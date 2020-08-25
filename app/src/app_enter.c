@@ -16,8 +16,13 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
+#include "uart_operate.h"
+#include "elog.h"
+#include "common_data.h"
+#include "net_task.h"
 
-extern void test_printf(void);
+extern hal_uart_config_t   uart1_cfg;
+extern hal_uart_config_t   uart2_cfg;
 
 static void prvInvokeGlobalCtors(void)
 {
@@ -31,33 +36,57 @@ static void prvInvokeGlobalCtors(void)
 
 static void prvThreadEntry(void *param)
 {
-    OSI_LOGI(0, "application thread enter, param 0x%x", param);
+    log_d("application thread enter, param 0x%x", param);
     //srand(100);
 
-    for (int n = 0; n < 10; n++)
-    {
-        OSI_LOGI(0, "hello world %d", n);
-        fibo_taskSleep(1000);
-    }
+    //网络任务
+	net_task();
 
-    char *pt = (char *)fibo_malloc(512);
-    if (pt != NULL)
-    {
-        OSI_LOGI(0, "malloc address %u", (unsigned int)pt);
-        fibo_free(pt);
-    }
-
-	test_printf();
     fibo_thread_delete();
 }
 
 void * appimg_enter(void *param)
 {
-    OSI_LOGI(0, "application image enter, param 0x%x", param);
+    //gpio_init();				//gpio初始化
+
+    INT32 uart1ret = uart_init(UART1,&uart1_cfg, uart1_recv_cb, NULL);
+    INT32 uart2ret = uart_init(UART2,&uart2_cfg, uart2_recv_cb, NULL); 
+
+	elog_init();
+ 	elog_start();
+
+    if(0 == uart1ret)
+    {
+        log_d("uart1ret is %ld,uart1 init success", uart1ret);
+    }
+    else
+    {
+        log_d("uart1ret is %ld,uart1 init fail", uart1ret);
+    }
+    
+    if(0 == uart2ret)
+    {
+        log_d("uart2ret is %ld,uart2 init success", uart2ret);
+    }
+    else
+    {
+        log_d("uart2ret is %ld,uart2 init fail", uart2ret);
+    }
+    
+    //log_init();
+
+    COMMON_DataInit();
+
+	// live_a_and_b();
+	// build_moment(CM_BUILD_TIME);
+	// update_version();//更新版本
+
+    log_d("application image enter, param 0x%x", param);
 
     prvInvokeGlobalCtors();
 
-    fibo_thread_create(prvThreadEntry, "mythread", 1024*4, NULL, OSI_PRIORITY_NORMAL);
+    fibo_thread_create(prvThreadEntry, "mythread", 1024*8*2, NULL, OSI_PRIORITY_NORMAL);
+
     return 0;
 }
 

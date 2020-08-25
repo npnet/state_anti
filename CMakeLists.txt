@@ -33,7 +33,7 @@ set(BUILD_SHARED_LIBS OFF)
 
 project(core C CXX ASM)
 
-include_directories(components/include components/newlib/include)
+include_directories(components/include components/newlib/include app/include)
 
 function(cpp_only target file)
     add_library(${target} OBJECT ${file})
@@ -104,8 +104,19 @@ endif()
 if(CONFIG_APPIMG_LOAD_FLASH)
     set(target hello_flash)
     add_appimg(${target} ${flash_ldscript} 
-    	hello_world.c
-    	demo.c)
+    app/src/app_enter.c
+    app/src/net_task.c 
+    app/src/elog.c
+    app/src/elog_async.c
+    app/src/elog_buf.c
+    app/src/elog_port.c
+    app/src/elog_utils.c
+    app/src/uart_operate.c
+    app/src/common_data.c
+    app/src/data_collector_parameter_table.c
+    app/src/eybond_modbus_tcp_protocol.c
+    app/src/big_little_endian_swap.c
+    app/src/debug_cmd.c)
     target_link_libraries(${target} PRIVATE ${libc_file_name} ${libm_file_name} ${libgcc_file_name})
 
     set(pac_file ${out_hex_dir}/${target}.pac)

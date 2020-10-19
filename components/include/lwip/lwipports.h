@@ -79,4 +79,5 @@ typedef void (*sys_timeout_handler)(void *arg);
 void sys_timeout(uint32_t msecs, sys_timeout_handler handler, void *arg);
 void sys_untimeout(sys_timeout_handler handler, void *arg);
 void sys_settime(uint32_t sec, uint32_t frac);
+uint32_t sys_get_srand();
 #endif

@@ -1,17 +1,3 @@
-/* Copyright (C) 2018 RDA Technologies Limited and/or its affiliates("RDA").
- * All rights reserved.
- *
- * This software is supplied "AS IS" without any warranties.
- * RDA assumes no responsibility or liability for the use of the software,
- * conveys no license or title under any patent, copyright, or mask work
- * right to the product. RDA reserves the right to make changes in the
- * software without notification.  RDA also make no representation or
- * warranty that such application will be suitable for the specified use
- * without further testing or modification.
- */
-
-#define OSI_LOG_TAG OSI_MAKE_LOG_TAG('M', 'Y', 'A', 'P')
-
 #include "fibo_opencpu.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -20,9 +6,14 @@
 #include "elog.h"
 #include "common_data.h"
 #include "net_task.h"
+#include "parameter_number_and_value.h"
+#include "watch_dog.h"
+#include "run_log.h"
+#include "xmodem_server.h"
+#include "gpio_operate.h"
 
 extern hal_uart_config_t   uart1_cfg;
-extern hal_uart_config_t   uart2_cfg;
+extern hal_uart_config_t   uart3_cfg;
 
 static void prvInvokeGlobalCtors(void)
 {
@@ -34,58 +25,38 @@ static void prvInvokeGlobalCtors(void)
         __init_array_start[i]();
 }
 
-static void prvThreadEntry(void *param)
-{
-    log_d("application thread enter, param 0x%x", param);
-    //srand(100);
-
-    //网络任务
-	net_task();
-
-    fibo_thread_delete();
-}
-
 void * appimg_enter(void *param)
 {
-    //gpio_init();				//gpio初始化
+    gpio_init();				//gpio初始化
 
-    INT32 uart1ret = uart_init(UART1,&uart1_cfg, uart1_recv_cb, NULL);
-    INT32 uart2ret = uart_init(UART2,&uart2_cfg, uart2_recv_cb, NULL); 
+    uart_init(UART1,&uart1_cfg, uart1_recv_cb, NULL);
+    uart_init(UART3,&uart3_cfg, uart3_recv_cb, NULL); 
 
 	elog_init();
  	elog_start();
 
-    if(0 == uart1ret)
-    {
-        log_d("uart1ret is %ld,uart1 init success", uart1ret);
-    }
-    else
-    {
-        log_d("uart1ret is %ld,uart1 init fail", uart1ret);
-    }
-    
-    if(0 == uart2ret)
-    {
-        log_d("uart2ret is %ld,uart2 init success", uart2ret);
-    }
-    else
-    {
-        log_d("uart2ret is %ld,uart2 init fail", uart2ret);
-    }
-    
-    //log_init();
+    log_init();
 
     COMMON_DataInit();
-
-	// live_a_and_b();
-	// build_moment(CM_BUILD_TIME);
-	// update_version();//更新版本
-
-    log_d("application image enter, param 0x%x", param);
-
     prvInvokeGlobalCtors();
 
-    fibo_thread_create(prvThreadEntry, "mythread", 1024*8*2, NULL, OSI_PRIORITY_NORMAL);
+    INT8 *hardware_version = NULL;
+    INT8 *software_version = NULL;
+
+    hardware_version   = fibo_get_hw_verno();               //获取当前的硬件版本（客户定制）
+    software_version   = fibo_get_sw_verno();               //获取当前的软件版本（客户定制）
+    INT32 disret = fibo_watchdog_disable();
+
+    for (int j = 0; j < 2; j++)
+    {
+        log_d("\r\nhardware_version %s\r\n",hardware_version); 
+        log_d("\r\nsoftware_version %s\r\n",software_version); 
+        log_d("\r\ndisret is %d\r\n",disret); 
+    }
+
+    fibo_thread_create(net_task,          "NET TASK",          1024*8*5, NULL, OSI_PRIORITY_NORMAL);
+    fibo_thread_create(device_update_task,"DEVICE UPDATE TASK",1024*8*3, NULL, OSI_PRIORITY_NORMAL);
+    fibo_thread_create(feed_dog_task,     "FEED DOG TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
 
     return 0;
 }

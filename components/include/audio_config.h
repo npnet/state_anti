@@ -49,5 +49,10 @@
  * whether AMR-WB encoder enabled
  */
 #define CONFIG_AUDIO_AMRWB_ENC_ENABLE
-
+#ifdef CONFIG_AUDIO_ENABLE
+/**
+ * whether ext i2s enable
+ */
+/* #undef CONFIG_AUDIO_EXT_I2S_ENABLE */
+#endif
 #endif

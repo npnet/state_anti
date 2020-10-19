@@ -15,6 +15,7 @@
 
 #include "osi_compiler.h"
 #include "fibocom.h"
+#include "drv_config.h"
 
 OSI_EXTERN_C_BEGIN
 
@@ -49,7 +50,12 @@ typedef struct
 } SensorOps_t;
 
 //general sensor drv need ping-pang buffer for continus data mode
+#ifdef CONFIG_CAMERA_SINGLE_BUFFER
+#define SENSOR_FRAMEBUFFER_NUM (1)
+#else
 #define SENSOR_FRAMEBUFFER_NUM (2)
+#endif
+
 typedef struct image_dev_tag
 {
     bool poweron_flag;

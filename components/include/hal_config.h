@@ -129,7 +129,7 @@
 /**
  * whether external NOR flash is used
  */
-#define CONFIG_SUPPORT_EXT_FLASH
+/* #undef CONFIG_SUPPORT_EXT_FLASH */
 
 /**
  * external NOR flash size
@@ -723,6 +723,16 @@
  * ldo vcore setting at low power mode (8955, 8909)
  */
 /* #undef CONFIG_VCORE_LDO_LP */
+
+/**
+ * Power down flash in low power mode (8910)
+ */
+/* #undef CONFIG_FLASH_LP_POWER_DOWN */
+
+/**
+ * PSRAM enter half sleep in low power mode (8910)
+ */
+/* #undef CONFIG_PSRAM_LP_HALF_SLEEP */
 
 /**
  * force pull up for tst_h in iomux (8910)

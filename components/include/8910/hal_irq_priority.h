@@ -98,7 +98,7 @@
 #define SYS_IRQ_PRIO_WCN_WLAN (8 << 3)
 #define SYS_IRQ_PRIO_WCN_SOFT (8 << 3)
 #define SYS_IRQ_PRIO_WCN_WDT_RST (8 << 3)
-#define SYS_IRQ_PRIO_WCN_AWAKE (8 << 3)
+#define SYS_IRQ_PRIO_WCN_AWAKE (7 << 3)
 #define SYS_IRQ_PRIO_RF_WDG_RST (8 << 3)
 #define SYS_IRQ_PRIO_LVDS (8 << 3)
 

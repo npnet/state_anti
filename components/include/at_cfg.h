@@ -448,6 +448,7 @@ typedef struct
     uint32_t mcuNotifySleepDelayMs;
     uint8_t csta;
     uint8_t csvm;
+    uint8_t detectMBS;
 #ifdef CONFIG_ATR_TB_API_SUPPORT
     atTbDataStatistics_t tbDataStatistics[2];
 #endif

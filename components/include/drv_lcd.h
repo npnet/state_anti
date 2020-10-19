@@ -65,6 +65,8 @@ typedef enum
     LCD_DIRECT_NORMAL2,
     LCD_DIRECT_NORMAL2_ROT_90,
     LCD_DIRECT_NORMAL2_ROT_180,
+    LCD_DIRECT_ROT_270,  // Rotation 270
+    LCD_DIRECT_NORMAL2_ROT_270,
 #endif
 } lcdDirect_t;
 

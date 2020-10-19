@@ -143,7 +143,7 @@
 #endif
 
 #ifdef LWIP_DEBUG
-#define LWIP_DEBUGF(debug, message) do { OSI_LOGI message;} while(0)
+#define LWIP_DEBUGF(debug, message) do { if((debug) !=0 ){OSI_LOGI message;}} while(0)
 
 #else  /* LWIP_DEBUG */
 #define LWIP_DEBUGF(debug, message)

@@ -163,6 +163,9 @@ typedef struct sensorInfo
 
 } sensorInfo_t;
 
+extern sensorInfo_t gc0310Info;
+extern sensorInfo_t gc032aInfo;
+
 void unittestCam(void);
 void drvCamSetPdn(bool pdnActivH);
 void drvCamSetRst(bool rstActiveH);

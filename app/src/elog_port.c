@@ -32,8 +32,8 @@
 #include "uart_operate.h"
 
 
-extern hal_uart_config_t   uart2_cfg;
-
+// extern hal_uart_config_t   uart2_cfg;
+extern hal_uart_config_t   uart3_cfg;
 static bool lockPort = false;
 
 /**
@@ -45,8 +45,12 @@ ElogErrCode elog_port_init(void) {
     ElogErrCode result = ELOG_NO_ERR;
 
     /* add your code here */
-    uart_deinit(UART2);
-    uart_init(UART2,&uart2_cfg, uart2_recv_cb, NULL); 
+    // uart_deinit(UART2);
+    // uart_init(UART2,&uart2_cfg, uart2_recv_cb, NULL); 
+
+    uart_deinit(UART3);
+    uart_init(UART3,&uart3_cfg, uart3_recv_cb, NULL); 
+
     return result;
 }
 
@@ -66,7 +70,8 @@ void elog_port_output(const char *log, size_t size) {
     // {
     //     putchar(outputData[i++]);
     // }
-    uart_write(UART2, (uint8_t*)log, (uint16_t)size);
+    // uart_write(UART2, (uint8_t*)log, (uint16_t)size);
+    uart_write(UART3, (uint8_t*)log, (uint16_t)size);
 }
 
 /**

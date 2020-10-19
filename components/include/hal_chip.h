@@ -61,6 +61,7 @@ extern "C" {
 #define HAL_NAME_USB OSI_MAKE_TAG('U', 'S', 'B', ' ')
 #define HAL_NAME_NETCARD OSI_MAKE_TAG('N', 'E', 'T', 'C')
 #define HAL_NAME_CAM OSI_MAKE_TAG('C', 'A', 'M', ' ')
+#define HAL_NAME_PWM OSI_MAKE_TAG('P', 'W', 'M', ' ')
 
 #define REG_APPLY_TYPE_END 0
 #define REG_APPLY_TYPE_UDELAY 1
@@ -277,8 +278,23 @@ void halRamInit(void);
 
 /**
  * \brief PSRAM/DDR initialization at resume
+ *
+ * This is called when system is power off, power of PSRAM is kept. Also,
+ * the content of RAM should be kept.
  */
 void halRamWakeInit(void);
+
+/**
+ * \brief PSRAM/DDR suspend
+ *
+ * When PSRAM half sleep is supported, it will be processed inside.
+ */
+void halRamSuspend(void);
+
+/**
+ * \brief PSRAM/DDR suspend abort
+ */
+void halRamSuspendAbort(void);
 
 /**
  * \brief batch write write registers, and executed on SRAM

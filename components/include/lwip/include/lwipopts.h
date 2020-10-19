@@ -78,33 +78,34 @@
 #define ALTCP_MBEDTLS_DEBUG 0
 #endif
 #define ETHARP_DEBUG 0
-#define NETIF_DEBUG 0
-#define PBUF_DEBUG 0
+#define NETIF_DEBUG 1
+#define PBUF_DEBUG 1
 #define API_LIB_DEBUG 0
 #define API_MSG_DEBUG 0
-#define SOCKETS_DEBUG 0
+#define SOCKETS_DEBUG 1
 #define ICMP_DEBUG 0
 #define IGMP_DEBUG 0
 #define INET_DEBUG 0
-#define IP_DEBUG 0
+#define IP_DEBUG 1
 #define IP_REASS_DEBUG 0
 #define RAW_DEBUG 0
 #define MEM_DEBUG 0
 #define MEMP_DEBUG 0
-#define TCP_INPUT_DEBUG 0
+#define TCP_INPUT_DEBUG 1
 #define TCP_FR_DEBUG 0
 #define TCP_RTO_DEBUG 0
-#define TCP_CWND_DEBUG 0
-#define TCP_WND_DEBUG 0
-#define TCP_OUTPUT_DEBUG 0
+#define TCP_CWND_DEBUG 1
+#define TCP_WND_DEBUG 1
+#define TCP_OUTPUT_DEBUG 1
 #define TCP_RST_DEBUG 0
 #define TCP_QLEN_DEBUG 0
 #define UDP_DEBUG 0
-#define TCPIP_DEBUG 0
+#define TCPIP_DEBUG 1
 #define SLIP_DEBUG 0
 #define DHCP_DEBUG 0
 #define AUTOIP_DEBUG 0
 #define IP6_DEBUG 0
+#define NAT_DEBUG 0
 
 #ifdef CONFIG_NET_LWIP_PPP_ON
 #define PPP_SUPPORT 1
@@ -198,7 +199,7 @@
 
 //#define malloc COS_MALLOC
 #define DEFAULT_UDP_RECVMBOX_SIZE       16
-#define DEFAULT_TCP_RECVMBOX_SIZE       16
+#define DEFAULT_TCP_RECVMBOX_SIZE       32
 #define DEFAULT_RAW_RECVMBOX_SIZE       16
 
 #define LWIP_SO_RCVTIMEO 0
@@ -240,6 +241,10 @@
 #endif
 #define LWIP_STATS 0
 #define LWIP_ICMP 1
+
+#ifdef CONFIG_FIBOCOM_BASE
+#define LWIP_ND6_NUM_ROUTERS 8
+#endif
 
 #define MEM_ALIGNMENT 4
 #define ETH_PAD_SIZE 0

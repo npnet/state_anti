@@ -119,7 +119,7 @@
 /**
  * profile buffer size in bytes
  */
-/* #undef CONFIG_KERNEL_PROFILE_BUF_SIZE */
+#define CONFIG_KERNEL_PROFILE_BUF_SIZE 0xc000
 
 /**
  * use host packet, flow id 0x97 for log
@@ -160,5 +160,13 @@
  * Maximum blue screen handler count
  */
 #define CONFIG_KERNEL_BLUE_SCREEN_HANDLER_COUNT 8
+
+/**
+ * whether to enable watchdog
+ *
+ * By default, watchdog will be enabled when \p BUILD_RELEASE_TYPE is
+ * "release".
+ */
+/* #undef CONFIG_WDT_ENABLE */
 
 #endif

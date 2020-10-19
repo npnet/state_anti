@@ -75,9 +75,4 @@
  */
 #define CONFIG_SRV_POWER_OFF_VOLTAGE 3250
 
-/**
- * support power off charge mode or not
- */
-/* #undef CONFIG_SRV_POWER_OFF_CHARGE_SUPPORT */
-
 #endif

@@ -106,7 +106,7 @@ typedef struct
     uint32_t chunk_size;     ///< file size minus 8
     uint32_t format_id;      ///< AUDIO_WAV_WAVE_ID
     uint32_t chunk_fmt_id;   ///< AUDIO_WAV_FMT_ID
-    uint32_t chunk_fmt_size; ///< 16
+    uint32_t chunk_fmt_size; ///< 16,18
     uint16_t audio_fmt;      ///< 1: PCM
     uint16_t channels;       ///< channel number
     uint32_t sample_rate;    ///< sample rate in Hz
@@ -231,6 +231,10 @@ typedef enum
      * Play to uplink remote during voice call.
      */
     AUDEV_PLAY_TYPE_VOICE,
+    /**
+     * Play to local audio path during poc mode.
+     */
+    AUDEV_PLAY_TYPE_POC,
 } audevPlayType_t;
 
 /**
@@ -260,6 +264,10 @@ typedef enum
      * PCM dump, for debug only.
      */
     AUDEV_RECORD_TYPE_DEBUG_DUMP,
+    /**
+     * Record from microphone, during poc mode.
+     */
+    AUDEV_RECORD_TYPE_POC,
 } audevRecordType_t;
 
 /**

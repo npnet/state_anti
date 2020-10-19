@@ -1,38 +1,216 @@
-/* Copyright (C) 2018 RDA Technologies Limited and/or its affiliates("RDA").
- * All rights reserved.
- *
- * This software is supplied "AS IS" without any warranties.
- * RDA assumes no responsibility or liability for the use of the software,
- * conveys no license or title under any patent, copyright, or mask work
- * right to the product. RDA reserves the right to make changes in the
- * software without notification.  RDA also make no representation or
- * warranty that such application will be suitable for the specified use
- * without further testing or modification.
- */
-
-#define OSI_LOG_TAG OSI_MAKE_LOG_TAG('M', 'Y', 'A', 'P')
-
 #include "fibo_opencpu.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
 #include "elog.h"
 #include "net_task.h"
-// #include "ip4_addr.h"
+#include "data_collector_parameter_table.h"
+#include "parameter_number_and_value.h"
+#include "uart_operate.h"
+#include "run_log.h"
 #include "eybond_modbus_tcp_protocol.h"
- char hostname1[] = "solar.eybond.com";
-// char hostname1[] = "www.shinemonitor.com";
+#include "big_little_endian_swap.h"
+#include "gpio_operate.h"
 
-INT8 socketid;
-ip_addr_t addr1;
+static void     un_modbus_tcp_Transparent_Transm();
 
-UINT8 ip_1[50];
-
+extern UINT8 	g_29;           	//29号参数
+extern UINT8 	g_34;           	//34号参数
+extern UINT8 	g_54;           	//54号参数
+extern int 		number_of_array_elements;
+extern UINT32 	g_EventFlag;		//事件标识
+extern UINT8 	g_RemoteIp[];    	//IP
+extern UINT8 	g_RemotePort[];    	//端口号 0-65535
+INT8            socketid;
 char 			g_RecvData[2*1024] 	= {0};
 UINT16 			g_RecvDataLen 		=  0;
-
 char 			g_SendData[2*1024] 	= {0};
 UINT16 			g_SendDataLen 		=  0;
+
+extern int 	    g_stop_dog_flag;
+static uint32_t g_i = 0;	//重启计数器
+void registered_network()
+{
+    UINT8       ip[50]          = {0};
+    reg_info_t  sim_reg_info;
+    INT32       regret          =  -1;
+    INT32       pdpret          =  -1;
+    int         reg_cycle_flag  =   1;
+    int         ret_try_count       =   0;
+    while(reg_cycle_flag)
+    {
+	    regret = fibo_getRegInfo(&sim_reg_info, single_sim_card);
+
+        if(0 == regret)
+        {
+            log_d("\r\nreg_info is valid data,try_count is %d\r\n",ret_try_count);
+        }
+        
+        if(regret < 0)
+        {
+            log_d("\r\nsim register failure,try_count is %d\r\n",ret_try_count);
+        }
+    
+		fibo_taskSleep(600);
+
+		if(1 == sim_reg_info.nStatus)
+		{
+            log_d("\r\nregister network success,try_count is %d\r\n",ret_try_count);
+			
+			pdpret = fibo_PDPActive(1, NULL, NULL, NULL, 0, single_sim_card, ip);
+            if(0 == pdpret)
+            {
+                log_d("\r\npdp active success,try_count is %d\r\n",ret_try_count);
+                reg_cycle_flag = 0;
+                net_lamp_on();
+            }
+            else
+            {
+                net_lamp_off();
+                log_d("\r\npdp active failed,try_count is %d\r\n",ret_try_count);
+            }
+		}
+        else
+        {
+            net_lamp_off();
+            log_d("\r\nregister network processing,try_count is %d\r\n",ret_try_count);
+        }
+
+        ret_try_count++;
+
+        if(100 == ret_try_count)//600*100 1分钟未注册并激活网络成功则退出
+        {
+            reg_cycle_flag = 0;   
+        }
+    }
+}
+
+unsigned short htons_special(unsigned short n)
+{
+    return ((n & 0xff) << 8) | ((n & 0xff00) >> 8);
+}
+
+int launch_tcp_connection()
+{
+    char 		*buf  			= NULL;							//参数值buff
+    UINT16		len 			= 64;   
+    UINT16 		u16Port			= 502;   
+    ip_addr_t   addr_para;
+    INT32       dns_ret         = -1;
+
+    if(1 == g_EventFlag)
+	{
+		u16Port = atoi((char*)g_RemotePort); 
+        dns_ret = fibo_getHostByName((char*)g_RemoteIp,&addr_para,1,single_sim_card);//0成功 小于0失败 
+
+        if(0 == dns_ret)
+        {
+            log_d("\r\nproduction test dns getHostByName success\r\n");
+        }
+
+        if(0 < dns_ret)
+        {
+            log_d("\r\nproduction test dns getHostByName fail\r\n");
+        }
+
+		log_d("\r\nproduction test u16Port:%d\r\n",u16Port);
+		log_d("\r\nproduction test g_RemoteIp:%s\r\n",g_RemoteIp);
+	}
+    else
+    {
+        //服务器端口号
+        for (int j = 0; j < number_of_array_elements; j++)
+        {
+            if(24 == PDT[j].num)
+            {
+                buf = fibo_malloc(sizeof(char)*64);
+                memset(buf, 0, sizeof(char)*64);
+                PDT[j].rFunc(&PDT[j],buf, &len);
+                u16Port = atoi(buf);
+                log_d("\r\nu16Port is %d\r\n",u16Port);
+                fibo_free(buf);
+            }
+        }
+
+        //服务器ip地址
+        for (int j = 0; j < number_of_array_elements; j++)
+        {
+            if(21 == PDT[j].num)
+            {
+                buf = fibo_malloc(sizeof(char)*64);
+                memset(buf, 0, sizeof(char)*64);
+                PDT[j].rFunc(&PDT[j],buf, &len);
+                dns_ret = fibo_getHostByName(buf,&addr_para,1,single_sim_card);//0成功 小于0失败 
+
+                if(0 == dns_ret)
+                {
+                    log_d("\r\ndns getHostByName success\r\n");
+                }
+                
+                if(0 < dns_ret)
+                {
+                    log_d("\r\ndns getHostByName fail\r\n");
+                }
+
+                log_d("\r\nbuf is %s\r\n",buf);
+                fibo_free(buf);
+            }
+        }
+    }
+
+    //sockets建立
+    GAPP_TCPIP_ADDR_T addr;
+    memset(&addr, 0, sizeof(GAPP_TCPIP_ADDR_T));
+    socketid                    = fibo_sock_create(0);//0-TCP,1-UDP
+    addr.sin_port               = htons_special(u16Port);
+    addr.sin_addr.u_addr.ip4    = addr_para.u_addr.ip4;
+    addr.sin_addr.type          = AF_INET;
+    INT32 retcode               = fibo_sock_connect(socketid, &addr);
+    if(0 == retcode)
+    {
+        log_d("\r\nfibo_sock_connect success\r\n");
+        return 0;
+    }
+    else
+    {
+        log_d("\r\nfibo_sock_connect fail\r\n");
+        return -1;
+    } 
+}
+
+void tcp_connection()
+{
+    log_d("\r\ntcp connecting\r\n");
+
+    int tcp_cycle_flag = 1;
+    int tcp_try_count  = 1;
+    int launch_tcp_ret = 1;
+
+    while(tcp_cycle_flag)
+    {
+        launch_tcp_ret = launch_tcp_connection();
+
+        if(0 == launch_tcp_ret)
+        {
+            log_d("\r\nlaunch tcp success,tcp_try_count is %d\r\n",tcp_try_count);
+            tcp_cycle_flag = 0;
+            srv_lamp_on();
+        }
+
+        if(-1 == launch_tcp_ret)
+        {
+            log_d("\r\nlaunch tcp fail,tcp_try_count is %d\r\n",tcp_try_count);
+            srv_lamp_off();
+        }
+
+        tcp_try_count++;
+        fibo_taskSleep(1000);   //不能删
+        if(60 == tcp_try_count) //60*1000 1分钟未联网成功则退出
+        {
+            tcp_cycle_flag = 0;   
+        }
+    }
+}
 
 /*机器大小端测试*/
 /*
@@ -41,122 +219,219 @@ UINT16 			g_SendDataLen 		=  0;
 高字节位存储在低地址   ---称为大端
 ----无论大小端，都可以使用，但一个地方只能用一种否则会出错.
 */
-
 int big_little_endian_test()
 {
 	int a;
 	a = 0x10000001;			//指针测试
 	char b = *((char*)(&a));
+
 	if(b==0x10)
-	log_d("\r\nbig mode\r\n");
-	else if(b==0x01)
-	log_d("\r\nlittle mode\r\n");
+    {
+	    log_d("\r\nbig mode\r\n");
+    }
+
+	if(b==0x01)
+    {
+	    log_d("\r\nlittle mode\r\n");
+    }
+
 	return 0;
 }
 
 //网络任务
-void net_task(void)
+void net_task(void *param)
 {
-    big_little_endian_test();
-    int i = 0;
-    //判断是否成功注册网络
-    reg_info_t reg_info1;
-    INT32 retreg = fibo_getRegInfo(&reg_info1,0);
-    log_d("retreg %d", retreg);
-    log_d("reg_info1->curr_rat %d", reg_info1.curr_rat);//当前注册RAT
-    log_d("reg_info1->nStatus %d", reg_info1.nStatus);//当前注册状态，0表示未注册，1表示注册上。
-    log_d("reg_info1->lte_scell_info.tac %d", reg_info1.lte_scell_info.tac);
-    log_d("reg_info1->lte_scell_info.cell_id %d", reg_info1.lte_scell_info.cell_id);
-    log_d("reg_info1->gsm_scell_info.lac %d", reg_info1.gsm_scell_info.lac);
-    log_d("reg_info1->gsm_scell_info.cell_id %d", reg_info1.gsm_scell_info.cell_id);
+    log_d("\r\n%s()\r\n",__func__);
+	log_d("\r\nSRNE AT init ok\r\n"); 
+    live_a_and_b();
+    // build_moment(CM_BUILD_TIME);
+	update_version();//更新版本
 
-    while(1 != reg_info1.nStatus)
-    {
-        fibo_taskSleep(1000);         //延时2S执行一次
-        i++;
-       
-        retreg = fibo_getRegInfo(&reg_info1,0);
-		log_d("i = %d reg_info1->nStatus %d",i,reg_info1.nStatus);
-        if(10 == i)
-        {
-            break;
-        }
-    }
-    if(1 == reg_info1.nStatus)
-    {
-        log_d("register network success");
-    }
-    memset(&ip_1, 0, sizeof(ip_1));
-    //激活PDP
-    INT32 retpdp = fibo_PDPActive(1, NULL, NULL, NULL, 0, 0, ip_1);//返回0且IP不为0表示成功,否则失败。
-    log_d("retpdp %d,ip_1=%s", retpdp,ip_1);
+    uint32_t relink = 0;            //重连计数器
 
-    for(int j = 0;j<5;j++)
-    {
-        retpdp = fibo_PDPActive(1, NULL, NULL, NULL, 0, 0, ip_1);//返回0且IP不为0表示成功,否则失败。
-        log_d("retpdp %d,ip_1=%s", retpdp,(char *)ip_1);
-        fibo_taskSleep(1000);         //延时2S执行一次
-    }
-    
-    //域名解析
-    INT32 rethost = fibo_getHostByName(hostname1,&addr1,1,0);//0成功 小于0失败
-    log_d("rethost %d", rethost);
-    log_d("addr1.type is %d", addr1.type);
-    log_d("addr1.u_addr.ip4 is %lld", addr1.u_addr.ip4);
-    log_d("addr1.u_addr.ip6 is %lld", addr1.u_addr.ip6);
+    net_lamp_off();
+	registered_network();			//注册网络
+    tcp_connection(); 			    //连接网络
 
-    for(int k = 0;k<5;k++)
-    {
-        rethost = fibo_getHostByName(hostname1,&addr1,1,0);//0成功 小于0失败
-        log_d("rethost %d", rethost);
-        log_d("addr1.type is %d", addr1.type);
-        log_d("addr1.u_addr.ip4 is %lld", addr1.u_addr.ip4);
-        log_d("addr1.u_addr.ip6 is %lld", addr1.u_addr.ip6);
-        fibo_taskSleep(1000);         //延时2S执行一次
-    }
-
-    //sockets建立
-    GAPP_TCPIP_ADDR_T addr;
-
-    memset(&addr, 0, sizeof(GAPP_TCPIP_ADDR_T));
-
-    socketid = fibo_sock_create(0);//0-TCP,1-UDP
-
-    addr.sin_port = htons(502);
-  
-
-
-    addr.sin_addr.u_addr.ip4 = addr1.u_addr.ip4;
-    addr.sin_addr.type       = AF_INET;
-
-    INT32 retcode            = fibo_sock_connect(socketid, &addr);
-
-    log_d("retcode is %lld", retcode);
-
-
-    INT32 g_SendDataLenTrue = 0;
     bool check_flag = false;
+    
     while(1)
     {
+        fibo_taskSleep(1000);//不能删除、给其他任务运行时间
+        log_d("\r\napp working\r\n"); 
         g_RecvDataLen = fibo_sock_recv(socketid, (UINT8 *)g_RecvData, sizeof(g_RecvData));
         log_hex((UINT8 *)g_RecvData,g_RecvDataLen);
-        check_flag = data_frame_legal_checking((UINT8 *)g_RecvData);
-        if(TRUE == check_flag )	/*判断数据帧是否为modbus_tcp*/
+        if(0 != g_RecvDataLen)
         {
-            receiving_processing(g_RecvData[7]);
-            memset(g_RecvData, 0, sizeof(g_RecvData));		//接收buff清零
-            g_RecvDataLen = 0;								//接收长度清零
-            g_SendDataLenTrue = fibo_sock_send(socketid, (UINT8 *)g_SendData, g_SendDataLen);
-            log_hex((UINT8 *)g_SendData,g_SendDataLen);
-            log_d("g_SendDataLenTrue is %lld", g_SendDataLenTrue);
+            log_d("\r\n0 != g_RecvDataLen\r\n"); 
+            relink  = 0;		//重连计数器清零
+            g_i     = 0;		//重启计数器清零
+            check_flag = data_frame_legal_checking((UINT8 *)g_RecvData);
+            if(TRUE == check_flag )	                            /*判断数据帧是否为modbus_tcp*/
+            {
+                receiving_processing(g_RecvData[7]);
+                memset(g_RecvData, 0, sizeof(g_RecvData));		//接收buff清零
+                g_RecvDataLen = 0;								//接收长度清零
+                fibo_sock_send(socketid, (UINT8 *)g_SendData, g_SendDataLen);
+                log_d("\r\n"); 
+                log_hex((UINT8 *)g_SendData,g_SendDataLen);
+                log_d("\r\n"); 
+            }
+            else
+            {
+                // un_modbus_tcp_Transparent_Transm();	
+                // g_RecvDataLen = 0;	
+            }
         }
         else
         {
-          log_d("wait data");  
-          fibo_taskSleep(1000);         //延时2S执行一次
+            if(0 == g_EventFlag)
+            {
+                g_i 	= g_i+1;		    //重启计数器
+                relink	= relink+1;		    //重连计数器
+                log_d("g_i      is     %d",g_i); 
+                log_d("relink   is     %d",relink); 
+                if(relink >= 75)   	        //75s左右           
+                {
+                    relink = 0;		        //重连计数器清零
+                    srv_lamp_off();
+                    log_d("\r\ntimeout\r\n"); 
+                    log_d("\r\nreconnection tcp\r\n"); 
+                    tcp_connection();	
+                }
+                //重连网络10次不成功就重启
+                if(g_i >= 750)   		    //750s左右           
+                {
+                    g_i = 0;		        //重启计数器
+                    log_d("softReset"); 
+                    fibo_softReset();
+                }
+            }
         }
     }
-    //收发数据
+}
 
-    //按需closesockets
+//非modbus tcp透传
+static void un_modbus_tcp_Transparent_Transm()
+{
+    log_d("\r\nun_modbus_tcp_Transparent_Transm\r\n"); 
+	memset(g_SendData, 0, sizeof(g_SendData));
+	memset(uart1_recv_data, 0, sizeof(uart1_recv_data));              //接收清零
+	uart1_recv_len = 0;
+	uart_write(UART1, (UINT8 *)g_RecvData, g_RecvDataLen);	//接收到服务器发送的数据及长度
+	memset(g_RecvData, 0, sizeof(g_RecvData));
+	fibo_taskSleep(1500);
+	// log_d("\r\nuart1_recv_len is %d\r\n",uart1_recv_len); 
+	log_hex((UINT8 *)uart1_recv_data, uart1_recv_len);
+	memcpy(g_SendData,uart1_recv_data,uart1_recv_len);
+	for(int i = 0; i < uart1_recv_len; i++)
+	{
+		g_SendData[i] = uart1_recv_data[i];
+	}
+	log_hex((UINT8 *)g_SendData, uart1_recv_len);
+	g_SendDataLen =  uart1_recv_len;
+	fibo_sock_send(socketid, (UINT8 *)g_SendData, g_SendDataLen);
+
+	memset(g_SendData, 0, sizeof(g_SendData));
+	g_SendDataLen =  0;
+	if(uart1_recv_len > 0)
+	{
+		com_lamp_on();
+        log_d("\r\ncom_lamp_on()\r\n"); 
+	}
+	else
+	{
+		com_lamp_off();
+        log_d("\r\ncom_lamp_off()\r\n"); 
+	}
+}
+
+void parameter_check()
+{
+	if(1 == g_34)
+	{
+		log_d("\r\ng_34 is %d\r\n",g_34);
+		g_34 = 0;
+		uart1_cfg_update();		//更新串口配置
+	}
+
+	if((0 == g_29)&&(0 == g_54))
+	{
+        parameter_a_module();
+        a_copy_to_b();
+		parameter_init();       //保持统一
+	}
+
+	if(1 == g_29)				// 系统操作
+	{
+		log_d("\r\nthe system_operation is %d restart system\r\n",g_29);
+		g_29 = 0;
+		g_stop_dog_flag = 1;
+	}
+	
+	if(1 == g_54)				// 系统操作
+	{
+		g_54 = 0;
+		log_clean();            //清除运行日志
+	}
+}
+
+void update_version()
+{
+    char firmware_version[] = "6.0.1.2";
+
+	UINT16 		len 			= 64;    						//参数值长度
+
+    char CSQ_char[3]={0};
+    INT32 CSQ  = 0;
+    INT32 ber  = 0;
+
+    char CCID[21]={0};
+
+    char IMEI[16]={0};
+
+	for(int j = 0; j < number_of_array_elements; j++)
+	{
+		if(5 == PDT[j].num)//固件版本
+		{
+			memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+			PDT[j].wFunc(&PDT[j],firmware_version, &len);
+		}
+
+		// if(51 == PDT[j].num)//固件编译日期
+		// {
+		// 	memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+		// 	PDT[j].wFunc(&PDT[j],g_compile_date, &len);
+		// }
+
+		// if(52 == PDT[j].num)//固件编译时间
+		// {
+		// 	memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+		// 	PDT[j].wFunc(&PDT[j],g_compile_time, &len);
+		// }
+
+		if(55 == PDT[j].num)
+		{
+            fibo_get_csq(&CSQ,&ber);
+			itoa(CSQ,CSQ_char,10);
+			memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+			PDT[j].wFunc(&PDT[j],CSQ_char, &len);
+		}
+
+		if(56 == PDT[j].num)//通信卡CCID
+		{
+			fibo_get_ccid((UINT8*)CCID);
+			memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+			PDT[j].wFunc(&PDT[j],CCID, &len);
+		}
+
+		if(58 == PDT[j].num)//CPUID IMEI
+		{
+			fibo_get_imei((UINT8 *)IMEI,0);
+			memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+			PDT[j].wFunc(&PDT[j],IMEI, &len);
+		}
+	}
+
+	parameter_check();//更新版本号
 }

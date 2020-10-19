@@ -220,6 +220,7 @@ typedef struct
         bool sms_init_done;
 
         uint8_t ring_count;
+		uint8_t creg_val;
         uint8_t cgreg_val;
         uint8_t cereg_val;
         uint8_t cscon_mode;

@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fibo_opencpu_comm.h"
-
 typedef int hal_uart_port_t;
 typedef struct hal_uart_config_s hal_uart_config_t;
 typedef enum hal_uart_data_bits_s hal_uart_data_bits_t;

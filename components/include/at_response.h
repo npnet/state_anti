@@ -26,6 +26,13 @@
 #define RETURN_OK(engine) OSI_DO_WHILE0(atCmdRespOK(engine); return;)
 #define RETURN_OK_CME_ERR(engine, res) OSI_DO_WHILE0(int _c = (res); atCmdEngine_t *_e = (engine); if (_c == 0) atCmdRespOK(_e); else atCmdRespCmeError(_e, _c); return;)
 #define RETURN_FOR_ASYNC() OSI_DO_WHILE0(return;)
+#ifdef CONFIG_FIBOCOM_BASE
+#define RETURN_GTTOK(engine) OSI_DO_WHILE0(atCmdGttRespOK(engine); return;)
+#define RETURN_GTTERROR(engine) OSI_DO_WHILE0(atCmdGTTRespERROR(engine); return;)
+#define RETURN_AUDOK(engine) OSI_DO_WHILE0(atCmdAudRespOK(engine); return;)
+#define RETURN_AUDERROR(engine) OSI_DO_WHILE0(atCmdAudRespERROR(engine); return;)
+#endif
+
 
 // DCE Result code
 #define CMD_RC_OK 0         ///< "OK"
@@ -576,6 +583,17 @@ void atCmdRespOutputNText(atCmdEngine_t *engine, const char *text, size_t length
 void atCmdRespOutputPrompt(atCmdEngine_t *engine);
 
 /**
+ * output prompt 
+ *
+ * The prompt is <tt>\\r\\n> </tt>.
+ *
+ * @param engine    AT command engine, can't be NULL
+ for http
+ */
+void atCmdRespOutputPrompt_ex(atCmdEngine_t *engine);
+
+
+/**
  * response OK with non-standard text
  *
  * This is final result. When it is called, AT engine will finish current
@@ -627,7 +645,16 @@ uint32_t atCfwToCmeError(uint32_t result);
  *      - CMS error code
  */
 uint32_t atCfwToCmsError(uint32_t result);
+#ifdef CONFIG_FIBOCOM_BASE
 
+void atCmdAudRespOK(atCmdEngine_t *engine);
+
+void atCmdAudRespERROR(atCmdEngine_t *engine);
+
+void atCmdGttRespOK(atCmdEngine_t *engine);
+
+void atCmdGTTRespERROR(atCmdEngine_t *engine);
+#endif
 /**
  * After release call, it need to save the release code for AT+CEER
  * @param result    Release code text information

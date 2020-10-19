@@ -37,16 +37,32 @@
 #define HAL_WAKEUP_OUT_PIN_INDEX 144
 #define HAL_DRING_PIN_INDEX 144
 
-#define HAL_WAKEUP_IN_PIN_INDEX 144
+#define HAL_WAKEUP_IN_PIN_INDEX 73
 #define HAL_DTR_PIN_INDEX 144
 
 #define FIBO_GTFMODE_PIN_INDEX 144
 #define FIBO_DCD_PIN_INDEX 144
 
 #define FIBO_HEADSET_PIN_INDEX 144
+#elif defined (CONFIG_FIBOCOM_MC610)||defined (CONFIG_FIBOCOM_MC615)
+#define HAL_WAKEUP_OUT_PIN_INDEX 61
+#define HAL_DRING_PIN_INDEX 22
+
+#define HAL_WAKEUP_IN_PIN_INDEX 41
+#define HAL_DTR_PIN_INDEX 15
+
+#define FIBO_GTFMODE_PIN_INDEX 144
+#define FIBO_DCD_PIN_INDEX 17
+
+#define FIBO_HEADSET_PIN_INDEX 144
+
 #else
 #define HAL_WAKEUP_OUT_PIN_INDEX 144
-#define HAL_DRING_PIN_INDEX 62
+#if defined(CONFIG_FIBOCOM_HAISL)
+#define HAL_DRING_PIN_INDEX 2
+#else
+#define HAL_DRING_PIN_INDEX  62
+#endif
 
 #define HAL_WAKEUP_IN_PIN_INDEX 1
 #define HAL_DTR_PIN_INDEX 66
@@ -63,12 +79,13 @@
 
 #define FIBO_FFS_DIR CONFIG_FS_SYS_MOUNT_POINT "FFS"
 #ifdef CONFIG_FIBOCOM_HELLOBIKE
-#ifdef CONFIG_SUPPORT_EXT_FLASH
+#ifdef CONFIG_BOARD_WITH_EXT_FLASH
 #define FIBO_HB_FFS_AUDIO_DIR CONFIG_FS_EXT_MOUNT_POINT "/Audio"
 #define FIBO_HB_FFS_LOG_DIR CONFIG_FS_EXT_MOUNT_POINT "/Log"
 #define FIBO_HB_FFS_TMP_DIR CONFIG_FS_EXT_MOUNT_POINT "/tmp"
 #define FIBO_HB_FFS_FW_DIR CONFIG_FS_EXT_MOUNT_POINT "/Firmware"
 #define FIBO_HB_FFS_MD_DIR CONFIG_FS_EXT_MOUNT_POINT "/Media"
+#define FIBO_HB_FFS_PT_DIR CONFIG_FS_EXT_MOUNT_POINT "/Picture"
 #else
 #define FIBO_HB_FFS_DIR  CONFIG_FS_SYS_MOUNT_POINT "ST"
 #define FIBO_HB_FFS_AUDIO_DIR CONFIG_FS_SYS_MOUNT_POINT "/ST/Audio"
@@ -76,6 +93,7 @@
 #define FIBO_HB_FFS_TMP_DIR CONFIG_FS_SYS_MOUNT_POINT "/ST/tmp"
 #define FIBO_HB_FFS_FW_DIR CONFIG_FS_SYS_MOUNT_POINT "/ST/Firmware"
 #define FIBO_HB_FFS_MD_DIR CONFIG_FS_SYS_MOUNT_POINT "/ST/Media"
+#define FIBO_HB_FFS_PT_DIR CONFIG_FS_SYS_MOUNT_POINT "/ST/Picture"
 #endif
 #endif
 
@@ -178,6 +196,7 @@ typedef struct
 	volatile uint32_t *key_reg;
 	uint8_t default_mode;
 	int  gpio_mode;
+	bool is_high_resistance;
 }pin_map_t;
 
 
@@ -315,3 +334,6 @@ void atCmdHandleKEYSWITCH(atCommand_t * cmd);
 bool fibo_setChargeSwitch(bool is_switchoff);
 bool fibo_hal_gpio_pull_up_or_down(uint16_t pin_id,bool is_pull_up);
 osiThread_t* fibo_get_open_timer_cb_task(void);
+bool fibo_custom_get_power_state(void);
+bool fibo_hal_gpio_pull_high_resistance(uint16_t pin_id,bool is_resistance);
+

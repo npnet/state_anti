@@ -20,7 +20,7 @@
 
 #define GMI_ID "FIBOCOM"
 #define GMM_ID "L610_CN_00_90-debug"
-#define GMR_ID "DEVEL-gLG610_CN_00_00_V02_202007231616-1-gf42fc439-dirty"
+#define GMR_ID "DEVEL-gLG610_CN_00_02_V01_202009251719-30-g39964c6b-dirty"
 
 /**
  * Whether to support coap AT commands
@@ -141,5 +141,10 @@
  * whether some wifi basic at command can be used
  */
 #define CONFIG_AT_WIFISCAN_SUPPORT
+
+/**
+ * whether wifi sensitivity test command can be used
+ */
+#define CONFIG_AT_WIFI_SENSITIVITY_TEST_SUPPORT
 
 #endif

@@ -3,19 +3,10 @@
 #include "net_task.h"
 #include <string.h>
 #include "data_collector_parameter_table.h"
-// #include "parameter_number_and_value.h"
-// #include "cmiot_common.h"
 #include <stdlib.h>
 #include "debug_cmd.h"
 #include "fibo_opencpu.h"
-// #include "cmiot_msg.h"
-// #include "cmiot_timer.h"
-
 #include "uart_operate.h"
-// #include "cmiot_basic.h"
-// #include "cmiot_gpio.h"
-// #include "cmiot_gprs.h"
-// #include "gpio_operate.h"
 
 #define DEF_IP_MAX_SIZE         46
 #define DEF_PORT_MAX_SIZE       6
@@ -27,10 +18,9 @@ extern char g_compile_date[];
 extern char g_compile_time[];
 
 extern int number_of_array_elements;
-// extern uint8_t g_29;           //29号参数 系统操作
-// extern uint8_t g_34;           //34号参数 串口配置
-uint8_t g_29;           //29号参数 系统操作
-uint8_t g_34;           //34号参数 串口配置
+extern uint8_t g_29;           //29号参数 系统操作
+extern uint8_t g_34;           //34号参数 串口配置
+
 UINT8 g_RemoteIp[DEF_IP_MAX_SIZE]       = {0};    //IP
 UINT8 g_RemotePort[DEF_PORT_MAX_SIZE]   = {0};    //端口号 0-65535
 
@@ -66,6 +56,7 @@ void Capital2Lowercase_str(void *buf, u16_t len)
 ************************************************************************************/
 void STRCMD_AtTest(void *para)
 {
+    log_d("\r\nSTRCMD_AtTest\r\n");
     UINT8 *p            = (UINT8 *)para;
     UINT8 cnt           = 0;
     UINT8 equalPlace    = 0;                //等号
@@ -96,6 +87,8 @@ void STRCMD_AtTest(void *para)
         cnt++;
     }
 
+    log_d("\r\nnewlinePlace is %d\r\n",newlinePlace);
+    
     memcpy(g_RemoteIp,(UINT8 *)para+equalPlace+1,commaPlace-equalPlace-1);      //等号 逗号-等号
    
     memcpy(g_RemotePort,(UINT8 *)para+commaPlace+1,newlinePlace-commaPlace-1);  //逗号 换行符-逗号
@@ -105,7 +98,7 @@ void STRCMD_AtTest(void *para)
         COMMON_DataInit();
         COMMON_SetEvent(flag);
         uart_write(UART1, (UINT8 *)"+OK\r\n", strlen("+OK\r\n"));	
-        // launch_tcp_connection();    	//发起TCP连接
+        tcp_connection();    	//发起TCP连接
     } 
 }
 
@@ -120,19 +113,18 @@ void uart_set_get_para(void *command)
     char *buf  = NULL;
     UINT16 len = 64;                                                //长度
 
-    int8_t  para_num           = 0;
+    int8_t  para_num           =  0;
     char para_num_char[3]      = {0};    //参数编号
     char para_value[64]        = {0};    //参数值
     char operate[3]            = {0};    //操作类型 set or get
 
-    // uint8_t CSQ;  
-    // char CSQ_char[3]={0};                                         //长度
+    INT32 CSQ;  
+    INT32 ber;  
+    char CSQ_char[3]={0};                                         //长度
 
-    // uint32_t CCID_len[1]={21}; 
-    // char CCID[21]={0};
+    char CCID[21]={0};
 
-    // uint8_t IMEI_len[1]={16};
-    // char IMEI[16]={0};
+    char IMEI[16]={0};
 
     // uint8_t device_online = 0;
     // char device_online_char[2] = {0};
@@ -186,7 +178,7 @@ void uart_set_get_para(void *command)
     )
     {
         para_num = atoi(para_num_char);
-        log_d("\r\npara_num is %d\r\n",para_num);
+        log_d("para_num is %d",para_num);
 
         if( ( 0 == para_num)||  //Reserved 特别预留，作为广播编号
             ( 4 == para_num)||  //协议版本 数采器支持的本协议的版本，固定3个字符。如版本号为1.2，则数据传输时为：0x31 0x2E 0x32
@@ -218,7 +210,7 @@ void uart_set_get_para(void *command)
                     {
                         memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
                         PDT[j].wFunc(&PDT[j],para_value, &len);
-                        log_d("\r\n%d=%s;\r\n",PDT[j].num,para_value); 
+                        log_d("%d=%s;",PDT[j].num,para_value); 
                     } 
                 }
 
@@ -227,7 +219,7 @@ void uart_set_get_para(void *command)
                     g_34 = 1;
                 }
             }
-            // parameter_check();
+            parameter_check();
         }
     }
     else if(
@@ -251,21 +243,24 @@ void uart_set_get_para(void *command)
                 //     PDT[j].wFunc(&PDT[j],device_online_char, &len);
                 // }
 
-                // if(49 == PDT[j].num)//查询网络注册信息
-                // {
-                //     cm_gprs_getcregstate(&creg);
-                //     cm_itoa(creg,creg_char,10);
-                //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                //     PDT[j].wFunc(&PDT[j],creg_char, &len);
-                // }
+    // reg_info_t reg_info1;
+    // INT32 retreg = fibo_getRegInfo(&reg_info1,0);
 
-                // if(50 == PDT[j].num)//GPRS 网络注册状态
-                // {
-                //     cm_gprs_getcgregstate(&cgreg);
-                //     cm_itoa(cgreg,cgreg_char,10);
-                //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                //     PDT[j].wFunc(&PDT[j],cgreg_char, &len);
-                // }
+    //             if(49 == PDT[j].num)//查询网络注册信息
+    //             {
+    //                 cm_gprs_getcregstate(&creg);
+    //                 cm_itoa(creg,creg_char,10);
+    //                 memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+    //                 PDT[j].wFunc(&PDT[j],creg_char, &len);
+    //             }
+
+    //             if(50 == PDT[j].num)//GPRS 网络注册状态
+    //             {
+    //                 cm_gprs_getcgregstate(&cgreg);
+    //                 cm_itoa(cgreg,cgreg_char,10);
+    //                 memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+    //                 PDT[j].wFunc(&PDT[j],cgreg_char, &len);
+    //             }
 
                 // if(51 == PDT[j].num)//固件编译日期
                 // {
@@ -279,27 +274,27 @@ void uart_set_get_para(void *command)
                 //     PDT[j].wFunc(&PDT[j],g_compile_time, &len);
                 // }
 
-                // if(55 == PDT[j].num)
-                // {
-                //     CSQ =cm_get_signalLevel();
-                //     cm_itoa(CSQ,CSQ_char,10);
-                //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                //     PDT[j].wFunc(&PDT[j],CSQ_char, &len);
-                // }
+                if(55 == PDT[j].num)
+                {
+                    fibo_get_csq(&CSQ,&ber);
+                    itoa(CSQ,CSQ_char,10);
+                    memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+                    PDT[j].wFunc(&PDT[j],CSQ_char, &len);
+                }
 
-                // if(56 == PDT[j].num)//通信卡CCID
-                // {
-                //     cm_get_iccid(CCID,CCID_len);
-                //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                //     PDT[j].wFunc(&PDT[j],CCID, &len);
-                // }
+                if(56 == PDT[j].num)//通信卡CCID
+                {
+                    fibo_get_ccid((uint8_t *)CCID);
+                    memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+                    PDT[j].wFunc(&PDT[j],CCID, &len);
+                }
 
-                // if(58 == PDT[j].num)//CPUID IMEI
-                // {
-                //     cm_get_imei((uint8_t*)IMEI,(uint32_t*)IMEI_len);
-                //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                //     PDT[j].wFunc(&PDT[j],IMEI, &len);
-                // }
+                if(58 == PDT[j].num)//CPUID IMEI
+                {
+                    fibo_get_imei((UINT8*)IMEI,0);
+                    memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+                    PDT[j].wFunc(&PDT[j],IMEI, &len);
+                }
 
                 buf = fibo_malloc(sizeof(char)*64);
                 memset(buf, 0, sizeof(char)*64);
@@ -313,7 +308,7 @@ void uart_set_get_para(void *command)
         else
         {
             para_num = atoi(para_num_char);
-            log_d("\r\npara_num is %d\r\n",para_num);
+            log_d("para_num is %d\r\n",para_num);
             for (int j = 0; j < number_of_array_elements; j++)
             {
                 if(para_num == PDT[j].num)
@@ -355,27 +350,27 @@ void uart_set_get_para(void *command)
                     //     PDT[j].wFunc(&PDT[j],g_compile_time, &len);
                     // }
 
-                    // if(55 == para_num)
-                    // {
-                    //     CSQ =cm_get_signalLevel();
-                    //     cm_itoa(CSQ,CSQ_char,10);
-                    //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                    //     PDT[j].wFunc(&PDT[j],CSQ_char, &len);
-                    // }
+                    if(55 == para_num)
+                    {
+                        fibo_get_csq(&CSQ,&ber);
+                        itoa(CSQ,CSQ_char,10);
+                        memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+                        PDT[j].wFunc(&PDT[j],CSQ_char, &len);
+                    }
 
-                    // if(56 == para_num)//通信卡CCID
-                    // {
-                    //     cm_get_iccid(CCID,CCID_len);
-                    //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                    //     PDT[j].wFunc(&PDT[j],CCID, &len);
-                    // }
+                    if(56 == para_num)//通信卡CCID
+                    {
+                        fibo_get_ccid((uint8_t*)CCID);
+                        memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+                        PDT[j].wFunc(&PDT[j],CCID, &len);
+                    }
 
-                    // if(58 == para_num)//CPUID IMEI
-                    // {
-                    //     cm_get_imei((uint8_t*)IMEI,(uint32_t*)IMEI_len);
-                    //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                    //     PDT[j].wFunc(&PDT[j],IMEI, &len);
-                    // }
+                    if(58 == para_num)//CPUID IMEI
+                    {
+                        fibo_get_imei((UINT8*)IMEI,0);
+                        memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+                        PDT[j].wFunc(&PDT[j],IMEI, &len);
+                    }
                     
                     buf = fibo_malloc(sizeof(char)*64);
                     memset(buf, 0, sizeof(char)*64);
@@ -383,7 +378,7 @@ void uart_set_get_para(void *command)
                     memset(para_value, 0, 64);      
                     memcpy(para_value,buf, len);
                     fibo_free(buf);
-                    log_d("\r\n%d=%s;\r\n",para_num,para_value); 
+                    log_d("%d=%s;\r\n",para_num,para_value); 
                 }
             }
         }

@@ -102,7 +102,7 @@ if(CONFIG_APPIMG_LOAD_FILE)
 endif()
 
 if(CONFIG_APPIMG_LOAD_FLASH)
-    set(target hello_flash)
+    set(target 000_4G04_BP)
     add_appimg(${target} ${flash_ldscript} 
     app/src/app_enter.c
     app/src/net_task.c 
@@ -116,7 +116,19 @@ if(CONFIG_APPIMG_LOAD_FLASH)
     app/src/data_collector_parameter_table.c
     app/src/eybond_modbus_tcp_protocol.c
     app/src/big_little_endian_swap.c
-    app/src/debug_cmd.c)
+    app/src/debug_cmd.c
+    app/src/parameter_number_and_value.c
+    app/src/md5_test.c
+    app/src/modbus_crc.c
+    app/src/modbus_md5.c
+    app/src/hextostr.c
+    app/src/watch_dog.c
+    app/src/run_log.c
+    app/src/data_block_burning_record_table.c
+    app/src/xmodem_server.c
+    app/src/gpio_operate.c
+    app/src/device_access_information.c
+    )
     target_link_libraries(${target} PRIVATE ${libc_file_name} ${libm_file_name} ${libgcc_file_name})
 
     set(pac_file ${out_hex_dir}/${target}.pac)

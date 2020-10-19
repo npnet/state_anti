@@ -174,6 +174,18 @@ void halAesTrngGetValue(uint32_t *v0, uint32_t *v1);
  */
 bool halAesCheckTrngComplete();
 
+/**
+ * \brief read 2720 RTC and convert to second
+ *
+ * \return  rtc second
+ */
+int64_t halPmuRtcReadSecond(void);
+
+/**
+ * \brief trigger watchdog reset immediately
+ */
+void halWatchdogReset(void);
+
 #ifdef __cplusplus
 }
 #endif

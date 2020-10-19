@@ -416,6 +416,7 @@ class PacConfig():
         self.szPrdVersion = cfg['szPrdVersion']
         self.szPrdAlias = cfg['szPrdAlias']
         self.dwMode = cfg['dwMode']
+        self.rebootByAt = cfg['rebootByAt']
         self.dwFlashType = cfg['dwFlashType']
         self.dwIsNvBackup = cfg['dwIsNvBackup']
         self.dwOmaDmProductFlag = cfg['dwOmaDmProductFlag']
@@ -474,6 +475,7 @@ class PacConfig():
         cfg['szPrdVersion'] = self.szPrdVersion
         cfg['szPrdAlias'] = self.szPrdAlias
         cfg['dwMode'] = self.dwMode
+        cfg['rebootByAt'] = self.rebootByAt
         cfg['dwFlashType'] = self.dwFlashType
         cfg['dwIsNvBackup'] = self.dwIsNvBackup
         cfg['dwOmaDmProductFlag'] = self.dwOmaDmProductFlag
@@ -663,6 +665,7 @@ class PacConfig():
         product = ET.SubElement(product_list, "Product",
                                 {"name": self.szPrdName})
         ET.SubElement(product, "SchemeName").text = self.szPrdName
+        ET.SubElement(product, "RebootByAT").text = str(self.rebootByAt)
         ET.SubElement(product, "FlashTypeID").text = str(self.dwFlashType)
         ET.SubElement(product, "Mode").text = str(self.dwMode)
 
@@ -805,6 +808,7 @@ def cfg_init(args):
     pc.szPrdVersion = args.pversion
     pc.szPrdAlias = args.palias
     pc.dwMode = args.mode
+    pc.rebootByAt = args.rebootat
     pc.dwFlashType = args.flashtype
     pc.dwIsNvBackup = 0
     pc.dwOmaDmProductFlag = args.productflag
@@ -955,6 +959,8 @@ def cfg_init_args(sub_parsers):
                         help='product version')
     parser.add_argument('--version', dest='version', required=True,
                         help='version string')
+    parser.add_argument('--rebootat', dest='rebootat',
+                        type=int, choices=[0, 1], default=1)
     parser.add_argument('--flashtype', dest='flashtype',
                         type=int, required=True)
     parser.add_argument('--mode', dest='mode', type=int, default=0)

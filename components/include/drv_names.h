@@ -59,6 +59,7 @@ OSI_EXTERN_C_BEGIN
 #define DRV_NAME_IOMUX OSI_MAKE_TAG('I', 'O', 'M', 'X')         // IOMX
 #define DRV_NAME_GPIO OSI_MAKE_TAG('G', 'P', 'I', 'O')          // GPIO
 #define DRV_NAME_AXI_DMA OSI_MAKE_TAG('A', 'D', 'M', 'A')       // ADMA
+#define DRV_NAME_CCID0 OSI_MAKE_TAG('C', 'I', 'D', '0')         // CID0
 
 #define DRV_NAME_PREFIX_MASK OSI_MAKE_TAG('\xff', '\xff', '\xff', '\x00')
 #define DRV_NAME_IS_UART(name) (((name)&DRV_NAME_PREFIX_MASK) == OSI_MAKE_TAG('U', 'R', 'T', '\0'))

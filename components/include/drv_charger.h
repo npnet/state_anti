@@ -77,14 +77,15 @@ void drvChargerGetCurbatVol(uint32_t *nBct);
 bool drvChargerIsWork(void);
 bool drvChargerSetConfig(chargerinfo_t * chg_cfg);
 uint32_t drvChargerGetChgCurrent(void);
-
+bool drvChargerIsChargeFull(void);
+uint32_t drvChargerGetCurBatVolPercent(void);
 #endif
 
 void drvChargeEnable(void);
 
 void drvChargeDisable(void);
 
-uint16_t drvChargerGetBatteryVoltage();
+uint16_t drvChargerGetVbatRT();
 
 #ifdef __cplusplus
 }

@@ -626,8 +626,8 @@ struct _ParamDescripTable_t PDT[] =
     {2,   "A0019510160089",          setSerialNum,               getSerialNum },           /* 序列号 */
     {3,   "000",                     setManufacturer,            getManufacturer},         /* 生产厂家 */
     {4,   "1.6",                     setProtocolVer,             getProtocolVer},          /* 协议版本 */
-    {5,   "5.0.0.0",                 setSoftwareVer,             getSoftwareVer},          /* 固件版本 */
-    {6,   "5.0.0.0",                 setHardwareVer,             getHardwareVer},          /* 硬件版本 */
+    {5,   "6.0.0.0",                 setSoftwareVer,             getSoftwareVer},          /* 固件版本 */
+    {6,   "6.0.0.0",                 setHardwareVer,             getHardwareVer},          /* 硬件版本 */
     {7,   "0000-00-00 00:00:00",     setFactoryTime,             getFactoryTime},          /* 出厂时间 */
     //业务属性
     {8,   "A5",                      setApplication_Agreement,   getApplication_Agreement},/* 应用协议 */

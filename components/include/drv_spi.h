@@ -80,6 +80,9 @@ typedef enum
     SPI_CS0_CTRL,
     SPI_CS1_CTRL,
     SPI_CS2_CTRL,
+    #ifdef CONFIG_FIBOCOM_BASE
+	SPI_GPIO_CS_CTRL,
+	#endif
 } drvSpiPinCtrl;
 
 typedef enum
@@ -134,6 +137,7 @@ typedef struct
 	bool gpio_csEn;
 	uint8_t gpio_pinId;
 	drvSpiCsPol gpio_cs_polarity;
+	bool gpio_cs_forceEN;
 	#endif
 } drvSpiConfig_t;
 

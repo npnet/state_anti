@@ -1,5 +1,4 @@
 #include "fibo_opencpu.h"
-// #include "cs_types.h"
 #include "eybond_modbus_tcp_protocol.h"
 #include "struct_type.h"
 #include "data_collector_parameter_table.h"
@@ -7,40 +6,21 @@
 #include "elog.h"
 #include "string.h"
 #include "uart_operate.h"
-// #include "cmiot_common.h"
-// #include "net_task.h"
-// #include "struct_type.h"
-// #include "data_collector_parameter_table.h"
-// #include "cmiot_uart.h"
-// #include "serial_drive.h"
-// #include "cmiot_file.h"
-// #include "modbus_crc.h"
-// #include "modbus_md5.h"
-// #include "md5_test.h"
-// #include <stdlib.h>
-// #include "cmiot_time.h"
-// #include "cmiot_update.h"
-// #include "parameter_number_and_value.h"
-// #include "struct_type.h"
-// #include "cmiot_basic.h"
-// #include "uart_configuration.h"
-// #include "cmiot_msg.h"
-// #include "cmiot_timer.h"
-// #include "stdlib.h"
-// #include "cmiot_gpio.h"
-// #include "cmiot_buildtime.h"
+#include "net_task.h"
+#include "modbus_crc.h"
+#include "modbus_md5.h"
+#include "md5_test.h"
 #include "big_little_endian_swap.h"
-// #include "xmodem_server.h"
-// #include "data_block_burning_record_table.h"
-// #include "hextostr.h"
-// #include "gpio_operate.h"
-// #include "run_log.h"
+#include "xmodem_server.h"
+#include "data_block_burning_record_table.h"
+#include "hextostr.h"
+#include "gpio_operate.h"
+#include "run_log.h"
 
 // extern char g_compile_date[]; 
 // extern char g_compile_time[]; 
 
-// extern int g_device_update_flag;
- int g_device_update_flag = 0; //后续删除
+extern int g_device_update_flag;
 // // extern int g_para_save_flag;
 
 // #ifndef SEEK_SET
@@ -56,8 +36,8 @@
 // **----------------------------------------------------------------------------*/
 
 extern int      number_of_array_elements;
-// extern char     uart1_recv_data[UART_BUFFER_SIZE];
-// extern uint16_t uart1_recv_len;
+extern char     uart1_recv_data[UART_BUFFER_SIZE];
+extern uint16_t uart1_recv_len;
 extern char     g_RecvData[2*1024];
 extern UINT16   g_RecvDataLen;
 extern UINT16   g_SendDataLen;
@@ -66,8 +46,8 @@ extern INT8 socketid;
 
 // extern int      iFd_run_log_a;
 // extern int      iFd_run_log_b;
-
 // extern UINT8    UpgradeProgress;
+ UINT8    UpgradeProgress;
 
 // static UINT32 dwOff_54_a  = 0;
 // static UINT32 dwOff_54_b  = 0;
@@ -77,26 +57,28 @@ extern INT8 socketid;
 // /*----------------------------------------------------------------------------*
 // **                             Local Vars                                     *
 // **----------------------------------------------------------------------------*/
-// static const UINT8 *g_recName =  "test.pack";                 //采集器固件文件名
-// const UINT8 *g_device_recName =  "device.bin";                //设备固件文件名
+
+//4G_L610本地烧录和远程升级不是同一个文件：本地烧录为编译生成的.pac文件、远程升级为编译生成的.img文件
+static const INT8 *g_recName =  "data_collector_firmware.img";                  //采集器固件文件名
+const INT8 *g_device_recName =  "sub_equipment_firmware.bin";       //设备固件文件名
 // //传输状态
 // //0x00:成功
 // //0x01:失败
 // //0x02:中断
-// UINT8    firmware_transmission_status= 0x00;
-// uint8_t  g_29                        = 0; //29号参数
-// uint8_t  g_34                        = 0; //34号参数
-// uint8_t  g_54                        = 0; //54号参数
+UINT8    firmware_transmission_status= 0x00;
+uint8_t  g_29                        = 0; //29号参数
+uint8_t  g_34                        = 0; //34号参数
+uint8_t  g_54                        = 0; //54号参数
 int      g_upgrade_mode_flag         = 0; //升级模式标志
-// INT32    g_iFd                       = 0; //采集器固件文件描述符
-// INT32    g_device_iFd                = 0; //设备固件文件描述符
-// UINT8    g_device_FW_type            = 0; //设备固件类型
-// UINT16   g_device_baudrate           = 0; //设备升级波特率
-// UINT8    g_device_AddressField       = 0; //设备地址
-// UINT32   g_device_firmware_real_size = 0; //设备固件实际大小
-// uint16_t g_block_size                = 0; //每个数据块长度
-// uint16_t g_block_amount              = 0; //数据区-数据块个数
-// UINT32   firmware_real_size          = 0; //固件的实际大小
+INT32    g_iFd                       = 0; //采集器固件文件描述符
+INT32    g_device_iFd                = 0; //设备固件文件描述符
+UINT8    g_device_FW_type            = 0; //设备固件类型
+UINT16   g_device_baudrate           = 0; //设备升级波特率
+UINT8    g_device_AddressField       = 0; //设备地址
+UINT32   g_device_firmware_real_size = 0; //设备固件实际大小
+uint16_t g_block_size                = 0; //每个数据块长度
+uint16_t g_block_amount              = 0; //数据区-数据块个数
+UINT32   firmware_real_size          = 0; //固件的实际大小
 
 static UINT8 HeartBeat_Package(void);               //0x01心跳包
 static UINT8 GetDAU_Param(void);                    //0x02数采器参数查询
@@ -104,17 +86,17 @@ static UINT8 SetDAU_Param(void);                    //0x03数采器参数设置
 static UINT8 Transparent_Transm(void);              //0x04完全透传
 // static UINT8 ReatTimeDataUpload(void);              //0x11设备实时数据上传   
 // static UINT8 HistoryDataUpload(void);               //0x13设备历史数据上传
-// static UINT8 TriggerDataLogUpGrade(void);           //0x21触发数采器固件升级
-// static UINT8 TriggerEquipmentUpGrade(void);         //0x22触发设备固件升级
-// static UINT8 ReadDeviceUpdateProgess(void);         //0x23查询设备的固件升级进度
-// static UINT8 CancelDeviceUpdate(void);              //0x24取消设备升级                 
-// static UINT8 GetFirmWareInformation(void);          //0x25获取固件信息             
-// static UINT8 SendFirmWareDataBlock(void);           //0x26发送固件数据块     
-// static UINT8 QueryFWBlockToReceiveInform(void);     //0x27查询固件数据块接收信息     
-// static UINT8 Verify_FirmWare(void);                 //0x28校验固件写入情况               
-// static UINT8 ExitFileTransferState(void);           //0x29退出文件传输状态
-// static INT32 MD5Verify_Func (UINT8 bHash[], UINT32 Verify_Len, UINT32 DataBlock_Len);
-// static INT32 device_MD5Verify_Func (UINT8 bHash[], UINT32 Verify_Len, UINT32 DataBlock_Len);
+static UINT8 TriggerDataLogUpGrade(void);           //0x21触发数采器固件升级
+static UINT8 TriggerEquipmentUpGrade(void);         //0x22触发设备固件升级
+static UINT8 ReadDeviceUpdateProgess(void);         //0x23查询设备的固件升级进度
+static UINT8 CancelDeviceUpdate(void);              //0x24取消设备升级                 
+static UINT8 GetFirmWareInformation(void);          //0x25获取固件信息             
+static UINT8 SendFirmWareDataBlock(void);           //0x26发送固件数据块     
+static UINT8 QueryFWBlockToReceiveInform(void);     //0x27查询固件数据块接收信息     
+static UINT8 Verify_FirmWare(void);                 //0x28校验固件写入情况               
+static UINT8 ExitFileTransferState(void);           //0x29退出文件传输状态
+static INT32 MD5Verify_Func (UINT8 bHash[], UINT32 Verify_Len, UINT32 DataBlock_Len);
+static INT32 device_MD5Verify_Func (UINT8 bHash[], UINT32 Verify_Len, UINT32 DataBlock_Len);
 static void  correction_time(void);                 //校时
 
 BOOL  data_frame_legal_checking(UINT8 a[])             //数据帧合法性检查
@@ -129,18 +111,6 @@ BOOL  data_frame_legal_checking(UINT8 a[])             //数据帧合法性检�
         return FALSE;
     }
 }
-
-// // static void flag_auto_increment(void)
-// // {
-// //     UINT16  len   = 64;                                //长度
-// //     char buf[64]  = "0";
-// //     PDT[0].rFunc(&PDT[0],buf, &len);
-// //     uint32 number = atoi(buf)+1;
-// //     cm_itoa(number,buf,10);
-// //     log_d("\r\nnumber+1 is %d\r\n",number);
-// //     memset((&PDT[0])->a, 0, sizeof((&PDT[0])->a));
-// //     PDT[0].wFunc(&PDT[0],buf, &len); 
-// // }
 
 void receiving_processing(UINT8 function_code)
 {
@@ -164,104 +134,110 @@ void receiving_processing(UINT8 function_code)
         // case 0x13:                                  //设备历史数据上传
         //     HistoryDataUpload();                        
         //     break; 
-		// case 0x21:                                  //触发数采器固件升级
-        //     g_upgrade_mode_flag = 0;       
-		// 	TriggerDataLogUpGrade();
-		// 	break;
-		// case 0x22:									//触发设备固件升级
-        //     g_upgrade_mode_flag = 0;      	
-		//     TriggerEquipmentUpGrade();
-		// 	break;
-		// case 0x23:									//查询设备的固件升级进度
-        //     if(2 == g_upgrade_mode_flag)
-        //     {
-        //         ReadDeviceUpdateProgess();
-        //     }
-        //     if(100 == UpgradeProgress)
-        //     {
-        //         cm_file_close(g_device_iFd);
-        //         cm_file_delete(g_device_recName);
-        //         cm_file_check(g_device_recName);
-        //         g_upgrade_mode_flag = 0;                            //升级模式标志
-        //         UpgradeProgress = 0;
-        //         g_device_update_flag = 0;
-        //     }
-		// 	break;
-        // case 0x24:                                  //取消设备升级
-        //     if(2 == g_upgrade_mode_flag)
-        //     {
-        //         CancelDeviceUpdate();                       
-        //     }
-        //     break;
-        // case 0x25:                                  //获取固件信息
-        //     GetFirmWareInformation();                   
-        //     break;
-        // case 0x26:                                  //发送固件数据块
-        //     if(0 != g_upgrade_mode_flag)
-        //     {
-        //         SendFirmWareDataBlock();                    
-        //     }
-        //     break; 
-        // case 0x27:                                  //查询固件数据块接收信息
-        //     if(0 != g_upgrade_mode_flag)
-        //     {
-        //         QueryFWBlockToReceiveInform();              
-        //     }
-        //     break;
-        // case 0x28:                                  //校验固件写入情况
-        //     if(0 != g_upgrade_mode_flag)
-        //     {
-        //         Verify_FirmWare();                          
-        //     }
-        //     break;
-        // case 0x29:                                  //退出文件传输状态
-        //     if(0 != g_upgrade_mode_flag)
-        //     {
-        //         ExitFileTransferState();                    
-        //     }
-		// 	socket_send(g_s32socketid);
-		// 	memset(g_RecvData, 0, sizeof(g_RecvData));		//接收清零
-        //     g_RecvDataLen = 0;
-        //     //释放内存
-        //     data_block_burning_record_table_destroy();
-        //     if(0x00 == firmware_transmission_status)//成功
-        //     {
-        //         log_d("\r\nFile transfer completed\r\n"); 
-                
-        //         if(1 == g_upgrade_mode_flag)//采集器升级状态
-        //         {
-        //             //fota升级:数据写入完成后调用，完成fota升级数据下载（校验完整性	成功后重启进行升级）
-        //             if(TRUE == cm_fotaupgrade_finish())
-        //             {  
-        //                 log_d("\r\ncm_fotaupgrade_finish TRUE\r\n");
-        //                 cm_file_close(g_iFd);
-        //                 cm_file_delete(g_recName);
-        //                 cm_file_check(g_recName);
-        //                 g_upgrade_mode_flag = 0;                            //升级模式标志
-                    
-        //                 cm_sysrestart();									//重启系统
-        //             }
-        //             else
-        //             {
-        //                 log_d("\r\ncm_fotaupgrade_finish FALSE\r\n");
-        //             }  
-        //         }
+		case 0x21:                                  //触发数采器固件升级
+            g_upgrade_mode_flag = 0;       
+			TriggerDataLogUpGrade();
+			break;
+		case 0x22:									//触发设备固件升级
+            g_upgrade_mode_flag = 0;      	
+		    TriggerEquipmentUpGrade();
+			break;
+		case 0x23:									//查询设备的固件升级进度
+            if(2 == g_upgrade_mode_flag)
+            {
+                ReadDeviceUpdateProgess();
+            }
+            if(100 == UpgradeProgress)
+            {
+                fibo_file_close(g_device_iFd);
+                fibo_file_delete(g_device_recName);
+                fibo_file_exist(g_device_recName);
+                g_upgrade_mode_flag = 0;                            //升级模式标志
+                UpgradeProgress = 0;
+                g_device_update_flag = 0;
+            }
+			break;
+        case 0x24:                                  //取消设备升级
+            if(2 == g_upgrade_mode_flag)
+            {
+                CancelDeviceUpdate();                       
+            }
+            break;
+        case 0x25:                                  //获取固件信息
+            GetFirmWareInformation();                   
+            break;
+        case 0x26:                                  //发送固件数据块
+            if(0 != g_upgrade_mode_flag)
+            {
+                SendFirmWareDataBlock();                    
+            }
+            break; 
+        case 0x27:                                  //查询固件数据块接收信息
+            if(0 != g_upgrade_mode_flag)
+            {
+                QueryFWBlockToReceiveInform();              
+            }
+            break;
+        case 0x28:                                  //校验固件写入情况
+            if(0 != g_upgrade_mode_flag)
+            {
+                Verify_FirmWare();                          
+            }
+            break;
+        case 0x29:                                  //退出文件传输状态
+            log_d("\r\ng_upgrade_mode_flag is %d\r\n",g_upgrade_mode_flag); 
+            if(0 != g_upgrade_mode_flag)
+            {
+                ExitFileTransferState();                    
+            }
+            memset(g_RecvData, 0, sizeof(g_RecvData));		//接收buff清零
+            g_RecvDataLen = 0;								//接收长度清零
+            fibo_sock_send(socketid, (UINT8 *)g_SendData, g_SendDataLen);
 
-        //         if(2 == g_upgrade_mode_flag)//设备升级状态
-        //         {
-        //             g_device_update_flag = 1;
-        //             //DeviceUpdateTask();//Xmodem-1k                         //升级模式标志
-        //         }
-        //     }
-        //     if(0x01 == firmware_transmission_status)//失败
-        //     {
-        //         log_d("\r\nFile transfer failure (such as final file MD5 verification failure)\r\n");
-        //     }
-        //     if(0x02 == firmware_transmission_status)//中断
-        //     {
-        //         log_d("\r\nUser canceled file transfer\r\n");
-        //     }
-        //     break; 
+            //释放内存
+            data_block_burning_record_table_destroy();
+            if(0x00 == firmware_transmission_status)//成功
+            {
+                log_d("\r\nFile transfer completed\r\n"); 
+                
+                if(1 == g_upgrade_mode_flag)//采集器升级状态
+                {
+                    log_d("\r\n1 == g_upgrade_mode_flag\r\n"); 
+                    char *data = NULL;
+                    data = fibo_malloc(firmware_real_size);
+                    memset(data, 0, firmware_real_size);
+                    g_iFd = fibo_file_open((INT8*)g_recName, FS_O_RDONLY);
+                    fibo_file_seek(g_iFd, 0, 0);
+                    fibo_file_read(g_iFd,(UINT8 *)data,firmware_real_size); 
+                    fibo_file_close(g_iFd);
+                    if(0 == fibo_app_check((INT8*)data, firmware_real_size))
+                    {
+                        INT32 app_ota_ret = fibo_ota_handle((INT8*)data, firmware_real_size);
+                        log_d("\r\napp ota_ret is %d\r\n",app_ota_ret); 
+                    }
+                    else
+                    {
+                        INT32 sdk_ota_ret = fibo_firmware_handle((INT8*)data, firmware_real_size);
+                        log_d("\r\nsdk ota_ret is %d\r\n",sdk_ota_ret); 
+                    }
+                    fibo_free(data);
+                }
+
+                if(2 == g_upgrade_mode_flag)//设备升级状态
+                {
+                    g_device_update_flag = 1;
+                    //DeviceUpdateTask();//Xmodem-1k                         //升级模式标志
+                }
+            }
+            if(0x01 == firmware_transmission_status)//失败
+            {
+                log_d("\r\nFile transfer failure (such as final file MD5 verification failure)\r\n");
+            }
+            if(0x02 == firmware_transmission_status)//中断
+            {
+                log_d("\r\nUser canceled file transfer\r\n");
+            }
+            break; 
 		default:            
             break;
 	}
@@ -404,15 +380,15 @@ static UINT8 GetDAU_Param(void)                     //0x02数采器参数查询
     UINT8 parameter_number_n    = swap_endian(ADU->MBAP.Datalen)-2; //参数编号总数
 
     char *buf  = NULL;
-    UINT16 len = 64;   
-    // uint8_t CSQ;  
-    // char CSQ_char[3]={0};                                         //长度
-    
-    // uint32_t CCID_len[1] ={21}; 
-    // char     CCID[21]    ={0};
+    UINT16 len = 64;
 
-    // uint8_t  IMEI_len[1] ={16};
-    // char     IMEI[16]    ={0};
+    INT32 CSQ;  
+    INT32 ber;  
+    char CSQ_char[3]={0};                                         //长度
+    
+    char     CCID[21]    ={0};
+
+    char     IMEI[16]    ={0};
 
     // uint8_t  device_online           = 0;
     // char     device_online_char[2]   = {0};
@@ -510,27 +486,27 @@ static UINT8 GetDAU_Param(void)                     //0x02数采器参数查询
                 //     }
                 // }
 
-                // if(55 == res->paramCode)//信号强度CSQ
-                // {
-                //     CSQ = cm_get_signalLevel();
-                //     cm_itoa(CSQ,CSQ_char,10);
-                //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                //     PDT[j].wFunc(&PDT[j],CSQ_char, &len);
-                // }
+                if(55 == res->paramCode)//信号强度CSQ
+                {
+                    fibo_get_csq(&CSQ,&ber);
+                    itoa(CSQ,CSQ_char,10);
+                    memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+                    PDT[j].wFunc(&PDT[j],CSQ_char, &len);
+                }
 
-                // if(56 == res->paramCode)//通信卡CCID
-                // {
-                //     cm_get_iccid((uint8_t *)CCID,(uint32_t *)CCID_len);
-                //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                //     PDT[j].wFunc(&PDT[j],CCID, &len);
-                // }
+                if(56 == res->paramCode)//通信卡CCID
+                {
+                    fibo_get_ccid((uint8_t *)CCID);
+                    memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+                    PDT[j].wFunc(&PDT[j],CCID, &len);
+                }
 
-                // if(58 == res->paramCode)//CPUID IMEI
-                // {
-                //     cm_get_imei((uint8_t *)IMEI,(uint32_t *)IMEI_len);
-                //     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-                //     PDT[j].wFunc(&PDT[j],IMEI, &len);
-                // }
+                if(58 == res->paramCode)//CPUID IMEI
+                {
+                    fibo_get_imei((UINT8 *)IMEI,0);
+                    memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+                    PDT[j].wFunc(&PDT[j],IMEI, &len);
+                }
                 
                 buf = fibo_malloc(sizeof(char)*64);
                 memset(buf, 0, sizeof(char)*64);
@@ -643,24 +619,24 @@ static UINT8 SetDAU_Param(void)                     //0x03数采器参数设置
             //         }
             //     }
 
-            //     if(29 == res->paramCode)
-            //     {
-            //         g_29 = atoi(ADU->param);
-            //         log_d("\r\ng_29：%d\r\n",g_29);
-            //     }
+                if(29 == res->paramCode)
+                {
+                    g_29 = atoi((char *)ADU->param);
+                    log_d("\r\ng_29：%d\r\n",g_29);
+                }
 
                 if((29 != res->paramCode)&&(54 != res->paramCode))
                 {
                     log_d("\r\nADU->param：%s\r\n",ADU->param);
                     memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
                     PDT[j].wFunc(&PDT[j],ADU->param, &len);
-                    // if(34 == res->paramCode)//串口通讯速率
-                    // {
-                    //     g_34 = 1;
-                    // }
+                    if(34 == res->paramCode)//串口通讯速率
+                    {
+                        g_34 = 1;
+                    }
                 }
                 
-            //     parameter_check();//保存参数
+                parameter_check();//保存参数
                 break;
             } 
         } 
@@ -695,21 +671,14 @@ static UINT8 Transparent_Transm(void)               //0x04完全透传命令
     #pragma pack(pop)                               //恢复对齐状态
   
     ADU_t   *ADU = (ADU_t *)g_RecvData;   
-                                                                    //透传发送
+                                                                        //透传发送
     int write_len = swap_endian(ADU->MBAP.Datalen)-2;
     char* serial_write_buffer = fibo_malloc(sizeof(char)*write_len);
     memcpy(serial_write_buffer,(char*)&ADU->Transparent,write_len);
-
-    memset(uart1_recv_data, 0, sizeof(uart1_recv_data));              //接收清零
+    memset(uart1_recv_data, 0, sizeof(uart1_recv_data));                //接收清零
 	uart1_recv_len = 0;
-
-
     uart_write(UART1, (UINT8 *)serial_write_buffer, write_len);
-    // log_d("\r\nserial_write_buffer:%s\r\n",serial_write_buffer);
-    fibo_free(serial_write_buffer);
     fibo_taskSleep(1500);
-    // log_d("\r\nuart1_callback recv_len:%d\r\n",uart1_recv_len);
-                                                                    //透传接收
     res_ADU_t 	*res 	    =   (res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
     res->MBAP.msgNum	    =	ADU->MBAP.msgNum;               //通讯编号
     res->MBAP.deviceCode	=	swap_endian(0x0103);            //设备编码
@@ -718,22 +687,17 @@ static UINT8 Transparent_Transm(void)               //0x04完全透传命令
     memcpy((char*)res->Transparent,uart1_recv_data,uart1_recv_len);
     res->MBAP.Datalen		=	swap_endian(uart1_recv_len + 2); //数据长度
     g_SendDataLen= 6 +swap_endian(res->MBAP.Datalen);
-    // log_d("\r\n%s:g_SendDataLen:%d\r\n", __func__,g_SendDataLen);
     memcpy(g_SendData,(char*)res,g_SendDataLen); 
-    // log_d("\r\n%s:memcpy ok\r\n", __func__);
     fibo_free(res);
-
     if(uart1_recv_len > 0)
     {
-        // com_lamp_on();
-        log_d("\r\ncom_lamp_on\r\n");
+        com_lamp_on();
     }
     else
     {
-        // com_lamp_off();
-        log_d("\r\ncom_lamp_off\r\n");
+        com_lamp_off();
     }
-   
+    fibo_free(serial_write_buffer);
     return 0;
 }
 
@@ -817,645 +781,621 @@ static UINT8 Transparent_Transm(void)               //0x04完全透传命令
 //     return 0;
 // }
 
-// static UINT8 TriggerDataLogUpGrade(void)            //0x21触发数采器固件升级
-// {
-//     #pragma pack(push)                              //保存对齐状态
-//     #pragma pack(1)                                 //设定为 1 字节对齐
-//     typedef struct 
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT16              block;                  //数据区-数据块个数
-//         UINT16              block_size;             //数据区-每个数据块长度       
-//     }ADU_t;                                         //服务器发送的数据格式
-//     typedef struct 
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT8               respondCode;            //响应码
-//     }res_ADU_t;                                     //数采器响应的数据格式
-//     #pragma pack(pop)                               //恢复对齐状态
-//     ADU_t     *ADU     = (ADU_t *)g_RecvData;
+static UINT8 TriggerDataLogUpGrade(void)            //0x21触发数采器固件升级
+{
+    #pragma pack(push)                              //保存对齐状态
+    #pragma pack(1)                                 //设定为 1 字节对齐
+    typedef struct 
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT16              block;                  //数据区-数据块个数
+        UINT16              block_size;             //数据区-每个数据块长度       
+    }ADU_t;                                         //服务器发送的数据格式
+    typedef struct 
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT8               respondCode;            //响应码
+    }res_ADU_t;                                     //数采器响应的数据格式
+    #pragma pack(pop)                               //恢复对齐状态
+    ADU_t     *ADU     = (ADU_t *)g_RecvData;
 
-//                                                         //固件大小
-//     UINT32 firmware_size = (swap_endian(ADU->block))*(swap_endian(ADU->block_size));
-//     log_d("\r\nfirmware_size:%d\r\n",firmware_size);
-//                                                         //数据块个数
-//     log_d("\r\nswap_endian:ADU->block：%d\r\n",swap_endian(ADU->block));
-//                                                         //每个数据块长度
-//     log_d("\r\nswap_endian:ADU->block_size：%d\r\n",swap_endian(ADU->block_size));
-//                                                     //数据块烧写记录表大小确认
-//     data_block_burning_record_table_init(ADU->block);                                         
-//     //文件系统使用情况
-//     uint32_t file_free_size  = 0;                       //文件系统可用大小
-//     uint32_t file_total_size = 0;                       //文件系统总大小
-//     cm_file_get_filesystem_size(&file_free_size, &file_total_size);
-//     log_d("\r\nfile_free_size：%d\r\n",file_free_size);
-//     log_d("\r\nfile_total_size：%d\r\n",file_total_size);
+                                                        //固件大小
+    UINT32 firmware_size = (swap_endian(ADU->block))*(swap_endian(ADU->block_size));
+    log_d("\r\nfirmware_size:%d\r\n",firmware_size);
+                                                        //数据块个数
+    log_d("\r\nswap_endian:ADU->block：%d\r\n",swap_endian(ADU->block));
+                                                        //每个数据块长度
+    log_d("\r\nswap_endian:ADU->block_size：%d\r\n",swap_endian(ADU->block_size));
+                                                    //数据块烧写记录表大小确认
+    data_block_burning_record_table_init(ADU->block);                                         
+    //文件系统使用情况
+    uint32_t file_free_size  = 0;                       //文件系统可用大小
 
-//     res_ADU_t 	*res        =(res_ADU_t *)cm_malloc(sizeof(res_ADU_t));
+    file_free_size = fibo_file_getFreeSize();
+    log_d("\r\nfile_free_size：%d\r\n",file_free_size);
 
-//     if(file_free_size < firmware_size)                  //文件系统可用空间 小于 固件大小
-//     {
-//         log_clean();
-//         cm_file_get_filesystem_size(&file_free_size, &file_total_size);
-//         if(file_free_size < firmware_size)
-//         {
-//             //0x02 错误 数据块个数和每个数据块的长度相乘过大，无对应缓冲区存储。
-//             //特殊地，当请求命令中的“数据块个数”为 0x0000 时，表示无完整的固件。
-//             res->respondCode = 0x02;                        //响应码-错误
-//         }
-//     }
+    res_ADU_t 	*res        =(res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
 
-//     if(0 == g_upgrade_mode_flag)
-//     {
-//         g_upgrade_mode_flag = 1;                        //进入升级模式
-//         //0x00 成功 数采器已经转入升级模式，做好了升级准备，即将接收来自服务器的文件传输请求。
-//         res->respondCode = 0x00;                        //响应码-成功
-//         cm_file_close(g_iFd);
-//         cm_file_delete(g_recName);
-//         cm_file_check(g_recName);
-//         g_iFd = cm_file_open(g_recName, O_RDWR|O_CREAT);//打开文件  创建文件														//打开文件
-//         if (g_iFd < 0)
-//         {
-//             log_d("\r\nCreate test.txt failed\r\n");
-//         }
+    if(file_free_size < firmware_size)                  //文件系统可用空间 小于 固件大小
+    {
+        log_clean();
+        file_free_size = fibo_file_getFreeSize();
+        if(file_free_size < firmware_size)
+        {
+            //0x02 错误 数据块个数和每个数据块的长度相乘过大，无对应缓冲区存储。
+            //特殊地，当请求命令中的“数据块个数”为 0x0000 时，表示无完整的固件。
+            res->respondCode = 0x02;                        //响应码-错误
+        }
+    }
 
-//         cm_file_close(g_iFd);                           //关闭文件
-//     }
-//     else
-//     {
-//         //0x01 失败 数采器有更紧急的任务要完成（如正在给设备更新固件），暂不接受升级任务。
-//         res->respondCode = 0x01;//响应码-失败
-//     }
+    if(0 == g_upgrade_mode_flag)
+    {
+        g_upgrade_mode_flag = 1;                        //进入升级模式
+        //0x00 成功 数采器已经转入升级模式，做好了升级准备，即将接收来自服务器的文件传输请求。
+        res->respondCode = 0x00;                        //响应码-成功
+        fibo_file_close(g_iFd);
+        fibo_file_delete(g_recName);
+        fibo_file_exist(g_recName);
+        g_iFd = fibo_file_open(g_recName, FS_O_RDWR|FS_O_CREAT);//打开文件  创建文件														//打开文件
+        if (g_iFd < 0)
+        {
+            log_d("\r\nCreate test.txt failed\r\n");
+        }
 
-//     g_block_amount          =   swap_endian(ADU->block);             //数据区-数据块个数
-//     g_block_size            =   swap_endian(ADU->block_size);        //每个数据块长度   
+        fibo_file_close(g_iFd);                           //关闭文件
+    }
+    else
+    {
+        //0x01 失败 数采器有更紧急的任务要完成（如正在给设备更新固件），暂不接受升级任务。
+        res->respondCode = 0x01;//响应码-失败
+    }
 
-//     res->MBAP.msgNum        =   ADU->MBAP.msgNum;       //通讯编号
-//     res->MBAP.deviceCode	=	swap_endian(0x0103);	//设备编码
-//     res->MBAP.Datalen       =   swap_endian(0x0003);    //数据长度
-// 	res->MBAP.deviceAddr	=	ADU->MBAP.deviceAddr;	//设备地址
-// 	res->PDU_Func			=	ADU->PDU_Func;			//功能码
+    g_block_amount          =   swap_endian(ADU->block);             //数据区-数据块个数
+    g_block_size            =   swap_endian(ADU->block_size);        //每个数据块长度   
 
-//     g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
-//     log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
-//     memcpy(g_SendData,(char*)res,g_SendDataLen); 
-//     cm_free(res);
+    res->MBAP.msgNum        =   ADU->MBAP.msgNum;       //通讯编号
+    res->MBAP.deviceCode	=	swap_endian(0x0103);	//设备编码
+    res->MBAP.Datalen       =   swap_endian(0x0003);    //数据长度
+	res->MBAP.deviceAddr	=	ADU->MBAP.deviceAddr;	//设备地址
+	res->PDU_Func			=	ADU->PDU_Func;			//功能码
 
-//     //fota升级初始化
-//     if(TRUE == cm_fotaupgrade_init())
-//     {
-//         log_d("\r\ncm_fotaupgrade_init TRUE\r\n");
-//     }
-//     else
-//     {
-//         log_d("\r\ncm_fotaupgrade_init FALSE\r\n");
-//     }
+    g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
+    log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
+    memcpy(g_SendData,(char*)res,g_SendDataLen); 
+    fibo_free(res);
 
-//     return 0;
-// }
+    return 0;
+}
 
-// static UINT8 TriggerEquipmentUpGrade(void)          //0x22触发设备固件升级
-// {
-//     #pragma pack(push)                              //保存对齐状态
-//     #pragma pack(1)                                 //设定为 1 字节对齐
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT8               FW_type;                //数据区-固件类型
-//         UINT16              baudrate;               //数据区-升级波特率
-//         UINT16              block;                  //数据区-数据块个数
-//         UINT16              block_size;             //数据区-每个数据块长度
-//     } ADU_t;                                        //服务器发送的数据格式
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT8               respondCode;            //响应码
-//     } res_ADU_t;                                    //数采器响应的数据格式
-//     #pragma pack(pop)                               //恢复对齐状态
+static UINT8 TriggerEquipmentUpGrade(void)          //0x22触发设备固件升级
+{
+    #pragma pack(push)                              //保存对齐状态
+    #pragma pack(1)                                 //设定为 1 字节对齐
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT8               FW_type;                //数据区-固件类型
+        UINT16              baudrate;               //数据区-升级波特率
+        UINT16              block;                  //数据区-数据块个数
+        UINT16              block_size;             //数据区-每个数据块长度
+    } ADU_t;                                        //服务器发送的数据格式
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT8               respondCode;            //响应码
+    } res_ADU_t;                                    //数采器响应的数据格式
+    #pragma pack(pop)                               //恢复对齐状态
 
-//     ADU_t       *ADU        = (ADU_t *)g_RecvData;
-//                                                        //设备固件大小
-//     UINT32 firmware_size = (swap_endian(ADU->block))*(swap_endian(ADU->block_size));
-//     log_d("\r\nfirmware_size:%d\r\n",firmware_size);
+    ADU_t       *ADU        = (ADU_t *)g_RecvData;
+                                                       //设备固件大小
+    UINT32 firmware_size = (swap_endian(ADU->block))*(swap_endian(ADU->block_size));
+    log_d("\r\nfirmware_size:%d\r\n",firmware_size);
 
-//                                                         //数据块个数
-//     log_d("\r\nswap_endian:ADU->block：%d\r\n",swap_endian(ADU->block));
+                                                        //数据块个数
+    log_d("\r\nswap_endian:ADU->block：%d\r\n",swap_endian(ADU->block));
 
-//                                                         //每个数据块长度
-//     log_d("\r\nswap_endian:ADU->block_size：%d\r\n",swap_endian(ADU->block_size));
+                                                        //每个数据块长度
+    log_d("\r\nswap_endian:ADU->block_size：%d\r\n",swap_endian(ADU->block_size));
 
-//                                                     //数据块烧写记录表大小确认
-//     data_block_burning_record_table_init(ADU->block);
+                                                    //数据块烧写记录表大小确认
+    data_block_burning_record_table_init(ADU->block);
   
-//     //特殊地，当请求命令中的“数据块个数”为 0x0000 时，表示将立即切换到 BOOT 区进行升级操作。
-//     if(0x0000 == ADU->block)
-//     {
-//         log_d("\r\nSwitch to the BOOT area immediately to upgrade.\r\n");
-//     }
+    //特殊地，当请求命令中的“数据块个数”为 0x0000 时，表示将立即切换到 BOOT 区进行升级操作。
+    if(0x0000 == ADU->block)
+    {
+        log_d("\r\nSwitch to the BOOT area immediately to upgrade.\r\n");
+    }
 
-//     //文件系统使用情况
-//     uint32_t file_free_size  = 0;                       //文件系统可用大小
-//     uint32_t file_total_size = 0;                       //文件系统总大小
-//     cm_file_get_filesystem_size(&file_free_size, &file_total_size);
-//     log_d("\r\nfile_free_size：%d\r\n",file_free_size);
-//     log_d("\r\nfile_total_size：%d\r\n",file_total_size);
+    //文件系统使用情况
+    uint32_t file_free_size  = 0;                       //文件系统可用大小
+    file_free_size = fibo_file_getFreeSize();
+    log_d("\r\nfile_free_size：%d\r\n",file_free_size);
 
-// 	res_ADU_t 	*res        = (res_ADU_t *)cm_malloc(sizeof(res_ADU_t));
+	res_ADU_t 	*res        = (res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
 
-//     if(file_free_size < firmware_size)                  //文件系统可用空间 小于 固件大小
-//     {
-//         log_clean();
-//         cm_file_get_filesystem_size(&file_free_size, &file_total_size);
-//         if(file_free_size < firmware_size)
-//         {
-//             //0x02 错误 数据块个数和每个数据块的长度相乘过大，无对应缓冲区存储。
-//             //特殊地，当请求命令中的“数据块个数”为 0x0000 时，表示无完整的固件。
-//             res->respondCode = 0x02;                        //响应码-错误
-//         }
-//     }
+    if(file_free_size < firmware_size)                  //文件系统可用空间 小于 固件大小
+    {
+        log_clean();
+        file_free_size = fibo_file_getFreeSize();
+        if(file_free_size < firmware_size)
+        {
+            //0x02 错误 数据块个数和每个数据块的长度相乘过大，无对应缓冲区存储。
+            //特殊地，当请求命令中的“数据块个数”为 0x0000 时，表示无完整的固件。
+            res->respondCode = 0x02;                        //响应码-错误
+        }
+    }
 
-//     if(0 == g_upgrade_mode_flag)
-//     {
-//         g_upgrade_mode_flag = 2;                        //进入设备升级模式
-//         //0x00 成功 数采器已经转入升级模式，做好了升级准备，即将接收来自服务器的文件传输请求。
-//         res->respondCode = 0x00;                        //响应码-成功
-//         cm_file_close(g_device_iFd);
-//         cm_file_delete(g_device_recName);
-//         cm_file_check(g_device_recName);
-//         g_device_iFd = cm_file_open(g_device_recName, O_RDWR|O_CREAT);//打开文件														//打开文件
-//         if (g_device_iFd <= 0)
-//         {
-//             log_d("\r\nCreate device.bin failed\r\n");
-//         }
-//         cm_file_close(g_device_iFd);                           //关闭文件
-//     }
-//     else
-//     {
-//         //0x01 失败 数采器有更紧急的任务要完成（如正在给设备更新固件），暂不接受升级任务。
-//         res->respondCode = 0x01;//响应码-失败
-//     }
+    if(0 == g_upgrade_mode_flag)
+    {
+        g_upgrade_mode_flag = 2;                        //进入设备升级模式
+        //0x00 成功 数采器已经转入升级模式，做好了升级准备，即将接收来自服务器的文件传输请求。
+        res->respondCode = 0x00;                        //响应码-成功
+        fibo_file_close(g_device_iFd);
+        fibo_file_delete(g_device_recName);
+        fibo_file_exist(g_device_recName);
+        g_device_iFd = fibo_file_open(g_device_recName, FS_O_RDWR|FS_O_CREAT);//打开文件														//打开文件
+        if (g_device_iFd <= 0)
+        {
+            log_d("\r\nCreate device.bin failed\r\n");
+        }
+        fibo_file_close(g_device_iFd);                           //关闭文件
+    }
+    else
+    {
+        //0x01 失败 数采器有更紧急的任务要完成（如正在给设备更新固件），暂不接受升级任务。
+        res->respondCode = 0x01;//响应码-失败
+    }
 
-//     g_device_FW_type        =   ADU->FW_type;           //设备固件类型
-//     // g_device_baudrate       =   ADU->baudrate;          //设备升级波特率
-//     g_device_baudrate       =   0x0000;          //设备升级波特率
+    g_device_FW_type        =   ADU->FW_type;           //设备固件类型
+    // g_device_baudrate       =   ADU->baudrate;          //设备升级波特率
+    g_device_baudrate       =   0x0000;          //设备升级波特率
 
-//     g_device_AddressField   =   ADU->MBAP.deviceAddr;	//逆变器设备地址
+    g_device_AddressField   =   ADU->MBAP.deviceAddr;	//逆变器设备地址
 
-//     g_block_amount          =   swap_endian(ADU->block);             //数据区-数据块个数
-//     g_block_size            =   swap_endian(ADU->block_size);        //每个数据块长度   
+    g_block_amount          =   swap_endian(ADU->block);             //数据区-数据块个数
+    g_block_size            =   swap_endian(ADU->block_size);        //每个数据块长度   
 
-//     res->MBAP.msgNum        =   ADU->MBAP.msgNum;       //通讯编号
-//     res->MBAP.deviceCode	=	ADU->MBAP.deviceCode;	//设备编码
-//     res->MBAP.Datalen       =   swap_endian(0x0003);    //数据长度
-// 	res->MBAP.deviceAddr	=	ADU->MBAP.deviceAddr;	//设备地址
-// 	res->PDU_Func			=	ADU->PDU_Func;			//功能码
+    res->MBAP.msgNum        =   ADU->MBAP.msgNum;       //通讯编号
+    res->MBAP.deviceCode	=	ADU->MBAP.deviceCode;	//设备编码
+    res->MBAP.Datalen       =   swap_endian(0x0003);    //数据长度
+	res->MBAP.deviceAddr	=	ADU->MBAP.deviceAddr;	//设备地址
+	res->PDU_Func			=	ADU->PDU_Func;			//功能码
 
-//     g_device_AddressField   =   ADU->MBAP.deviceAddr;	//逆变器设备地址
+    g_device_AddressField   =   ADU->MBAP.deviceAddr;	//逆变器设备地址
 
 
-//     g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
-//     log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
-//     memcpy(g_SendData,(char*)res,g_SendDataLen); 
-//     cm_free(res);
-//     return 0;
-// }
+    g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
+    log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
+    memcpy(g_SendData,(char*)res,g_SendDataLen); 
+    fibo_free(res);
+    return 0;
+}
 
-// static UINT8 ReadDeviceUpdateProgess(void)          //0x23查询设备的固件升级进度
-// {
-//     #pragma pack(push)                              //保存对齐状态
-//     #pragma pack(1)                                 //设定为 1 字节对齐
-//     typedef struct
-//     {
-//         MBAP_Type          MBAP;                    //MBAP报文头
-//         UINT8              PDU_Func;                //功能码
-//     } ADU_t;                                        //服务器发送的数据格式
-//     typedef struct
-//     {
-//         MBAP_Type          MBAP;                    //MBAP报文头
-//         UINT8              PDU_Func;                //功能码
-//         UINT8              Progress;                //数据区-进度值
-//     } res_ADU_t;                                    //数采器响应的数据格式
-//     #pragma pack(pop)                               //恢复对齐状态
+static UINT8 ReadDeviceUpdateProgess(void)          //0x23查询设备的固件升级进度
+{
+    #pragma pack(push)                              //保存对齐状态
+    #pragma pack(1)                                 //设定为 1 字节对齐
+    typedef struct
+    {
+        MBAP_Type          MBAP;                    //MBAP报文头
+        UINT8              PDU_Func;                //功能码
+    } ADU_t;                                        //服务器发送的数据格式
+    typedef struct
+    {
+        MBAP_Type          MBAP;                    //MBAP报文头
+        UINT8              PDU_Func;                //功能码
+        UINT8              Progress;                //数据区-进度值
+    } res_ADU_t;                                    //数采器响应的数据格式
+    #pragma pack(pop)                               //恢复对齐状态
 
-//     ADU_t       *ADU        =   (ADU_t *)g_RecvData;
-// 	res_ADU_t 	*res        =   (res_ADU_t *)cm_malloc(sizeof(res_ADU_t));
+    ADU_t       *ADU        =   (ADU_t *)g_RecvData;
+	res_ADU_t 	*res        =   (res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
 
-//     res->MBAP.msgNum        =   ADU->MBAP.msgNum;       //通讯编号
-//     res->MBAP.deviceCode	=   swap_endian(0x0103);    //设备编码
-//     res->MBAP.Datalen       =   swap_endian(0x0003);    //数据长度
-// 	res->MBAP.deviceAddr	=   ADU->MBAP.deviceAddr;	//设备地址
-// 	res->PDU_Func			=   ADU->PDU_Func;			//功能码
-//     res->Progress           =   UpgradeProgress;        //进度值
+    res->MBAP.msgNum        =   ADU->MBAP.msgNum;       //通讯编号
+    res->MBAP.deviceCode	=   swap_endian(0x0103);    //设备编码
+    res->MBAP.Datalen       =   swap_endian(0x0003);    //数据长度
+	res->MBAP.deviceAddr	=   ADU->MBAP.deviceAddr;	//设备地址
+	res->PDU_Func			=   ADU->PDU_Func;			//功能码
+    res->Progress           =   UpgradeProgress;        //进度值
 
 
     
-//     g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
-//     log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
-//     memcpy(g_SendData,(char*)res,g_SendDataLen); 
-//     cm_free(res);
-//     return 0;
-// }
+    g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
+    log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
+    memcpy(g_SendData,(char*)res,g_SendDataLen); 
+    fibo_free(res);
+    return 0;
+}
 
-// static UINT8 CancelDeviceUpdate(void)               //0x24取消设备升级                 
-// {
-//     #pragma pack(push)                              //保存对齐状态 
-//     #pragma pack(1)                                 //设定为 1 字节对齐
-//     typedef struct
-//     {
-//         MBAP_Type          MBAP;                    //MBAP报文头
-//         UINT8              PDU_Func;                //功能码
-//         UINT8              Data;                    //数据区-强制中断标识
-//     } ADU_t;                                        //服务器发送的数据格式
-//     typedef struct
-//     {
-//         MBAP_Type          MBAP;                    //MBAP报文头
-//         UINT8              PDU_Func;                //功能码
-//         UINT8              respondCode;             //响应码
-//     } res_ADU_t;                                    //数采器响应的数据格式
-//     #pragma pack(pop)                               //恢复对齐状态
+static UINT8 CancelDeviceUpdate(void)               //0x24取消设备升级                 
+{
+    #pragma pack(push)                              //保存对齐状态 
+    #pragma pack(1)                                 //设定为 1 字节对齐
+    typedef struct
+    {
+        MBAP_Type          MBAP;                    //MBAP报文头
+        UINT8              PDU_Func;                //功能码
+        UINT8              Data;                    //数据区-强制中断标识
+    } ADU_t;                                        //服务器发送的数据格式
+    typedef struct
+    {
+        MBAP_Type          MBAP;                    //MBAP报文头
+        UINT8              PDU_Func;                //功能码
+        UINT8              respondCode;             //响应码
+    } res_ADU_t;                                    //数采器响应的数据格式
+    #pragma pack(pop)                               //恢复对齐状态
 
-//     ADU_t       *ADU        = (ADU_t *)g_RecvData;
-// 	res_ADU_t 	*res        = (res_ADU_t *)cm_malloc(sizeof(res_ADU_t));
-//     res->MBAP.msgNum        =   ADU->MBAP.msgNum;       //通讯编号
-//     res->MBAP.deviceCode	=	swap_endian(0x0103);	//设备编码
-//     res->MBAP.Datalen       =   swap_endian(0x0003);    //数据长度
-// 	res->MBAP.deviceAddr	=	ADU->MBAP.deviceAddr;	//设备地址
-// 	res->PDU_Func			=	ADU->PDU_Func;			//功能码
-//     res->respondCode        =   0x00;                   //成功：表示数采器执行设备升级取消的指令。
+    ADU_t       *ADU        = (ADU_t *)g_RecvData;
+	res_ADU_t 	*res        = (res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
+    res->MBAP.msgNum        =   ADU->MBAP.msgNum;       //通讯编号
+    res->MBAP.deviceCode	=	swap_endian(0x0103);	//设备编码
+    res->MBAP.Datalen       =   swap_endian(0x0003);    //数据长度
+	res->MBAP.deviceAddr	=	ADU->MBAP.deviceAddr;	//设备地址
+	res->PDU_Func			=	ADU->PDU_Func;			//功能码
+    res->respondCode        =   0x00;                   //成功：表示数采器执行设备升级取消的指令。
 
-//     g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
-//     log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
-//     memcpy(g_SendData,(char*)res,g_SendDataLen); 
-//     cm_free(res);
-//     return 0;
-// }
+    g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
+    log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
+    memcpy(g_SendData,(char*)res,g_SendDataLen); 
+    fibo_free(res);
+    return 0;
+}
 
-// static UINT8 GetFirmWareInformation(void)           //0x25获取固件信息              
-// {
-//     #pragma pack(push)                              //保存对齐状态
-//     #pragma pack(1)                                 //设定为 1 字节对齐
-//     typedef struct
-//     {
-//         MBAP_Type          MBAP;                    //MBAP报文头
-//         UINT8              PDU_Func;                //功能码
-//         UINT8              FW_area;                 //数据区-固件区域
-//     } ADU_t;                                        //服务器发送的数据格式
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT8               FW_area;                //数据区-固件区域
-//         UINT8               respondCode;            //数据区-响应码
-//         UINT8               MD5[32];                //数据区-MD5值
-//     } res_ADU_t;                                    //数采器响应的数据格式
-//     #pragma pack(pop)//恢复对齐状态
+static UINT8 GetFirmWareInformation(void)           //0x25获取固件信息              
+{
+    #pragma pack(push)                              //保存对齐状态
+    #pragma pack(1)                                 //设定为 1 字节对齐
+    typedef struct
+    {
+        MBAP_Type          MBAP;                    //MBAP报文头
+        UINT8              PDU_Func;                //功能码
+        UINT8              FW_area;                 //数据区-固件区域
+    } ADU_t;                                        //服务器发送的数据格式
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT8               FW_area;                //数据区-固件区域
+        UINT8               respondCode;            //数据区-响应码
+        UINT8               MD5[32];                //数据区-MD5值
+    } res_ADU_t;                                    //数采器响应的数据格式
+    #pragma pack(pop)//恢复对齐状态
 
-//     ADU_t     *ADU       = (ADU_t *)g_RecvData;
-// 	res_ADU_t *res       = (res_ADU_t *)cm_malloc(sizeof(res_ADU_t));
-//     res->MBAP.msgNum     = ADU->MBAP.msgNum;        //通讯编号
-//     res->MBAP.deviceCode = swap_endian(0x0001);	    //设备编码
-//     res->MBAP.Datalen    = swap_endian(0x0024);     //数据长度
-// 	res->MBAP.deviceAddr = ADU->MBAP.deviceAddr;    //设备地址
-// 	res->PDU_Func	     = ADU->PDU_Func;		    //功能码
-//     res->FW_area         = ADU->FW_area;            //固件区域
+    ADU_t     *ADU       = (ADU_t *)g_RecvData;
+	res_ADU_t *res       = (res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
+    res->MBAP.msgNum     = ADU->MBAP.msgNum;        //通讯编号
+    res->MBAP.deviceCode = swap_endian(0x0001);	    //设备编码
+    res->MBAP.Datalen    = swap_endian(0x0024);     //数据长度
+	res->MBAP.deviceAddr = ADU->MBAP.deviceAddr;    //设备地址
+	res->PDU_Func	     = ADU->PDU_Func;		    //功能码
+    res->FW_area         = ADU->FW_area;            //固件区域
 
-//     //不存在 表示数采器对应区域不存在已经下载完全的固件。
-//     res->respondCode     =   0x02;      
+    //不存在 表示数采器对应区域不存在已经下载完全的固件。
+    res->respondCode     =   0x02;      
 
-//     //当响应码不为 0x00 时，响应数据中的“MD5 值”区域全部用 0x00 填充。
-//     if(0x00 != res->respondCode)
-//     {
-//         for(int i=0;i<32;i++)
-//         {
-//             res->MD5[i]=0x00;
-//         }
-//     }
+    //当响应码不为 0x00 时，响应数据中的“MD5 值”区域全部用 0x00 填充。
+    if(0x00 != res->respondCode)
+    {
+        for(int i=0;i<32;i++)
+        {
+            res->MD5[i]=0x00;
+        }
+    }
 
-//     g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
-//     log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
-//     memcpy(g_SendData,(char*)res,g_SendDataLen); 
-//     cm_free(res);
+    g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
+    log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
+    memcpy(g_SendData,(char*)res,g_SendDataLen); 
+    fibo_free(res);
 
-//     return 0;
-// }
+    return 0;
+}
 
-// static UINT8 SendFirmWareDataBlock(void)            //0x26发送固件数据块    
-// {
-//     #pragma pack(push)                              //保存对齐状态 
-//     #pragma pack(1)                                 //设定为 1 字节对齐
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT16              block_code;             //数据区-数据块编号
-//         UINT8               data[];                 //数据块内容//数据块CRC值                              
-//     } ADU_t;                                        //服务器发送的数据格式
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT16              block_code;             //数据区-数据块编号
-//         UINT8               respondCode;            //数据区-响应码
-//     } res_ADU_t;                                    //数采器响应的数据格式
-//     #pragma pack(pop)                               //恢复对齐状态
+static UINT8 SendFirmWareDataBlock(void)            //0x26发送固件数据块    
+{
+    #pragma pack(push)                              //保存对齐状态 
+    #pragma pack(1)                                 //设定为 1 字节对齐
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT16              block_code;             //数据区-数据块编号
+        UINT8               data[];                 //数据块内容//数据块CRC值                              
+    } ADU_t;                                        //服务器发送的数据格式
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT16              block_code;             //数据区-数据块编号
+        UINT8               respondCode;            //数据区-响应码
+    } res_ADU_t;                                    //数采器响应的数据格式
+    #pragma pack(pop)                               //恢复对齐状态
 
-//     ADU_t       *ADU        = (ADU_t *)g_RecvData;
-// 	res_ADU_t 	*res        = (res_ADU_t *)cm_malloc(sizeof(res_ADU_t));
+    ADU_t       *ADU        = (ADU_t *)g_RecvData;
+	res_ADU_t 	*res        = (res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
 
-//     //数采器在收到服务器的该功能码后，对“数据块内容”进行 CRC 校验，并与“数据块 CRC 值”
-//     uint8_t  *pucframe  = ADU->data ;
-//     uint16_t usdatalen  = swap_endian(ADU->MBAP.Datalen)-6;
-//     uint16_t c_checksum = crc16rtu(pucframe,usdatalen);
-//     log_d("\r\nc_checksum:%x\r\n",c_checksum); 
+    //数采器在收到服务器的该功能码后，对“数据块内容”进行 CRC 校验，并与“数据块 CRC 值”
+    uint8_t  *pucframe  = ADU->data ;
+    uint16_t usdatalen  = swap_endian(ADU->MBAP.Datalen)-6;
+    uint16_t c_checksum = crc16rtu(pucframe,usdatalen);
+    log_d("\r\nc_checksum:%x\r\n",c_checksum); 
 
-//     log_d("\r\ns_checksum_1:%x\r\n",ADU->data[usdatalen]);
-//     log_d("\r\ns_checksum_2:%x\r\n",ADU->data[usdatalen+1]);
-//     uint16_t s_checksum=(uint16_t)ADU->data[usdatalen]+((uint16_t)ADU->data[usdatalen+1]<<8);
-//     log_d("\r\ns_checksum:%x\r\n",s_checksum);
+    log_d("\r\ns_checksum_1:%x\r\n",ADU->data[usdatalen]);
+    log_d("\r\ns_checksum_2:%x\r\n",ADU->data[usdatalen+1]);
+    uint16_t s_checksum=(uint16_t)ADU->data[usdatalen]+((uint16_t)ADU->data[usdatalen+1]<<8);
+    log_d("\r\ns_checksum:%x\r\n",s_checksum);
 
-//     if(c_checksum == s_checksum)                        //校验成功
-//     {
-//         //0x00 成功 表示数采器对该数据块正确接收。
-//         res->respondCode = 0x00;                        //数据区-响应码
-//         int32_t wlen=0;
+    if(c_checksum == s_checksum)                        //校验成功
+    {
+        //0x00 成功 表示数采器对该数据块正确接收。
+        res->respondCode = 0x00;                        //数据区-响应码
+        int32_t wlen=0;
 
-//         //判断是设备固件 or 采集器固件
-//         if(1 == g_upgrade_mode_flag)//采集器固件
-//         {
-//             g_iFd = cm_file_open(g_recName, O_RDWR|O_APPEND);
-//             cm_file_write(g_iFd, ADU->data, g_block_size);   //写内容到文件
-//             log_d("\r\nADU->data：%s\r\n",ADU->data);
-//             cm_file_close(g_iFd);
-//             if(TRUE == cm_fotaupgrade_writedata(ADU->data,(uint32_t)g_block_size))
-// 			{
-//                 log_d("\r\ncm_fotaupgrade_writedata TRUE\r\n");
-//                 data_block_burning_record_table_set(ADU->block_code);
-//             }
-//             else
-//             {
-//                 log_d("\r\ncm_fotaupgrade_writedata FALSE\r\n");
-//             }   
-//         }
+        //判断是设备固件 or 采集器固件
+        if(1 == g_upgrade_mode_flag)//采集器固件
+        {
+            g_iFd = fibo_file_open(g_recName, FS_O_RDWR|FS_O_APPEND);
+            fibo_file_write(g_iFd, (UINT8 *)ADU->data, g_block_size);   //写内容到文件
+            log_d("\r\nADU->data：%s\r\n",ADU->data);
+            fibo_file_close(g_iFd); 
+        }
         
-//         if(2 == g_upgrade_mode_flag)//设备固件
-//         {
-//             g_device_iFd = cm_file_open(g_device_recName, O_RDWR|O_APPEND);
-//             wlen  = cm_file_write(g_device_iFd, ADU->data, g_block_size);   //写内容到文件
-//             log_d("\r\nADU->data：%s\r\n",ADU->data);
-//             cm_file_close(g_device_iFd);
-//         }
+        if(2 == g_upgrade_mode_flag)//设备固件
+        {
+            g_device_iFd = fibo_file_open(g_device_recName, FS_O_RDWR|FS_O_APPEND);
+            wlen  = fibo_file_write(g_device_iFd, ADU->data, g_block_size);   //写内容到文件
+            log_d("\r\nADU->data：%s\r\n",ADU->data);
+            fibo_file_close(g_device_iFd);
+        }
         
-//         if (wlen < 0)
-//         {
-//             log_d("\r\nWrite file failed\r\n"); 
-//         }
-//         else
-//         {
-//             data_block_burning_record_table_set(ADU->block_code);
-//         }
-//     }
-//     else//校验失败
-//     {
-//         //0x01 失败 表示数采器对该数据块未正确接收，要求重传。
-//         res->respondCode        =   0x01;                   //数据区-响应码
-//     }
+        if (wlen < 0)
+        {
+            log_d("\r\nWrite file failed\r\n"); 
+        }
+        else
+        {
+            data_block_burning_record_table_set(ADU->block_code);
+        }
+    }
+    else//校验失败
+    {
+        //0x01 失败 表示数采器对该数据块未正确接收，要求重传。
+        res->respondCode        =   0x01;                   //数据区-响应码
+    }
 
-//     res->MBAP.msgNum        =   ADU->MBAP.msgNum;       //通讯编号
-//     res->MBAP.deviceCode	=	swap_endian(0x0001);	//设备编码
-//     res->MBAP.Datalen       =   swap_endian(0x0005);    //数据长度
-// 	res->MBAP.deviceAddr	=	ADU->MBAP.deviceAddr;	//设备地址
-// 	res->PDU_Func			=	ADU->PDU_Func;			//功能码
-//     res->block_code         =   ADU->block_code;        //数据区-数据块编号
+    res->MBAP.msgNum        =   ADU->MBAP.msgNum;       //通讯编号
+    res->MBAP.deviceCode	=	swap_endian(0x0001);	//设备编码
+    res->MBAP.Datalen       =   swap_endian(0x0005);    //数据长度
+	res->MBAP.deviceAddr	=	ADU->MBAP.deviceAddr;	//设备地址
+	res->PDU_Func			=	ADU->PDU_Func;			//功能码
+    res->block_code         =   ADU->block_code;        //数据区-数据块编号
 
-//     g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
-//     log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
-//     memcpy(g_SendData,(char*)res,g_SendDataLen); 
-//     cm_free(res);
-//     return 0;
-// }
+    g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
+    log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
+    memcpy(g_SendData,(char*)res,g_SendDataLen); 
+    fibo_free(res);
+    return 0;
+}
 
-// static UINT8 QueryFWBlockToReceiveInform(void)      //0x27查询固件数据块接收信息      
-// {
-//     #pragma pack(push)                              //保存对齐状态 
-//     #pragma pack(1)                                 //设定为 1 字节对齐
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT16              block_amount;           //数据区-数据块个数
-//     } ADU_t;                                        //服务器发送的数据格式
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT8               state;                  //数据区-烧录状态
-//         UINT8               data[];                  //数据区-数据块烧写记录表
-//     } res_ADU_t;                                    //数采器响应的数据格式
-//     #pragma pack(pop)                               //恢复对齐状态
+static UINT8 QueryFWBlockToReceiveInform(void)      //0x27查询固件数据块接收信息      
+{
+    #pragma pack(push)                              //保存对齐状态 
+    #pragma pack(1)                                 //设定为 1 字节对齐
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT16              block_amount;           //数据区-数据块个数
+    } ADU_t;                                        //服务器发送的数据格式
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT8               state;                  //数据区-烧录状态
+        UINT8               data[];                  //数据区-数据块烧写记录表
+    } res_ADU_t;                                    //数采器响应的数据格式
+    #pragma pack(pop)                               //恢复对齐状态
 
-//     ADU_t       *ADU     = (ADU_t *)g_RecvData;
-// 	res_ADU_t 	*res     = (res_ADU_t *)cm_malloc(sizeof(res_ADU_t));
+    ADU_t       *ADU     = (ADU_t *)g_RecvData;
+	res_ADU_t 	*res     = (res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
 
-//     res->MBAP.msgNum     = ADU->MBAP.msgNum;                    //通讯编号
-//     res->MBAP.deviceCode = ADU->MBAP.deviceCode;	            //设备编码
+    res->MBAP.msgNum     = ADU->MBAP.msgNum;                    //通讯编号
+    res->MBAP.deviceCode = ADU->MBAP.deviceCode;	            //设备编码
 
-// 	res->MBAP.deviceAddr = ADU->MBAP.deviceAddr;                //设备地址
-// 	res->PDU_Func		 = ADU->PDU_Func;			            //功能码
-//     res->state           = 0x00;                                //数据区-烧录状态
-//     res->MBAP.Datalen    = swap_endian(3+data_block_burning_record_table_size_get()); 
+	res->MBAP.deviceAddr = ADU->MBAP.deviceAddr;                //设备地址
+	res->PDU_Func		 = ADU->PDU_Func;			            //功能码
+    res->state           = 0x00;                                //数据区-烧录状态
+    res->MBAP.Datalen    = swap_endian(3+data_block_burning_record_table_size_get()); 
 
-//     g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
-//     log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
-//     memcpy(g_SendData,(char*)res,9); 
-//     memcpy(g_SendData+9,data_block_burning_record_table_value_get(),data_block_burning_record_table_size_get());  
-//     cm_free(res);
-//     return 0;
-// }
+    g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
+    log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
+    memcpy(g_SendData,(char*)res,9); 
+    memcpy(g_SendData+9,data_block_burning_record_table_value_get(),data_block_burning_record_table_size_get());  
+    fibo_free(res);
+    return 0;
+}
 
-// static UINT8 Verify_FirmWare(void)                  //0x28校验固件写入情况                   
-// {
-//     #pragma pack(push)                              //保存对齐状态
-//     #pragma pack(1)                                 //设定为 1 字节对齐
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT8               verify_len[4];          //数据区-校验长度
-//         UINT8               MD5[32];                //数据区-MD5值
-//     } ADU_t;                                        //服务器发送的数据格式
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT8               calibration_result;     //数据区-校验结果
-//     } res_ADU_t;                                    //数采器响应的数据格式
-//     #pragma pack(pop)//恢复对齐状态
+static UINT8 Verify_FirmWare(void)                  //0x28校验固件写入情况                   
+{
+    #pragma pack(push)                              //保存对齐状态
+    #pragma pack(1)                                 //设定为 1 字节对齐
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT8               verify_len[4];          //数据区-校验长度
+        UINT8               MD5[32];                //数据区-MD5值
+    } ADU_t;                                        //服务器发送的数据格式
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT8               calibration_result;     //数据区-校验结果
+    } res_ADU_t;                                    //数采器响应的数据格式
+    #pragma pack(pop)//恢复对齐状态
 
-//     ADU_t       *ADU        = (ADU_t *)g_RecvData;
-// 	res_ADU_t 	*res        = (res_ADU_t *)cm_malloc(sizeof(res_ADU_t));
+    ADU_t       *ADU        = (ADU_t *)g_RecvData;
+	res_ADU_t 	*res        = (res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
 
-//     res->MBAP.msgNum        = ADU->MBAP.msgNum;     //通讯编号
-//     res->MBAP.deviceCode	= swap_endian(0x0001);	//设备编码
-//     res->MBAP.Datalen       = swap_endian(0x0003);  //数据长度
-// 	res->MBAP.deviceAddr	= ADU->MBAP.deviceAddr;	//设备地址
-// 	res->PDU_Func			= ADU->PDU_Func;		//功能码
+    res->MBAP.msgNum        = ADU->MBAP.msgNum;     //通讯编号
+    res->MBAP.deviceCode	= swap_endian(0x0001);	//设备编码
+    res->MBAP.Datalen       = swap_endian(0x0003);  //数据长度
+	res->MBAP.deviceAddr	= ADU->MBAP.deviceAddr;	//设备地址
+	res->PDU_Func			= ADU->PDU_Func;		//功能码
 
-//     UINT8       *c_MD5_1    = cm_malloc(sizeof(UINT8)*32);   //客户端MD5值   
-//     UINT8       *c_MD5      = cm_malloc(sizeof(UINT8)*32);   //客户端MD5值   
-//     UINT32      Verify_Len  = (UINT32)((UINT32)(ADU->verify_len[0] << 24   )|   
-//                                        (UINT32)(ADU->verify_len[1] << 16   )|   
-//                                        (UINT32)(ADU->verify_len[2] << 8    )|   
-//                                        (UINT32)(ADU->verify_len[3]         ));
-//     log_d("\r\nADU->verify_len[0] is %d\r\n",ADU->verify_len[0]); 
-//     log_d("\r\nADU->verify_len[1] is %d\r\n",ADU->verify_len[1]); 
-//     log_d("\r\nADU->verify_len[2] is %d\r\n",ADU->verify_len[2]); 
-//     log_d("\r\nADU->verify_len[3] is %d\r\n",ADU->verify_len[3]);                                 
-//     log_d("\r\nVerify_Len：%d\r\n",Verify_Len);   
+    UINT8       *c_MD5_1    = fibo_malloc(sizeof(UINT8)*32);   //客户端MD5值   
+    UINT8       *c_MD5      = fibo_malloc(sizeof(UINT8)*32);   //客户端MD5值   
+    UINT32      Verify_Len  = (UINT32)((UINT32)(ADU->verify_len[0] << 24   )|   
+                                       (UINT32)(ADU->verify_len[1] << 16   )|   
+                                       (UINT32)(ADU->verify_len[2] << 8    )|   
+                                       (UINT32)(ADU->verify_len[3]         ));
+    log_d("\r\nADU->verify_len[0] is %d\r\n",ADU->verify_len[0]); 
+    log_d("\r\nADU->verify_len[1] is %d\r\n",ADU->verify_len[1]); 
+    log_d("\r\nADU->verify_len[2] is %d\r\n",ADU->verify_len[2]); 
+    log_d("\r\nADU->verify_len[3] is %d\r\n",ADU->verify_len[3]);                                 
+    log_d("\r\nVerify_Len：%d\r\n",Verify_Len);   
 
-//     firmware_real_size   = Verify_Len ;
+    firmware_real_size   = Verify_Len ;
 
-//     if(1 == g_upgrade_mode_flag)//采集器固件升级
-//     {
-//         MD5Verify_Func(c_MD5_1,  Verify_Len, g_block_size);
-//     }
+    if(1 == g_upgrade_mode_flag)//采集器固件升级
+    {
+        MD5Verify_Func(c_MD5_1,  Verify_Len, g_block_size);
+    }
 
-//     if(2 == g_upgrade_mode_flag)//设备固件升级
-//     {
-//         g_device_firmware_real_size = Verify_Len;
-//         device_MD5Verify_Func(c_MD5_1,  Verify_Len, g_block_size);
-//     }                         
+    if(2 == g_upgrade_mode_flag)//设备固件升级
+    {
+        g_device_firmware_real_size = Verify_Len;
+        device_MD5Verify_Func(c_MD5_1,  Verify_Len, g_block_size);
+    }                         
     
-//     hextostr(c_MD5_1, c_MD5, 16);
-//     log_d("\r\nc_MD5：%s\r\n",c_MD5);
+    hextostr(c_MD5_1, c_MD5, 16);
+    log_d("\r\nc_MD5：%s\r\n",c_MD5);
 
-//     UINT8       *s_MD5      = cm_malloc(sizeof(UINT8)*32);   //服务器MD5值
-//     memcpy(s_MD5,ADU->MD5,32);                            
-//     log_d("\r\ns_MD5：%s\r\n",s_MD5);
+    UINT8       *s_MD5      = fibo_malloc(sizeof(UINT8)*32);   //服务器MD5值
+    memcpy(s_MD5,ADU->MD5,32);                            
+    log_d("\r\ns_MD5：%s\r\n",s_MD5);
 
-//     if(0==memcmp(c_MD5,s_MD5,16))
-//     {
-//         //0x00 成功 数采器将写入的固件全部读出，计算出 MD5 值，与服务器下发的 MD5 比较，完全一致。
-//         res->calibration_result = 0x00;//数据区-校验结果
-//     }
-//     else
-//     {
-//         //0x01 失败 数采器将写入的固件全部读出，计算出 MD5 值，与服务器下发的 MD5 比较，二者不同。
-//         res->calibration_result = 0x01;//数据区-校验结果
-//     }
+    if(0==memcmp(c_MD5,s_MD5,16))
+    {
+        //0x00 成功 数采器将写入的固件全部读出，计算出 MD5 值，与服务器下发的 MD5 比较，完全一致。
+        res->calibration_result = 0x00;//数据区-校验结果
+    }
+    else
+    {
+        //0x01 失败 数采器将写入的固件全部读出，计算出 MD5 值，与服务器下发的 MD5 比较，二者不同。
+        res->calibration_result = 0x01;//数据区-校验结果
+    }
 
-//     g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
-//     log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
-//     memcpy(g_SendData,(char*)res,g_SendDataLen); 
-//     cm_free(res);
+    g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
+    log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
+    memcpy(g_SendData,(char*)res,g_SendDataLen); 
+    fibo_free(res);
 
-//     cm_free(c_MD5_1);
-//     cm_free(c_MD5);
-//     cm_free(s_MD5);
-//     return 0;
-// }
+    fibo_free(c_MD5_1);
+    fibo_free(c_MD5);
+    fibo_free(s_MD5);
+    return 0;
+}
 
-// static UINT8 ExitFileTransferState(void)            //0x29退出文件传输状态             
-// {
-//     #pragma pack(push)                              //保存对齐状态 
-//     #pragma pack(1)                                 //设定为 1 字节对齐
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT8               transmission_status;    //数据区-传输状态
-//     } ADU_t;                                        //服务器发送的数据格式
-//     typedef struct
-//     {
-//         MBAP_Type           MBAP;                   //MBAP报文头
-//         UINT8               PDU_Func;               //功能码
-//         UINT8               respond;                //数据区-响应码
-//     } res_ADU_t;                                    //数采器响应的数据格式
-//     #pragma pack(pop)                               //恢复对齐状态
+static UINT8 ExitFileTransferState(void)            //0x29退出文件传输状态             
+{
+    #pragma pack(push)                              //保存对齐状态 
+    #pragma pack(1)                                 //设定为 1 字节对齐
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT8               transmission_status;    //数据区-传输状态
+    } ADU_t;                                        //服务器发送的数据格式
+    typedef struct
+    {
+        MBAP_Type           MBAP;                   //MBAP报文头
+        UINT8               PDU_Func;               //功能码
+        UINT8               respond;                //数据区-响应码
+    } res_ADU_t;                                    //数采器响应的数据格式
+    #pragma pack(pop)                               //恢复对齐状态
 
-//     ADU_t       *ADU        = (ADU_t *)g_RecvData;
-// 	res_ADU_t 	*res        = (res_ADU_t *)cm_malloc(sizeof(res_ADU_t));
+    ADU_t       *ADU        = (ADU_t *)g_RecvData;
+	res_ADU_t 	*res        = (res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
   
-//     res->MBAP.msgNum        = ADU->MBAP.msgNum;         //通讯编号
-//     res->MBAP.deviceCode	= swap_endian(0x0001);	    //设备编码
-//     res->MBAP.Datalen       = swap_endian(0x0003);      //字节据实填充
-// 	res->MBAP.deviceAddr	= ADU->MBAP.deviceAddr;	    //设备地址
-// 	res->PDU_Func			= ADU->PDU_Func;			//功能码
-//     res->respond            = 0x00;                     //数据区-响应码
+    res->MBAP.msgNum        = ADU->MBAP.msgNum;         //通讯编号
+    res->MBAP.deviceCode	= swap_endian(0x0001);	    //设备编码
+    res->MBAP.Datalen       = swap_endian(0x0003);      //字节据实填充
+	res->MBAP.deviceAddr	= ADU->MBAP.deviceAddr;	    //设备地址
+	res->PDU_Func			= ADU->PDU_Func;			//功能码
+    res->respond            = 0x00;                     //数据区-响应码
 
-//     firmware_transmission_status = ADU->transmission_status;//传输状态  
+    firmware_transmission_status = ADU->transmission_status;//传输状态  
 
-//     g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
-//     log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
-//     memcpy(g_SendData,(char*)res,g_SendDataLen); 
-//     cm_free(res);
-//     return 0;
-// }
+    g_SendDataLen = 6 + swap_endian(res->MBAP.Datalen);
+    log_d("\r\ng_SendDataLen：%d\r\n",g_SendDataLen);
+    memcpy(g_SendData,(char*)res,g_SendDataLen); 
+    fibo_free(res);
+    return 0;
+}
 
-// //数采器固件升级MD5校验
-// static INT32 MD5Verify_Func (UINT8 bHash[], UINT32 Verify_Len, UINT32 DataBlock_Len)//生成MD5值
-// {
-//     HASH_MD5_CTX  MD5;
-//     HASH_MD5Init (&MD5);
-//     static UINT8 s_pTempMd5[512] = {0};
-//     UINT32       dwOff           = 0;
-//     memset(s_pTempMd5, 0, sizeof(s_pTempMd5));
+//数采器固件升级MD5校验
+static INT32 MD5Verify_Func (UINT8 bHash[], UINT32 Verify_Len, UINT32 DataBlock_Len)//生成MD5值
+{
+    HASH_MD5_CTX  MD5;
+    HASH_MD5Init (&MD5);
+    static UINT8 s_pTempMd5[512] = {0};
+    UINT32       dwOff           = 0;
+    memset(s_pTempMd5, 0, sizeof(s_pTempMd5));
 
-//     log_d("\r\nVerify_Len is %d\r\n",Verify_Len);
+    log_d("\r\nVerify_Len is %d\r\n",Verify_Len);
 
-//     while (dwOff < Verify_Len)
-//     {
-//         cm_file_open(g_recName, O_RDONLY);
-//         cm_file_seek(g_iFd, dwOff, 0);
-//         cm_file_read(g_iFd, s_pTempMd5, DataBlock_Len);
-//         if ((Verify_Len - dwOff) < DataBlock_Len) 
-//         {
-//             DataBlock_Len = Verify_Len - dwOff;
-//         }
-//         HASH_MD5Update(&MD5, s_pTempMd5, DataBlock_Len);
-//         dwOff += DataBlock_Len;
-//         cm_file_close(g_iFd);
-//     }
-//     HASH_MD5Final (bHash, &MD5);
-//     return 0;
-// }
+    while (dwOff < Verify_Len)
+    {
+        fibo_file_open(g_recName, FS_O_RDONLY);
+        fibo_file_seek(g_iFd, dwOff, 0);
+        fibo_file_read(g_iFd, s_pTempMd5, DataBlock_Len);
+        if ((Verify_Len - dwOff) < DataBlock_Len) 
+        {
+            DataBlock_Len = Verify_Len - dwOff;
+        }
+        HASH_MD5Update(&MD5, s_pTempMd5, DataBlock_Len);
+        dwOff += DataBlock_Len;
+        fibo_file_close(g_iFd);
+    }
+    HASH_MD5Final (bHash, &MD5);
+    return 0;
+}
 
-// //设备固件升级MD5校验
-// static INT32 device_MD5Verify_Func (UINT8 bHash[], UINT32 Verify_Len, UINT32 DataBlock_Len)//生成MD5值
-// {
-//     HASH_MD5_CTX  MD5;
-//     HASH_MD5Init (&MD5);
-//     static UINT8 s_pTempMd5[512] = {0};
-//     UINT32       dwOff           = 0;
-//     memset(s_pTempMd5, 0, sizeof(s_pTempMd5));
+//设备固件升级MD5校验
+static INT32 device_MD5Verify_Func (UINT8 bHash[], UINT32 Verify_Len, UINT32 DataBlock_Len)//生成MD5值
+{
+    HASH_MD5_CTX  MD5;
+    HASH_MD5Init (&MD5);
+    static UINT8 s_pTempMd5[512] = {0};
+    UINT32       dwOff           = 0;
+    memset(s_pTempMd5, 0, sizeof(s_pTempMd5));
 
-//     log_d("\r\nVerify_Len is %d\r\n",Verify_Len);
+    log_d("\r\nVerify_Len is %d\r\n",Verify_Len);
 
-//     while (dwOff < Verify_Len)
-//     {
-//         cm_file_open(g_device_recName, O_RDONLY);
-//         cm_file_seek(g_device_iFd, dwOff, 0);
-//         cm_file_read(g_device_iFd, s_pTempMd5, DataBlock_Len);
-//         if ((Verify_Len - dwOff) < DataBlock_Len) 
-//         {
-//             DataBlock_Len = Verify_Len - dwOff;
-//         }
-//         HASH_MD5Update(&MD5, s_pTempMd5, DataBlock_Len);
-//         dwOff += DataBlock_Len;
-//         cm_file_close(g_device_iFd);
-//     }
-//     HASH_MD5Final (bHash, &MD5);
-//     return 0;
-// }
+    while (dwOff < Verify_Len)
+    {
+        fibo_file_open(g_device_recName, FS_O_RDONLY);
+        fibo_file_seek(g_device_iFd, dwOff, 0);
+        fibo_file_read(g_device_iFd, s_pTempMd5, DataBlock_Len);
+        if ((Verify_Len - dwOff) < DataBlock_Len) 
+        {
+            DataBlock_Len = Verify_Len - dwOff;
+        }
+        HASH_MD5Update(&MD5, s_pTempMd5, DataBlock_Len);
+        dwOff += DataBlock_Len;
+        fibo_file_close(g_device_iFd);
+    }
+    HASH_MD5Final (bHash, &MD5);
+    return 0;
+}
 
 //校时
 static void correction_time(void)
 {
-    // fibo_setRTC(hal_rtc_time_t *time);
-
     UINT16 len = 0;
     char current_char[30]={0};
 	hal_rtc_time_t current = {
@@ -1469,31 +1409,18 @@ static void correction_time(void)
 
     hal_rtc_time_t local_time;
 
-	// uint32_t time_stamp = 0;
-	// time_stamp = date_time_to_utc_timestamp(&current);//将时间结构体转换成UTC时间戳
-
-	// int8_t time_zone = 0;
-	// time_zone = cm_getTimeZone();//获取当前时区 (后续将通过数采器参数表25号传值确定系统时区)
-	// // log_d("current time zone：%d\r\n",time_zone);
-
-	// uint32_t time_zone_s = time_zone*60*60;
-
-	// time_stamp =  time_stamp + time_zone_s;
-
- 	// utc_timestamp_to_date_time(time_stamp, &current);//将时间戳转换成时间结构体
-
-	INT32 current_flag = fibo_setRTC(&current);//设置本地时间 参数：time 时间结构体
+	INT32 current_flag = fibo_setRTC(&current);             //设置本地时间 参数：time 时间结构体
     log_d("current_flag is %ld\r\n",current_flag);
 
-    INT32 local_time_flag = fibo_getRTC(&local_time);//获取本地时间
+    INT32 local_time_flag = fibo_getRTC(&local_time);       //获取本地时间
     log_d("local_time_flag is %ld\r\n",local_time_flag);
 
     sprintf(current_char, "%04d-%02d-%02d %02d:%02d:%02d",current.year,current.month,current.day,current.hour,current.min,current.sec);
-    //yyyy-MM-dd HH:mm:ss
+                                                            //yyyy-MM-dd HH:mm:ss
 
     for (int j = 0; j < number_of_array_elements; j++)
     {
-        if(26 == PDT[j].num)//系统时间
+        if(26 == PDT[j].num)                                //系统时间
         {
             memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j],current_char, &len);
@@ -1501,6 +1428,6 @@ static void correction_time(void)
     }
 
 	log_d("current is :%04d-%02d-%02d %02d:%02d:%02d\r\n",current.year,current.month,current.day,current.hour,current.min,current.sec);
-    log_d("local_time is :%04d-%02d-%02d %02d:%02d:%02d\r\n",local_time.year,local_time.month,local_time.day,local_time.hour,local_time.min,local_time.sec);
-	// log_d("correction_time ok\r\n");
+    log_d("local_time is :%04d-%02d-%02d %02d:%02d:%02d\r\n",2000+local_time.year,local_time.month,local_time.day,local_time.hour,local_time.min,local_time.sec);
+	log_d("correction_time ok\r\n");
 }

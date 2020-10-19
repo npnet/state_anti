@@ -28,9 +28,9 @@
 /* #undef CONFIG_SUPPORT_BATTERY_CHARGER */
 
 /**
- * whether external flash is supported
+ * whether to support camera single buffer
  */
-#define CONFIG_SUPPORT_EXT_FLASH
+/* #undef CONFIG_CAMERA_SINGLE_BUFFER */
 
 /**
  * host command engine packet size
@@ -43,15 +43,21 @@
 #define CONFIG_UART_AUTOMODE_DEFAULT_BAUD 115200
 
 /**
+ * enable wcn wifi scan or not
+ */
+#define CONFIG_WCN_WIFI_SCAN_SUPPORT
+
+/**
  * whether USB is supported
  */
 #define CONFIG_USB_SUPPORT
 
 #ifdef CONFIG_USB_SUPPORT
+
 /**
  * usb connect timeout
  */
-#define CONFIG_USB_CONNECT_TIMEOUT 120000
+#define CONFIG_USB_CONNECT_TIMEOUT 10000
 
 /**
  * usb debounce time in milliseconds before enumarating
@@ -62,6 +68,17 @@
  * udc features, lower 8 bits for config->bmAttributes, higher are software defined
  */
 #define CONFIG_USB_DEVICE_CONTROLLER_FEATURE 0xE0
+
+/**
+ * usb ether host mac address
+ */
+#define CONFIG_USB_ETHER_HOST_MAC "\xf0\x4b\xb3\xb9\xeb\xe5"
+
+/**
+ * usb ether dev mac address
+ */
+#define CONFIG_USB_ETHER_DEV_MAC "\xfa\x32\x47\x15\xe1\x88"
+
 #endif
 
 /**

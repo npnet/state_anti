@@ -48,6 +48,7 @@
 #include "lwip/def.h"
 #include "lwip/pbuf.h"
 #include "lwip/stats.h"
+#include "lwip/ip4_nat.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -378,6 +379,9 @@ struct netif {
   u16_t loop_cnt_current;
 #endif /* LWIP_LOOPBACK_MAX_PBUFS */
 #endif /* ENABLE_LOOPBACK */
+#if IP_NAT
+  ip4_nat_entry_t *nat_entry;
+#endif
   u8_t is_ppp_mode;  //To identify ppp mode
   u8_t link_mode;  //To identify netif mode
   u8_t is_used;

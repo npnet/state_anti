@@ -63,7 +63,8 @@ struct netif * ip4_src_route(const ip4_addr_t *dst, const ip4_addr_t *src);
 /** Currently, the function ip_output_if_opt() is only used with IGMP */
 #define IP_OPTIONS_SEND   (LWIP_IPV4 && LWIP_IGMP)
 
-#define ip_init() /* Compatibility define, no init needed. */
+//#define ip_init() /* Compatibility define, no init needed. */
+void ip_init(void);
 struct netif *ip4_route(const ip4_addr_t *dest);
 #if LWIP_IPV4_SRC_ROUTING
 struct netif *ip4_route_src(const ip4_addr_t *dest, const ip4_addr_t *src);

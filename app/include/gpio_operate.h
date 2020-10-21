@@ -20,6 +20,7 @@
 #define COM         30
 #define RECOVERY    31
 
+#define ADC0        45
 // #define SPI_CS      37
 // #define SPI_MOSI    38
 // #define SPI_MISO    39

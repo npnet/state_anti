@@ -251,6 +251,9 @@ void net_task(void *param)
 
     net_lamp_off();
 	registered_network();			//注册网络
+    
+    
+    srv_lamp_off();
     tcp_connection(); 			    //连接网络
 
     bool check_flag = false;
@@ -378,7 +381,7 @@ void parameter_check()
 
 void update_version()
 {
-    char firmware_version[] = "6.0.1.5";
+    char firmware_version[] = "6.0.1.8";
 
 	UINT16 		len 			= 64;    						//参数值长度
 

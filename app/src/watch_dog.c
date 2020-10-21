@@ -16,6 +16,7 @@ void feed_the_dog()
 
 void heap_status(void);
 
+
 void watch_dog_task()
 {
     while(1)

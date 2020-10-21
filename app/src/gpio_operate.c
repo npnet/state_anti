@@ -21,16 +21,15 @@ void gpio_init(void)
 	feed_the_dog();				//上电先喂一次狗
 
 	fibo_gpio_mode_set(BUZZER,0);  		
-	fibo_gpio_cfg(BUZZER,output);   		
-	fibo_gpio_set(BUZZER,high);		
+	fibo_gpio_cfg(BUZZER,output);   			
 	BUZZER_on();
 	fibo_taskSleep(500);		//开机上电响一下
 	BUZZER_off();
 
-	// fibo_gpio_mode_set(RECOVERY,1);  		
-	// fibo_gpio_cfg(RECOVERY,output);   	
-	// fibo_gpio_set(RECOVERY,high);	
+	fibo_gpio_mode_set(RECOVERY,1);  		
+	fibo_gpio_cfg(RECOVERY,input);   		
 
+								//调试串口
 	fibo_gpio_mode_set(M_TXD,6);  		
 	fibo_gpio_cfg(M_TXD,output);   	
 	fibo_gpio_set(M_TXD,high);			
@@ -38,10 +37,6 @@ void gpio_init(void)
 	fibo_gpio_mode_set(M_RXD,6);  		
 	fibo_gpio_cfg(M_RXD,input);   		
 	fibo_gpio_set(M_RXD,high);			
-
-	// //RECOVERY
-	// cm_gpio_setin(RECOVERY);
-	// cm_gpio_set_initial_state(RECOVERY, CMIOT_GPIO_PULL_UP);
 }
 
 void gpio_test(void)

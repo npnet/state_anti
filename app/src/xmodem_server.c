@@ -623,6 +623,7 @@ void DeviceUpdateTask()
     }
 }
 
+
 void device_update_task(void *param)
 {	
 	while(1)
@@ -633,5 +634,10 @@ void device_update_task(void *param)
 		{
 			DeviceUpdateTask();
 		}
+
+
 	}
 }
+
+
+

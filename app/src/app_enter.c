@@ -25,6 +25,36 @@ static void prvInvokeGlobalCtors(void)
         __init_array_start[i]();
 }
 
+void rec_check_task(void);
+
+void rec_check_task()
+{
+    UINT8 recovery_flag = 1;
+    INT32 get_ret       = 0;
+    while(1)
+    {
+        fibo_taskSleep(1000);        
+        get_ret = fibo_gpio_get(RECOVERY,&recovery_flag);
+
+        log_d("\r\nrecovery_flag is %d\r\n",recovery_flag);
+
+        if(1 == get_ret)
+        {
+            log_d("\r\nget_ret success\r\n");
+        }
+
+        if(-1 == get_ret)
+        {
+            log_d("\r\nget_ret fail\r\n");
+        }
+
+        if(0 == recovery_flag)
+        {
+            log_d("\r\nrecovery_flag...\r\n");
+        }
+    }
+}
+
 void * appimg_enter(void *param)
 {
     gpio_init();				//gpio初始化
@@ -54,10 +84,21 @@ void * appimg_enter(void *param)
         log_d("\r\ndisret is %d\r\n",disret); 
     }
 
+    INT32 adc_init_ret = fibo_hal_adc_init();        //ADC打开接口
+    if(0 == adc_init_ret)
+    {
+        log_d("\r\nadc_init success\r\n"); 
+    }
+
+    if(adc_init_ret < 0)
+    {
+        log_d("\r\nadc_init fail\r\n");   
+    }
+
     fibo_thread_create(net_task,          "NET TASK",          1024*8*5, NULL, OSI_PRIORITY_NORMAL);
     fibo_thread_create(device_update_task,"DEVICE UPDATE TASK",1024*8*3, NULL, OSI_PRIORITY_NORMAL);
     fibo_thread_create(feed_dog_task,     "FEED DOG TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
-
+    fibo_thread_create(rec_check_task,    "REC  CHECK TASK",   1024*8*2, NULL, OSI_PRIORITY_NORMAL);
     return 0;
 }
 

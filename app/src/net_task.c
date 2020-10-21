@@ -378,7 +378,7 @@ void parameter_check()
 
 void update_version()
 {
-    char firmware_version[] = "6.0.1.4";
+    char firmware_version[] = "6.0.1.5";
 
 	UINT16 		len 			= 64;    						//参数值长度
 

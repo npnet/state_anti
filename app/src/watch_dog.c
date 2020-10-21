@@ -20,22 +20,6 @@ void watch_dog_task()
 {
     while(1)
     {
-        // log_d("\r\n%s()\r\n",__func__);
-        if(1 == g_stop_dog_flag)
-        {
-            // fibo_taskSleep(35000);        //停狗35s 
-            INT32 reset_flag = fibo_softReset();
-            if(0 == reset_flag)
-            {
-                log_d("reset success"); 
-            }
-       
-            if(reset_flag < 0)
-            {
-                log_d("reset fail"); 
-            }
-        }
-
         if(0 == g_stop_dog_flag)
         {
             feed_the_dog();

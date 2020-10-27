@@ -22,9 +22,7 @@ void gpio_init(void)
 
 	fibo_gpio_mode_set(BUZZER,0);  		
 	fibo_gpio_cfg(BUZZER,output);   			
-	BUZZER_on();
-	fibo_taskSleep(500);		//开机上电响一下
-	BUZZER_off();
+	BUZZER_on(1);				//开机上电响一下
 
 	fibo_gpio_mode_set(RECOVERY,1);  		
 	fibo_gpio_cfg(RECOVERY,input);   		
@@ -90,9 +88,16 @@ void com_lamp_off()//数据传输灯 关
 	fibo_gpio_set(COM,high);		
 }
 
-void BUZZER_on()//蜂鸣器响
+void BUZZER_on(int i)//蜂鸣器响
 {
-	fibo_gpio_set(BUZZER,high);			
+	int j = 0;
+	for(j = 0;j<i;j++)
+	{
+		fibo_gpio_set(BUZZER,high);		
+		fibo_taskSleep(500);
+		fibo_gpio_set(BUZZER,low);	
+		fibo_taskSleep(500);
+	}
 }
 
 void BUZZER_off()

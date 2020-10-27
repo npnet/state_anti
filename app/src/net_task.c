@@ -29,14 +29,55 @@ UINT16 			g_SendDataLen 		=  0;
 
 extern int 	    g_stop_dog_flag;
 static uint32_t g_i = 0;	//重启计数器
+
+//开机后先读卡
+static void read_card()
+{
+    uint8_t simstatus  =  0;
+    INT32   simret     = -1;
+
+    //获取sim卡插拔状态 
+    //1 == simstatus 代表已插卡
+    //0 == simstatus 代表未插卡
+    simret =  fibo_get_sim_status(&simstatus);
+    // 0 成功
+    //<0 失败
+
+    int i = 0;
+    while((0 == simret)&&(0 == simstatus)) //获取sim卡插拔状态成功且状态为未插卡
+    {
+		fibo_taskSleep(1000);       //延时1S执行一次
+		i++;
+		if(10 == i)                 //10S              
+		{
+            net_lamp_off();
+            BUZZER_on(5);           //读不到卡响5声
+            log_d("read_sim_fail");
+            break;
+		}
+        simret =  fibo_get_sim_status(&simstatus);
+    }
+
+    if(1 == simstatus)//已插卡
+    {
+        log_d("read_sim_succed\r\n");   //调试信息
+    }
+
+    if(0 == simstatus)//未插卡
+    {
+        log_d("read_sim_fail");
+    }
+}
+
 void registered_network()
 {
+    read_card();
     UINT8       ip[50]          = {0};
     reg_info_t  sim_reg_info;
     INT32       regret          =  -1;
     INT32       pdpret          =  -1;
     int         reg_cycle_flag  =   1;
-    int         ret_try_count       =   0;
+    int         ret_try_count   =   0;
     while(reg_cycle_flag)
     {
 	    regret = fibo_getRegInfo(&sim_reg_info, single_sim_card);
@@ -51,7 +92,7 @@ void registered_network()
             log_d("\r\nsim register failure,try_count is %d\r\n",ret_try_count);
         }
     
-		fibo_taskSleep(600);
+		fibo_taskSleep(2000);
 
 		if(1 == sim_reg_info.nStatus)
 		{
@@ -78,7 +119,7 @@ void registered_network()
 
         ret_try_count++;
 
-        if(100 == ret_try_count)//600*100 1分钟未注册并激活网络成功则退出
+        if(10 == ret_try_count)//20s未注册并激活网络成功则退出
         {
             reg_cycle_flag = 0;   
         }
@@ -381,7 +422,7 @@ void parameter_check()
 
 void update_version()
 {
-    char firmware_version[] = "6.0.1.8";
+    char firmware_version[] = "6.0.1.9";
 
 	UINT16 		len 			= 64;    						//参数值长度
 

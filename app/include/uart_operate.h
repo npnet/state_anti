@@ -3,15 +3,11 @@
 
 #include "oc_uart.h"
 #define UART1   0
-// #define UART2   1
 #define UART3   2
 
 #define UART_BUFFER_SIZE    1300
 extern  char                uart1_recv_data[UART_BUFFER_SIZE];
 extern  UINT16              uart1_recv_len;
-
-// extern  char                uart2_recv_data[UART_BUFFER_SIZE];
-// extern  UINT16              uart2_recv_len;
 
 extern  char                uart3_recv_data[UART_BUFFER_SIZE];
 extern  UINT16              uart3_recv_len;
@@ -21,9 +17,6 @@ void uart1_cfg_update();
 
 //串口1接收回调
 void uart1_recv_cb(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg);
-
-// //串口2接收回调
-// void uart2_recv_cb(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg);
 
 //串口3接收回调
 void uart3_recv_cb(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg);

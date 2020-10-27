@@ -9,9 +9,9 @@
 #define low         0
 #define high        1
 
-#define NET         24
+#define SRV         24
 #define WDI         25
-#define SRV         26
+#define NET         26
 #define BUZZER      27
 
 #define M_TXD       28
@@ -38,7 +38,7 @@ void srv_lamp_off();    //服务灯关
 void com_lamp_on();     //设备灯开
 void com_lamp_off();    //设备灯关
 
-void BUZZER_on();       //蜂鸣器响
+void BUZZER_on(int i);  //蜂鸣器响 i为次数
 void BUZZER_off();      //蜂鸣器灭
 
 #endif // __GPIO_OPERATE_H__

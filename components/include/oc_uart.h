@@ -5,10 +5,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fibo_opencpu_comm.h"
-typedef int hal_uart_port_t;
-typedef struct hal_uart_config_s hal_uart_config_t;
-typedef enum hal_uart_data_bits_s hal_uart_data_bits_t;
-typedef enum hal_uart_stop_bits_s hal_uart_stop_bits_t;
+typedef int     hal_uart_port_t;
+typedef struct  hal_uart_config_s       hal_uart_config_t;
+typedef enum    hal_uart_data_bits_s    hal_uart_data_bits_t;
+typedef enum    hal_uart_stop_bits_s    hal_uart_stop_bits_t;
 
 
 #define UART_RX_BUF_SIZE (4 * 1024)
@@ -42,15 +42,15 @@ typedef enum
 
 struct hal_uart_config_s
 {
-    uint32_t baud;                  ///< baudrate, 0 for auto baud
-    hal_uart_data_bits_t data_bits; ///< data bits
-    hal_uart_stop_bits_t stop_bits; ///< stop bits
-    hal_uart_parity_t parity;
-    bool cts_enable;                ///< enable cts or not
-    bool rts_enable;                ///< enable rts or not
-    size_t rx_buf_size;             ///< rx buffer size
-    size_t tx_buf_size;             ///< tx buffer size
-    uint32_t recv_timeout;          //ms
+    uint32_t                baud;                   ///< baudrate, 0 for auto baud
+    hal_uart_data_bits_t    data_bits;              ///< data bits
+    hal_uart_stop_bits_t    stop_bits;              ///< stop bits
+    hal_uart_parity_t       parity;
+    bool                    cts_enable;             ///< enable cts or not
+    bool                    rts_enable;             ///< enable rts or not
+    size_t                  rx_buf_size;            ///< rx buffer size
+    size_t                  tx_buf_size;            ///< tx buffer size
+    uint32_t                recv_timeout;           //ms
 };
 
 /**

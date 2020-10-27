@@ -18,33 +18,26 @@ char	uart3_recv_data[UART_BUFFER_SIZE]	=	{0};
 
 //串口1默认配置
 hal_uart_config_t   uart1_cfg  = {
-    .baud                 = 9600,                   //波特率9600
-    .parity               = HAL_UART_NO_PARITY,     //无校验
-    .data_bits            = HAL_UART_DATA_BITS_8,   //8位数据位
-    .stop_bits            = HAL_UART_STOP_BITS_1,   //1位停止位
-    .rx_buf_size          = UART_RX_BUF_SIZE,       //接收缓冲区大小
-    .tx_buf_size          = UART_TX_BUF_SIZE,       //发送缓冲区大小
+    .baud                 = 9600,                           //波特率9600
+    .data_bits            = HAL_UART_DATA_BITS_8,           //8位数据位
+    .stop_bits            = HAL_UART_STOP_BITS_1,           //1位停止位
+    .parity               = HAL_UART_NO_PARITY,             //无校验
+    .rx_buf_size          = UART_RX_BUF_SIZE,               //接收缓冲区大小
+    .tx_buf_size          = UART_TX_BUF_SIZE,               //发送缓冲区大小
 };
 
 //串口3默认配置
 hal_uart_config_t   uart3_cfg  = {
-    .baud                 = 115200,                 //波特率115200
-    .parity               = HAL_UART_NO_PARITY,     //无校验
-    .data_bits            = HAL_UART_DATA_BITS_8,   //8位数据位
-    .stop_bits            = HAL_UART_STOP_BITS_1,   //1位停止位
-    .rx_buf_size          = UART_RX_BUF_SIZE,       //接收缓冲区大小
-    .tx_buf_size          = UART_TX_BUF_SIZE,       //发送缓冲区大小
+    .baud                 = 115200,                         //波特率115200
+    .data_bits            = HAL_UART_DATA_BITS_8,           //8位数据位
+    .stop_bits            = HAL_UART_STOP_BITS_1,           //1位停止位
+    .parity               = HAL_UART_NO_PARITY,             //无校验
+    .rx_buf_size          = UART_RX_BUF_SIZE,               //接收缓冲区大小
+    .tx_buf_size          = UART_TX_BUF_SIZE,               //发送缓冲区大小
 };
 
 //串口1更新配置
-hal_uart_config_t   uart1_newcfg  = {
-    .baud                 = 9600,                   //波特率9600
-    .parity               = HAL_UART_NO_PARITY,     //无校验
-    .data_bits            = HAL_UART_DATA_BITS_8,   //8位数据位
-    .stop_bits            = HAL_UART_STOP_BITS_1,   //1位停止位
-    .rx_buf_size          = UART_RX_BUF_SIZE,       //接收缓冲区大小
-    .tx_buf_size          = UART_TX_BUF_SIZE,       //发送缓冲区大小
-};
+hal_uart_config_t   uart1_newcfg;
 
 void serial_communication_information(void)
 {
@@ -86,53 +79,38 @@ void serial_communication_information(void)
 
     log_d("\r\nnewlinePlace is %d\r\n",newlinePlace);
 
-    if(0 == linkPlace)//只有波特率
+    if(0 == linkPlace)                                                      //只有波特率
     {
         baud_rate_char  = fibo_malloc(sizeof(char)*(len));  
         memcpy(baud_rate_char,(UINT8 *)buf,len);             
-        uart1_newcfg.baud = atoi(baud_rate_char);                              
+        uart1_newcfg.baud = atoi(baud_rate_char);                          //波特率                          
         log_d("\r\nbaud_rate is %d\r\n",uart1_newcfg.baud); 
 
-		uart1_newcfg.data_bits      = 8;        //数据位
-		uart1_newcfg.parity         = 0;        //校验位
-		uart1_newcfg.stop_bits      = 1;        //停止位
+		uart1_newcfg.data_bits      = 8;                                   //数据位
+        uart1_newcfg.stop_bits      = 1;                                   //停止位
+		uart1_newcfg.parity         = 0;                                   //校验位
     }
     else
     {
-        char data_bits_char[1]  = {0};  //数据位字符
-        char check_bits_char[1] = {0};  //校验位字符
-        baud_rate_char  = fibo_malloc(sizeof(char)*(linkPlace-4));  //波特率字符
-        char stop_bits_char[1]  = {0};  //停止位字符
+        baud_rate_char  = fibo_malloc(sizeof(char)*(linkPlace-4));          //波特率字符
+        char data_bits_char[1]  = {0};                                      //数据位字符
+        char stop_bits_char[1]  = {0};                                      //停止位字符
+        char check_bits_char[1] = {0};                                      //校验位字符
 
-        memcpy(data_bits_char,  (UINT8 *)buf+linkPlace-3,   1);             //数据位字符
-        memcpy(check_bits_char, (UINT8 *)buf+linkPlace-1,   1);             //校验位字符
         memcpy(baud_rate_char,  (UINT8 *)buf,               linkPlace-4);   //波特率字符
+        memcpy(data_bits_char,  (UINT8 *)buf+linkPlace-3,   1);             //数据位字符
         memcpy(stop_bits_char,  (UINT8 *)buf+linkPlace+1,   1);             //停止位字符
+        memcpy(check_bits_char, (UINT8 *)buf+linkPlace-1,   1);             //校验位字符
 
-        uart1_newcfg.data_bits   = atoi(data_bits_char);                  //数据位
-        uart1_newcfg.baud        = atoi(baud_rate_char);                  //波特率
-        uart1_newcfg.stop_bits   = atoi(stop_bits_char);                  //停止位
+        uart1_newcfg.baud        = atoi(baud_rate_char);                   //波特率
+        uart1_newcfg.data_bits   = atoi(data_bits_char);                   //数据位
+        uart1_newcfg.stop_bits   = atoi(stop_bits_char);                   //停止位
+        uart1_newcfg.parity      = atoi(check_bits_char);                  //校验位
 
-		//无校验 0   N
-		//奇校验 1   O
-		//偶校验 2   E
-		if('N'== check_bits_char[0])
-		{
-			uart1_newcfg.parity  = 0;
-		}
-		if('O'== check_bits_char[0])
-		{
-			uart1_newcfg.parity  = 1;
-		}
-		if('E'== check_bits_char[0])
-		{
-			uart1_newcfg.parity  = 2;
-		}
-
-        log_d("\r\ndata_bits  is %d\r\n",uart1_newcfg.data_bits);               //数据位
-        log_d("\r\ncheck_bits is %d\r\n",uart1_newcfg.parity );   		        //校验位
-        log_d("\r\nbaud_rate  is %d\r\n",uart1_newcfg.baud);                    //波特率
-        log_d("\r\nstop_bits  is %d\r\n",uart1_newcfg.stop_bits);               //停止位
+        log_d("\r\nbaud_rate  is %d\r\n",uart1_newcfg.baud);               //波特率
+        log_d("\r\ndata_bits  is %d\r\n",uart1_newcfg.data_bits);          //数据位
+        log_d("\r\nstop_bits  is %d\r\n",uart1_newcfg.stop_bits);          //停止位
+        log_d("\r\ncheck_bits is %d\r\n",uart1_newcfg.parity );   		    //校验位
     } 
     fibo_free(buf);
     fibo_free(baud_rate_char);

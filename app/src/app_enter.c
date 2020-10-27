@@ -65,6 +65,8 @@ void * appimg_enter(void *param)
 	elog_init();
  	elog_start();
 
+    uart1_cfg_update();         //更新串口配置
+
     log_init();
 
     COMMON_DataInit();

@@ -103,7 +103,7 @@ endif()
 
 string(TIMESTAMP VERSION "%Y%m%d_%H%M%S")
 if(CONFIG_APPIMG_LOAD_FLASH)
-    set(target 000_4G04_BP_V6.0.1.8_${VERSION})
+    set(target 000_4G04_BP_V6.0.1.9_${VERSION})
     add_appimg(${target} ${flash_ldscript} 
     app/src/app_enter.c
     app/src/net_task.c 

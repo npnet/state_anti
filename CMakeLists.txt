@@ -33,7 +33,19 @@ set(BUILD_SHARED_LIBS OFF)
 
 project(core C CXX ASM)
 
+if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
+ADD_DEFINITIONS(-D_PLATFORM_L610_=\"EYBOND_L610\")
+include_directories(components/include components/newlib/include)
+include_directories(eybondapp/lib)
+include_directories(eybondapp/public)
+include_directories(eybondapp/app)
+include_directories(eybondapp/net)
+include_directories(eybondapp/device)
+include_directories(eybondapp/device/Manufactor)
+include_directories(eybondapp/server/Eybond)
+else()
 include_directories(components/include components/newlib/include app/include)
+endif()
 
 function(cpp_only target file)
     add_library(${target} OBJECT ${file})
@@ -101,10 +113,27 @@ if(CONFIG_APPIMG_LOAD_FILE)
     add_custom_target(${target}_pacgen ALL DEPENDS ${pac_file})
 endif()
 
-string(TIMESTAMP VERSION "%Y%m%d_%H%M%S")
+string(TIMESTAMP VERSION "%Y%m%d%H%M%S")
 if(CONFIG_APPIMG_LOAD_FLASH)
     set(target 000_4G04_BP_V6.0.1.9_${VERSION})
-    add_appimg(${target} ${flash_ldscript} 
+ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
+    add_appimg(${target} ${flash_ldscript}
+    eybondapp/main/eybapp_L610Enter.c
+    eybondapp/app/eybapp_appTask.c
+    eybondapp/net/4G_net.c
+    eybondapp/server/Eybond/eybond.c
+    eybondapp/lib/eyblib_list.c
+    eybondapp/lib/eyblib_r_stdlib.c
+    eybondapp/public/eybpub_Debug.c
+    eybondapp/public/eybpub_Status.c
+    eybondapp/public/eybpub_watchdog.c
+    eybondapp/public/eybpub_run_log.c
+    eybondapp/public/eybpub_adc.c
+    eybondapp/public/eybpub_Key.c
+    eybondapp/public/Clock.c
+    )
+ else()
+    add_appimg(${target} ${flash_ldscript}
     app/src/app_enter.c
     app/src/net_task.c 
     app/src/elog.c
@@ -130,6 +159,7 @@ if(CONFIG_APPIMG_LOAD_FLASH)
     app/src/gpio_operate.c
     app/src/device_access_information.c
     )
+endif()
     target_link_libraries(${target} PRIVATE ${libc_file_name} ${libm_file_name} ${libgcc_file_name})
 
     set(pac_file ${out_hex_dir}/${target}.pac)

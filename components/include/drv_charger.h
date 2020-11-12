@@ -84,7 +84,7 @@ uint32_t drvChargerGetCurBatVolPercent(void);
 void drvChargeEnable(void);
 
 void drvChargeDisable(void);
-
+bool drvChargerOver(void);
 uint16_t drvChargerGetVbatRT();
 
 #ifdef __cplusplus

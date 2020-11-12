@@ -13,7 +13,7 @@
 #ifndef _HTTP_CONFIG_H_
 #define _HTTP_CONFIG_H_
 
-/* #undef CONFIG_LWIP_HTTP_TEST */
+#define CONFIG_LWIP_HTTP_TEST
 
 
 #endif

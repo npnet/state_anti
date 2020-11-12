@@ -29,8 +29,11 @@ void rec_check_task(void);
 
 void rec_check_task()
 {
-    UINT8 recovery_flag = 1;
-    INT32 get_ret       = 0;
+    UINT8 recovery_flag =  1;
+    INT32 get_ret       =  0;
+
+    INT32 adc_ret       = -1;
+    UINT32 adc_data     =  0;
     while(1)
     {
         fibo_taskSleep(1000);        
@@ -52,6 +55,19 @@ void rec_check_task()
         {
             log_d("\r\nrecovery_flag...\r\n");
         }
+
+        //adc 检测
+        adc_ret = fibo_hal_adc_get_data_polling(2, &adc_data);//ADC0_45引脚对应通道2
+        if(0 == adc_ret)
+        {
+            log_d("\r\nadc_ret success\r\n");
+            log_d("\r\nadc_data is %d\r\n",adc_data);
+        }
+
+        if(-1 == adc_ret)
+        {
+            log_d("\r\nadc_ret fail\r\n");
+        }
     }
 }
 
@@ -64,8 +80,6 @@ void * appimg_enter(void *param)
 
 	elog_init();
  	elog_start();
-
-    uart1_cfg_update();         //更新串口配置
 
     log_init();
 

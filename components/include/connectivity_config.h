@@ -18,11 +18,13 @@
 /**
  * enable SPRD old blue stack
  */
+#ifndef CONFIG_FIBOCOM_L610_NIU
 /* #undef CONFIG_SPRD_BT_ENABLE */
 
 /*
  * enable blueu bt stack
  */
 #define CONFIG_BLUEU_BT_ENABLE
+#endif
 
 #endif

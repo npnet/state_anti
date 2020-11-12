@@ -49,7 +49,10 @@ void serial_communication_information(void)
     char *buf  = NULL;
     UINT16 len = 64;    
 
-    char *baud_rate_char=NULL;
+    char *baud_rate_char  = NULL;
+    char *data_bits_char  = NULL;
+    char *stop_bits_char  = NULL;
+    char *check_bits_char = NULL; 
 
     //串口通讯信息获取
     for (int j = 0; j < number_of_array_elements; j++)
@@ -89,18 +92,19 @@ void serial_communication_information(void)
 		uart1_newcfg.data_bits      = 8;                                   //数据位
         uart1_newcfg.stop_bits      = 1;                                   //停止位
 		uart1_newcfg.parity         = 0;                                   //校验位
+        fibo_free(baud_rate_char);
     }
     else
     {
         baud_rate_char  = fibo_malloc(sizeof(char)*(linkPlace-4));          //波特率字符
-        char data_bits_char[1]  = {0};                                      //数据位字符
-        char stop_bits_char[1]  = {0};                                      //停止位字符
-        char check_bits_char[1] = {0};                                      //校验位字符
-
+        data_bits_char  = fibo_malloc(sizeof(char)*(1));                    //数据位字符
+        stop_bits_char  = fibo_malloc(sizeof(char)*(1));                    //停止位字符
+        check_bits_char = fibo_malloc(sizeof(char)*(1));                    //校验位字符
+                                 
         memcpy(baud_rate_char,  (UINT8 *)buf,               linkPlace-4);   //波特率字符
         memcpy(data_bits_char,  (UINT8 *)buf+linkPlace-3,   1);             //数据位字符
-        memcpy(stop_bits_char,  (UINT8 *)buf+linkPlace+1,   1);             //停止位字符
-        memcpy(check_bits_char, (UINT8 *)buf+linkPlace-1,   1);             //校验位字符
+        memcpy(stop_bits_char,  (UINT8 *)buf+linkPlace-1,   1);             //停止位字符
+        memcpy(check_bits_char, (UINT8 *)buf+linkPlace+1,   1);             //校验位字符
 
         uart1_newcfg.baud        = atoi(baud_rate_char);                   //波特率
         uart1_newcfg.data_bits   = atoi(data_bits_char);                   //数据位
@@ -110,10 +114,15 @@ void serial_communication_information(void)
         log_d("\r\nbaud_rate  is %d\r\n",uart1_newcfg.baud);               //波特率
         log_d("\r\ndata_bits  is %d\r\n",uart1_newcfg.data_bits);          //数据位
         log_d("\r\nstop_bits  is %d\r\n",uart1_newcfg.stop_bits);          //停止位
-        log_d("\r\ncheck_bits is %d\r\n",uart1_newcfg.parity );   		    //校验位
+        log_d("\r\ncheck_bits is %d\r\n",uart1_newcfg.parity );   		   //校验位
+        fibo_free(baud_rate_char);
+        fibo_free(data_bits_char);  
+        fibo_free(stop_bits_char);
+        fibo_free(check_bits_char);  
     } 
+    uart1_newcfg.rx_buf_size          = UART_RX_BUF_SIZE,               //接收缓冲区大小
+    uart1_newcfg.tx_buf_size          = UART_TX_BUF_SIZE,               //发送缓冲区大小
     fibo_free(buf);
-    fibo_free(baud_rate_char);
 }
 
 void uart1_cfg_update()
@@ -127,11 +136,10 @@ void uart1_cfg_update()
 void uart1_recv_cb(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg)
 {
     log_d("uartapi recv uart_port=%d len=%d, data=%s", uart_port, len, (char *)data);
-    log_hex((UINT8 *)data,uart1_recv_len);
 	uart1_recv_len = len;
-    
     memcpy(uart1_recv_data,data,uart1_recv_len); 
 
+    log_hex((UINT8 *)data,uart1_recv_len);
 	int cmp = 1;
 	char *buf="AT+TEST";
 	cmp = memcmp(data,buf,7);
@@ -146,7 +154,7 @@ void uart1_recv_cb(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg
 	}
 
 	dev_access_info();  //硕日专用
-}
+}  
 
 //串口3接收回调
 void uart3_recv_cb(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg)

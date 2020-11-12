@@ -12,7 +12,7 @@
 #include "big_little_endian_swap.h"
 #include "gpio_operate.h"
 
-static void     un_modbus_tcp_Transparent_Transm();
+// static void     un_modbus_tcp_Transparent_Transm();
 
 extern UINT8 	g_29;           	//29号参数
 extern UINT8 	g_34;           	//34号参数
@@ -72,6 +72,22 @@ static void read_card()
 void registered_network()
 {
     read_card();
+
+    char    *buf            = NULL;//APN信息
+    UINT16  len             = 64;    
+    //57号参数：APN配置信息
+    for (int j = 0; j < number_of_array_elements; j++)
+    {
+        if(57 == PDT[j].num)
+        {
+            buf = fibo_malloc(sizeof(char)*64);
+            memset(buf, 0, sizeof(char)*64);
+            PDT[j].rFunc(&PDT[j],buf, &len);
+            log_d("\r\nAPN CFG INFO is %s\r\n",buf); 
+            log_d("\r\nlen is %d\r\n",len);  
+        }
+    }
+
     UINT8       ip[50]          = {0};
     reg_info_t  sim_reg_info;
     INT32       regret          =  -1;
@@ -98,7 +114,7 @@ void registered_network()
 		{
             log_d("\r\nregister network success,try_count is %d\r\n",ret_try_count);
 			
-			pdpret = fibo_PDPActive(1, NULL, NULL, NULL, 0, single_sim_card, ip);
+			pdpret = fibo_PDPActive(1, (UINT8*)buf, NULL, NULL, 0, single_sim_card, ip);
             if(0 == pdpret)
             {
                 log_d("\r\npdp active success,try_count is %d\r\n",ret_try_count);
@@ -124,6 +140,8 @@ void registered_network()
             reg_cycle_flag = 0;   
         }
     }
+
+    fibo_free(buf);
 }
 
 unsigned short htons_special(unsigned short n)
@@ -287,7 +305,7 @@ void net_task(void *param)
     live_a_and_b();
     // build_moment(CM_BUILD_TIME);
 	update_version();//更新版本
-
+    uart1_cfg_update();             //更新串口配置
     uint32_t relink = 0;            //重连计数器
 
     net_lamp_off();
@@ -355,6 +373,7 @@ void net_task(void *param)
     }
 }
 
+#if 0
 //非modbus tcp透传
 static void un_modbus_tcp_Transparent_Transm()
 {
@@ -389,6 +408,7 @@ static void un_modbus_tcp_Transparent_Transm()
         log_d("\r\ncom_lamp_off()\r\n"); 
 	}
 }
+#endif
 
 void parameter_check()
 {
@@ -422,7 +442,7 @@ void parameter_check()
 
 void update_version()
 {
-    char firmware_version[] = "6.0.1.9";
+    char firmware_version[] = "6.0.2.0";
 
 	UINT16 		len 			= 64;    						//参数值长度
 

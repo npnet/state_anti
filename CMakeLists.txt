@@ -112,12 +112,11 @@ if(CONFIG_APPIMG_LOAD_FILE)
     )
     add_custom_target(${target}_pacgen ALL DEPENDS ${pac_file})
 endif()
-
 string(TIMESTAMP VERSION "%Y%m%d%H%M%S")
 if(CONFIG_APPIMG_LOAD_FLASH)
-    set(target 000_4G04_BP_V6.0.1.9_${VERSION})
- if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
-    add_appimg(${target} ${flash_ldscript}
+    set(target 000_4G04_BP_V6.0.2.0_${VERSION})
+if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)  
+    add_appimg(${target} ${flash_ldscript} 
     eybondapp/main/eybapp_L610Enter.c
     eybondapp/app/eybapp_appTask.c
     eybondapp/net/4G_net.c
@@ -132,7 +131,7 @@ if(CONFIG_APPIMG_LOAD_FLASH)
     eybondapp/public/eybpub_Key.c
     eybondapp/public/Clock.c
     )
- else()
+    else()
     add_appimg(${target} ${flash_ldscript}
     app/src/app_enter.c
     app/src/net_task.c 
@@ -160,6 +159,8 @@ if(CONFIG_APPIMG_LOAD_FLASH)
     app/src/device_access_information.c
     )
 endif()
+
+
     target_link_libraries(${target} PRIVATE ${libc_file_name} ${libm_file_name} ${libgcc_file_name})
 
     set(pac_file ${out_hex_dir}/${target}.pac)

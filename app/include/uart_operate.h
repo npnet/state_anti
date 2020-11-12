@@ -15,9 +15,7 @@ extern  UINT16              uart3_recv_len;
 //更新串口信息
 void uart1_cfg_update();
 
-//串口1接收回调
 void uart1_recv_cb(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg);
-
 //串口3接收回调
 void uart3_recv_cb(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg);
 

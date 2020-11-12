@@ -5,6 +5,7 @@
 #include "string.h"
 #include "stdio.h"
 #include "elog.h"
+#include "net_task.h"
 
 extern char 	uart1_recv_data[UART_BUFFER_SIZE];
 extern int 		number_of_array_elements;
@@ -92,4 +93,73 @@ void dev_access_info()
 		memset(uart1_recv_data, 0, sizeof(uart1_recv_data)); 
 		uart1_recv_len = 0;
 	}
+
+	//1.6 获取APN
+	if(0 == memcmp(uart1_recv_data,"AT+APN\r\n",6))
+	{
+		log_d("\r\ndev_access APN\r\n");
+		UINT16 len=0;
+		for (int j = 0; j < number_of_array_elements; j++)       
+		{
+			if(57 == PDT[j].num)
+			{
+				PDT[j].rFunc(&PDT[j],(void*)AT_buf, &len);
+				UINT8 APN_buf[64]={0};						//包含回车换行及0
+				sprintf((char *)APN_buf,"APN:%s\r\n",AT_buf);
+				uart_write(UART1,APN_buf, strlen((char *)APN_buf));
+				log_d("\r\n%s\r\n",APN_buf);
+				break;
+			} 
+		}
+		memset(uart1_recv_data, 0, sizeof(uart1_recv_data)); 
+		uart1_recv_len = 0;
+	}
+
+	//1.6 设置APN
+	if(0 == memcmp(uart1_recv_data,"AT-APN=",7))
+	{
+		log_d("\r\ndev_set APN\r\n");
+		UINT16 len = 0;
+
+		int branch_flag = 1;
+
+		for(int i=0; i<uart1_recv_len; i++)
+		{
+			if(';' == uart1_recv_data[i])
+			{
+				branch_flag = 0;
+			}
+		}
+
+		if(1 == branch_flag)
+		{
+			char *uart1_recv_APN = NULL;
+
+			uart1_recv_APN = fibo_malloc(sizeof(char)*((uart1_recv_len-7)+1));
+			memset(uart1_recv_APN, 0, sizeof(char)*((uart1_recv_len-7)+1));
+			
+			memcpy(uart1_recv_APN,&uart1_recv_data[7],(uart1_recv_len-7)); 
+
+			for (int j = 0; j < number_of_array_elements; j++)       
+			{
+				if(57 == PDT[j].num)
+				{
+					memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+					PDT[j].wFunc(&PDT[j],(void*)uart1_recv_APN, &len);
+					log_d("\r\n%d=%s;\r\n",PDT[j].num,uart1_recv_APN); 
+					log_d("\r\nlen=%d;\r\n",len); 
+				} 
+			}
+			fibo_free(uart1_recv_APN);
+			memset(uart1_recv_data, 0, sizeof(uart1_recv_data)); 
+			uart1_recv_len = 0;
+			
+			parameter_check();
+
+			registered_network();			//设置完APN后重新注册网络
+			tcp_connection(); 				//设置完APN后重新连接网络
+		}
+	}
+
+	
 }   

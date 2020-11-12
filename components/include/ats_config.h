@@ -19,8 +19,8 @@
 // Auto generated. Don't edit it manually!
 
 #define GMI_ID "FIBOCOM"
-#define GMM_ID "L610_CN_00_90-debug"
-#define GMR_ID "DEVEL-gLG610_CN_00_02_V01_202009251719-30-g39964c6b-dirty"
+#define GMM_ID "L610_CN_00_90_ALIOS-debug"
+#define GMR_ID "DEVEL-gL610_CN_02_92_V01_202010201015-12-ga63dc739-dirty"
 
 /**
  * Whether to support coap AT commands
@@ -50,12 +50,12 @@
 /**
  * Whether to support MYNET AT commands
  */
-/* #undef CONFIG_AT_MYNET_TCPIP_SUPPORT */
+#define CONFIG_AT_MYNET_TCPIP_SUPPORT
 
 /**
  * Whether to support MYINFO AT commands
  */
-/* #undef CONFIG_AT_MYINFO_SUPPORT */
+#define CONFIG_AT_MYINFO_SUPPORT
 
 /**
  * Whether to support +IPR=<n>&W
@@ -77,7 +77,7 @@
 /**
  * whether to support onenet DM AT command
  */
-/* #undef CONFIG_AT_DM_LWM2M_SUPPORT */
+#define CONFIG_AT_DM_LWM2M_SUPPORT
 
 /**
  * whether to support oceanconnect AT commands
@@ -92,7 +92,7 @@
 /**
  * whether to support MQTT (based on paho) AT commands
  */
-/* #undef CONFIG_AT_PAHO_MQTT_SUPPORT */
+#define CONFIG_AT_PAHO_MQTT_SUPPORT
 
 /**
  * whether to support AT commands for memory size

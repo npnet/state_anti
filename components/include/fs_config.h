@@ -47,16 +47,16 @@
 /**
  * whether to mount sdcard
  */
-#define CONFIG_FS_MOUNT_SDCARD
+/* #undef CONFIG_FS_MOUNT_SDCARD */
 
 /**
  * whether to format on mounting sdcard file system failure
  */
-#define CONFIG_FS_FORMAT_SDCARD_ON_MOUNT_FAIL
+/* #undef CONFIG_FS_FORMAT_SDCARD_ON_MOUNT_FAIL */
 
 /**
  * sdcard file system mount point
  */
-#define CONFIG_FS_SDCARD_MOUNT_POINT "/sdcard0"
+/* #undef CONFIG_FS_SDCARD_MOUNT_POINT */
 
 #endif

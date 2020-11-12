@@ -3,7 +3,7 @@
 
 #define single_sim_card 0
 
-int launch_tcp_connection();
+int  launch_tcp_connection();
 void tcp_connection();
 void registered_network();
 void net_task(void *param);

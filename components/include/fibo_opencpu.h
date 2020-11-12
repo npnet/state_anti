@@ -37,6 +37,7 @@
 #include "oc_ccid.h"
 #include "oc_mbedtls.h"
 
+
 /* FOTA ERROR CODE */
 #define OTA_ERRCODE_MEMLEAK				(-1)
 #define OTA_ERRCODE_FSREAD				(-2)
@@ -428,7 +429,7 @@ extern INT32 fibo_lbs_get_gisinfo(UINT8 type);
 //uart
 extern INT32 fibo_hal_uart_init(hal_uart_port_t uart_port, hal_uart_config_t *uart_config, uart_input_callback_t recv_cb, void *arg);
 extern INT32 fibo_hal_uart_put(hal_uart_port_t uart_port, UINT8 *buff, UINT32 len);
-extern INT32 fibo_hal_uart_data_to_send(int uart_port);
+//extern INT32 fibo_hal_uart_data_to_send(int uart_port);
 extern INT32 fibo_hal_uart_deinit(hal_uart_port_t uart_port);
 
 //adc
@@ -466,7 +467,7 @@ INT32 fibo_at_send(const UINT8 *cmd, UINT16 len);
 
 extern INT32 fibo_textTrace(INT8 *fmt, ...);
 extern INT32 fibo_get_imsi(UINT8 *imsi);
-extern INT32 fibo_get_imsi_asyn(void *cb(UINT8 *imsi));
+extern INT32 fibo_get_imsi_asyn(void (*cb)(UINT8 *imsi));
 extern INT32 fibo_get_csq(INT32* rssi, INT32* ber);
 extern INT32  fibo_rtc_start_timer(UINT32* sleep_rtc_handle,UINT32 time_out_100ms,bool  is_periodic,void (*callback)(void* ));
 extern INT32  fibo_rtc_delete_timer(UINT32 sleep_rtc_handle);
@@ -593,15 +594,23 @@ extern INT32 fibo_app_dl(UINT8 type, UINT8 *url,UINT8 *filename,UINT8 *username,
 extern INT32 fibo_app_update(void);
 extern INT32 fibo_appfota_ota(UINT8 type, UINT8 *url,UINT8 *filename,UINT8 *username,UINT8 *password);
 extern INT32 fibo_appfota_handle(INT8 *data, UINT32 len);
+extern INT32 fibo_appfota_handle_no_reboot(INT8 *data, UINT32 len);
 
 
 
 //firmware ota
 extern INT32 fibo_firmware_handle(INT8 *data, UINT32 len);
+extern INT32 fibo_firmware_handle_no_reboot(INT8 *data, UINT32 len);
 extern INT32 fibo_firmware_ota(UINT8 type, UINT8 *url,UINT8 *filename,UINT8 *username,UINT8 *password);
 extern INT32 fibo_firmware_dl(UINT8 type, UINT8 *url,UINT8 *filename,UINT8 *username,UINT8 *password);
 extern INT32 fibo_firmware_update(void);
 extern INT32 fibo_ota_errcode(void);
+
+//appfota+firmware ota
+extern INT32 fibo_appfw_ota(UINT8 type, UINT8 *url,UINT8 *filename,UINT8 *username,UINT8 *password);
+extern INT32 fibo_appfw_handle(INT8 *data, UINT32 len);
+extern INT32 fibo_appfw_handle_no_reboot(INT8 *data, UINT32 len);
+
 
 //audio
 extern INT32 fibo_audio_play(INT32 type,INT8 * filename);
@@ -748,7 +757,8 @@ extern INT32 fibo_log_uart_output_close(hal_uart_port_t uart_port);
 
 //Audio Streaming Recording
 extern int32_t fibo_audio_recorder_stream_stop(void);
-extern int32_t fibo_audio_recorder_stream_start(uint8_t format, uint8_t *buf, uint32_t *Wp, uint32_t buffsize, auAmrnbMode_t amr_mode);
+extern int32_t fibo_audio_recorder_stream_start_ex(uint8_t format, uint8_t *buf, uint32_t *Wp, uint32_t buffsize, auAmrnbMode_t amr_mode);
+extern int32_t fibo_audio_recorder_stream_start(uint8_t format, uint8_t *buf, uint32_t *Wp, uint32_t buffsize);
 
 //loopback
 extern int32_t fibo_audio_loopback(audevOutput_t output, audevInput_t input, bool is_lp, uint8_t volume);
@@ -1041,7 +1051,7 @@ extern INT32 fibo_sim_SendApdu(CFW_SIM_ID nSim,uint8_t Channel, uint8_t *pdu,uin
 extern bool fibo_open_cam_led(int32_t level);
 extern void fibo_close_cam_led();
 #endif
-extern INT32 fibo_audrec(uint8_t oper, uint8_t filenum, uint8_t format, uint8_t duration, auAmrnbMode_t amr_mode);
+extern INT32 fibo_audrec(uint8_t oper, uint8_t filenum, uint8_t format, uint8_t duration, char *user_name, auAmrnbMode_t amr_mode);
 extern INT8 fibo_usbswitch(uint8_t en);
 extern INT32 fibo_set_volume_ex(AUDIO_VOLUME_MODE_T mode, uint8_t level);
 
@@ -1121,5 +1131,17 @@ extern int fibo_tls_write(uintptr_t handle, unsigned char *msg, size_t totalLen,
 extern int fibo_tls_read(uintptr_t handle, unsigned char *msg, size_t totalLen, uint32_t timeout_ms, size_t *read_len);
 //sercureboot
 extern bool fibo_get_security_flag(void);
+extern INT32 fibo_SpecialGpio_Init(void);
+
+#ifdef CONFIG_FIBOCOM_ALIOS
+#include "mqtt_api.h"
+extern bool fibo_aliyunMQTT_cloudauth(void* product_key, void* device_name, void* device_secret, void* host, void* product_secret);
+extern void* fibo_aliyunMQTT_cloudConn(int keep_alive,int clean_session, int mqtt_version, iotx_mqtt_event_handle_func_fpt conn_callback);
+extern bool fibo_aliyunMQTT_cloudSub(void* client_handle, void *topic, int qos, iotx_mqtt_event_handle_func_fpt sub_callback);
+extern bool fibo_aliyunMQTT_cloudPub(void* client_handle, char* topic, int qos, char* payload);
+extern bool fibo_aliyunMQTT_cloudUnsub(void* client_handle, char* topic);
+extern bool fibo_aliyunMQTT_cloudDisconn(void** p_client_handle);
+extern bool fibo_aliyunMQTT_cloudPub_FixedLen(void* client_handle, char* topic, int qos, uint8_t* payload, int payloadLen);
+#endif
 #endif
 

@@ -241,7 +241,7 @@
 /**
  * reserved NOR flash size for application
  */
-#define CONFIG_APP_FLASH_SIZE 0x324000
+#define CONFIG_APP_FLASH_SIZE 0x3D0000
 
 /**
  * external NOR flash physical address of application
@@ -256,12 +256,12 @@
 /**
  * NOR flash address of loadable app image
  */
-#define CONFIG_APPIMG_FLASH_ADDRESS 0x60334000
+#define CONFIG_APPIMG_FLASH_ADDRESS 0x603E0000
 
 /**
  * reserved NOR flash size for loadable app image
  */
-#define CONFIG_APPIMG_FLASH_SIZE 0x12C000
+#define CONFIG_APPIMG_FLASH_SIZE 0x80000
 
 /**
  * NOR flash address of system file system

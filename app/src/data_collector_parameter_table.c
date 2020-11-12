@@ -623,7 +623,7 @@ struct _ParamDescripTable_t PDT[] =
     {0,   "0",                       setflag,                    getflag},
     //出厂属性
     {1,   "00",                      setType,                    getType},                 /* 类型 */    
-    {2,   "A0019510160089",          setSerialNum,               getSerialNum },           /* 序列号 */
+    {2,   "00000000000000",          setSerialNum,               getSerialNum },           /* 序列号 */
     {3,   "000",                     setManufacturer,            getManufacturer},         /* 生产厂家 */
     {4,   "1.6",                     setProtocolVer,             getProtocolVer},          /* 协议版本 */
     {5,   "6.0.0.0",                 setSoftwareVer,             getSoftwareVer},          /* 固件版本 */
@@ -666,7 +666,7 @@ struct _ParamDescripTable_t PDT[] =
     {54,  "0",                       setrunlog,                  getrunlog},
     {55,  "20",                      setCSQ,                     getCSQ},                   /* 信号强度 */
     {56,  "0",                       setEthernetSerial,          getEthernetSerial},        /* 通信卡CCID */
-    {57,  "apn:user,pwd",            setAPN,                     getAPN},
+    {57,  "SYNIVERSE",               setAPN,                     getAPN},
     {58,  "0",                       setCPUID,                   getCPUID}
 };
 

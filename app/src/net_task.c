@@ -315,29 +315,24 @@ void net_task(void *param)
     srv_lamp_off();
     tcp_connection(); 			    //连接网络
 
-    bool check_flag = false;
-    
     while(1)
     {
         fibo_taskSleep(1000);//不能删除、给其他任务运行时间
         log_d("\r\napp working\r\n"); 
         g_RecvDataLen = fibo_sock_recv(socketid, (UINT8 *)g_RecvData, sizeof(g_RecvData));
+        log_d("\r\ng_RecvDataLen is %d\r\n",g_RecvDataLen); 
         log_hex((UINT8 *)g_RecvData,g_RecvDataLen);
-        if(0 != g_RecvDataLen)
+        if(g_RecvDataLen >= 0)
         {
-            log_d("\r\n0 != g_RecvDataLen\r\n"); 
             relink  = 0;		//重连计数器清零
             g_i     = 0;		//重启计数器清零
-            check_flag = data_frame_legal_checking((UINT8 *)g_RecvData);
-            if(TRUE == check_flag )	                            /*判断数据帧是否为modbus_tcp*/
+            if(TRUE == data_frame_legal_checking((UINT8 *)g_RecvData))	                            /*判断数据帧是否为modbus_tcp*/
             {
                 receiving_processing(g_RecvData[7]);
                 memset(g_RecvData, 0, sizeof(g_RecvData));		//接收buff清零
                 g_RecvDataLen = 0;								//接收长度清零
                 fibo_sock_send(socketid, (UINT8 *)g_SendData, g_SendDataLen);
-                log_d("\r\n"); 
                 log_hex((UINT8 *)g_SendData,g_SendDataLen);
-                log_d("\r\n"); 
             }
             else
             {

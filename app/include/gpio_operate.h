@@ -21,6 +21,11 @@
 #define RECOVERY    31
 
 #define ADC0        45
+
+//硬件引脚 45 ADC0  对应通道2
+//硬件引脚 44 ADC1  对应通道3
+//硬件引脚 43 ADC2  对应通道1
+
 // #define SPI_CS      37
 // #define SPI_MOSI    38
 // #define SPI_MISO    39

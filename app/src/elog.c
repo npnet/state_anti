@@ -701,7 +701,7 @@ void elog_hexdump(const char *name, uint8_t width, uint8_t *buf, uint16_t size)
     for (i = 0; i < size; i += width) {
         /* package header */
 //        fmt_result = snprintf(log_buf, ELOG_LINE_BUF_SIZE, "D/HEX %s: %04X-%04X: ", name, i, i + width);
-        fmt_result = snprintf(log_buf, ELOG_LINE_BUF_SIZE, "%04X: ", i + width);
+        fmt_result = snprintf(log_buf, ELOG_LINE_BUF_SIZE, "\r\n%04X: ", i + width);
         /* calculate log length */
         if ((fmt_result > -1) && (fmt_result <= ELOG_LINE_BUF_SIZE)) {
             log_len = fmt_result;

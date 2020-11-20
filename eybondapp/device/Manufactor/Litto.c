@@ -2,10 +2,8 @@
   *@brief   : litto.c
   *@notes   : 2017.12.29 CGQ   
 *******************************************************************************/
-#include "ql_stdlib.h"
-
 #include "eyblib_typedef.h"
-// #include "eyblib_r_stdlib.h"
+#include "eyblib_r_stdlib.h"
 #include "Protocol.h"
 #include "Modbus.h"
 #include "Device.h"
@@ -45,7 +43,7 @@ static u8_t commandCheck(void *load, void *optPoint)
 		)
 	{
 		cmd->ack.lenght = cmd->ack.size;
-		Ql_memset(cmd->ack.payload, 0, cmd->ack.lenght);
+		r_memset(cmd->ack.payload, 0, cmd->ack.lenght);
 	}
 	else if (ret >  0)
 	{

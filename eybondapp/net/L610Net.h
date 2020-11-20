@@ -9,7 +9,6 @@
 
 #include "4G_net.h"
 
-#define  APP_NET_OC_TIMER_ID  (TIMER_ID_USER_START + 5)
 /*****************************************************************
 * define OceanConnect state for timer state_step
 ******************************************************************/
@@ -36,19 +35,19 @@ typedef struct {
 //  Enum_OCREG_State ocreg_status;  // oc register status
   char  ipStr[52];        // user connet IP/DNS, lake
   NetDataCallback callback;  // rcveData callback fun
-} BC25OCNet_t;
+} L610Net_t;
 
 extern OC_State_e m_OCActState;
 
-void BC25Net_init(void);
-u8_t BC25Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback);
-void BC25Net_close();
-int  BC25Net_send(u8_t *data, u16_t len);
-void BC25Net_closeAll(void);
-void BC25Net_manage(void);
-u8_t BC25Net_status();
-void BC25Net_ready(void);
-// BC25Net_t *BC25Socket(s32_t socketid);
+void L610Net_init(void);
+u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback);
+void L610Net_close();
+int  L610Net_send(u8_t *data, u16_t len);
+void L610Net_closeAll(void);
+void L610Net_manage(void);
+u8_t L610Net_status();
+void L610Net_ready(void);
+// L610Net_t *L610Socket(s32_t socketid);
 
 #endif  // __L610_NET_H_
 /******************************************************************************/

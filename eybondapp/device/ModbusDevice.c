@@ -2,20 +2,24 @@
   *@brief   : ModbusDevice.c  MOSOEC Modbus
   *@notes   : 2017.08.04 CGQ
 *******************************************************************************/
+#ifdef _PLATFORM_BC25_
 #include "ql_stdlib.h"
 #include "ql_memory.h"
+#endif
 
 #include "eyblib_list.h"
 #include "eyblib_swap.h"
-// #include "eyblib_r_stdlib.h"
-// #include "eyblib_memory.h"
+#include "eyblib_r_stdlib.h"
+#include "eyblib_memory.h"
 
 #include "eybpub_Debug.h"
 #include "eybpub_run_log.h"
+#include "eybpub_utility.h"
 
 #include "ModbusDevice.h"
 #include "Modbus.h"
 #include "Protocol.h"
+#include "Device.h"
 
 #include "eybond.h"
 
@@ -58,17 +62,8 @@ void ModbusDevice_init(void) {
 void ModbusDevice_clear(void) {
   list_trans(&onlineDeviceList, onlineDeviceRemove, null);
   list_delete(&onlineDeviceList);
-//  memory_release(ModbusDevice.cfg);  
+  memory_release(ModbusDevice.cfg);     // mike 20201120
 //  memory_release(MeterDevice.cfg);
-
-  if (ModbusDevice.cfg != NULL) {
-    Ql_MEM_Free(ModbusDevice.cfg);
-    ModbusDevice.cfg = NULL;
-  }
-/*  if (MeterDevice.cfg != NULL) {
-    Ql_MEM_Free(MeterDevice.cfg);
-    MeterDevice.cfg = NULL;
-  } */  // mike 20201028
 }
 
 /*******************************************************************************
@@ -99,8 +94,8 @@ static void addrFind(void) {
   DeviceExplain_t *exp;
   u8_t addrTab[64];
 
-  Ql_memset(addrTab, 0, sizeof(addrTab));
-  Ql_memcpy(addrTab, ModbusDevice.addrTab, sizeof(addrTab));
+  r_memset(addrTab, 0, sizeof(addrTab));
+  r_memcpy(addrTab, ModbusDevice.addrTab, sizeof(addrTab));
 
   /* 如果查找到指定地址，本地址对应数组数据为0xFF */
   list_trans(&DeviceList, addrCmp, addrTab);
@@ -109,9 +104,7 @@ static void addrFind(void) {
     APP_DEBUG("addrTab[%d]: %04X \r\n", i, addrTab[i]);
     if (addrTab[i] != 0xFF) {
       ModbusGetCmd_t *cmd = null;
-//      exp = memory_apply(sizeof(DeviceExplain_t));    // mike 20200828
-      exp = Ql_MEM_Alloc(sizeof(DeviceExplain_t));
-
+      exp = memory_apply(sizeof(DeviceExplain_t));
 /*      if (MeterDevice.head != null && addrTab[i] >= MeterDevice.startAddr && addrTab[i] <= MeterDevice.endAddr) {
         dev = list_nodeApply(sizeof(Device_t));
         cmd = (ModbusGetCmd_t *)MeterDevice.head->findCmd;
@@ -380,7 +373,13 @@ static void onlineDeviceAddr(Device_t *dev) {
 //      log_saveAbnormal("Device online: ", exp->addr);     //mike 20200824
       APP_DEBUG("Device online: %d\r\n", exp->addr);
       log_save("Device online: %d", exp->addr);
+#ifdef _PLATFORM_BC25_
       Ql_OS_SendMessage(EYBOND_TASK, EYBOND_CMD_REPORT, 0, 0);  // mike Report first message when device online
+#endif
+#ifdef _PLATFORM_L610_
+      int value_put = EYBOND_CMD_REPORT;
+      fibo_queue_put(EYBOND_TASK, &value_put, 0);
+#endif
     } else {
       APP_DEBUG("Monitor num over!!\r\n");
       log_save("Monitor num over!!");
@@ -419,7 +418,7 @@ static u8_t onlineDeviceCmdAdd(void *load, void *changePoint) {
   DeviceCmd_t *cmd = (DeviceCmd_t *)load;
 
   CmdBuf_t *cmdBuf = list_find(head, onlineDeviceCmdCmp, cmd->cmd.payload);
-  Ql_memcpy(&crc, &cmd->ack.payload[cmd->ack.lenght - 2], 2);
+  r_memcpy(&crc, &cmd->ack.payload[cmd->ack.lenght - 2], 2);
 
   if (cmdBuf == null) {
 
@@ -432,27 +431,21 @@ static u8_t onlineDeviceCmdAdd(void *load, void *changePoint) {
     cmdBuf->crc = crc;
     cmdBuf->buf.size = cmd->ack.lenght > 5 ? (cmd->ack.lenght - 5) : 0;
     cmdBuf->buf.lenght = cmdBuf->buf.size;
-//    cmdBuf->buf.payload = memory_apply(cmdBuf->buf.size);  // mike 20200828
-    cmdBuf->buf.payload = Ql_MEM_Alloc(cmdBuf->buf.size);
-    Ql_memcpy(cmdBuf->buf.payload, &cmd->ack.payload[3], cmdBuf->buf.size);
+    cmdBuf->buf.payload = memory_apply(cmdBuf->buf.size);
+    r_memcpy(cmdBuf->buf.payload, &cmd->ack.payload[3], cmdBuf->buf.size);
   }
 
   if (crc != cmdBuf->crc && cmd->ack.lenght > 5) {
     int dataLenght = cmd->ack.lenght - 5;
 
     if (dataLenght > cmdBuf->buf.size) {
-//    memory_release(cmdBuf->buf.payload);
-      if (cmdBuf->buf.payload != NULL) {
-        Ql_MEM_Free(cmdBuf->buf.payload);
-        cmdBuf->buf.payload = NULL;
-      }
+      memory_release(cmdBuf->buf.payload);
       cmdBuf->buf.size = dataLenght;
       cmdBuf->buf.lenght = cmdBuf->buf.size;
-//      cmdBuf->buf.payload = memory_apply(cmdBuf->buf.size);
-      cmdBuf->buf.payload = Ql_MEM_Alloc(cmdBuf->buf.size);  // mike 20200828
+      cmdBuf->buf.payload = memory_apply(cmdBuf->buf.size);
     }
     cmdBuf->buf.lenght = dataLenght;
-    Ql_memcpy(cmdBuf->buf.payload, &cmd->ack.payload[3], dataLenght);
+    r_memcpy(cmdBuf->buf.payload, &cmd->ack.payload[3], dataLenght);
     cmdBuf->state = 0;
     cmdBuf->crc = crc;
   }
@@ -468,14 +461,8 @@ static u8_t onlineDeviceCmdAdd(void *load, void *changePoint) {
   * @retval None
 *******************************************************************************/
 static u8_t onlineDeviceCmdRemove(void *load, void *changePoint) {
-  CmdBuf_t *cmdBuf = load;
-   
-//  memory_release(cmdBuf->buf.payload);
-  if (cmdBuf->buf.payload != NULL) {
-    Ql_MEM_Free(cmdBuf->buf.payload);
-    cmdBuf->buf.payload = NULL;
-  }
-
+  CmdBuf_t *cmdBuf = load;   
+  memory_release(cmdBuf->buf.payload);
   return 1;
 }
 
@@ -524,16 +511,11 @@ static u8_t onlineCmdTabPrintf(void *load, void *changeData) {
   cmd = (DeviceCmd_t *)load;
 
   if (cmd->ack.lenght > 0) {
-//    char *buf = memory_apply(cmd->ack.lenght * 2 + 1);
-    char *buf = Ql_MEM_Alloc(cmd->ack.lenght * 2 + 1);
+    char *buf = memory_apply(cmd->ack.lenght * 2 + 1);
 //    Swap_hexChar(buf, cmd->ack.payload, cmd->ack.lenght, ' ');    // mike 20200904
     hextostr(cmd->ack.payload, buf, cmd->ack.lenght);   // 和Swap_hexChar是反的
     APP_DEBUG("%s\r\n", buf);
-//    memory_release(buf);
-    if (buf != NULL) {
-      Ql_MEM_Free(buf);
-      buf = NULL;
-    }
+    memory_release(buf);
   }
 
   return 1;

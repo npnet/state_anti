@@ -284,7 +284,7 @@ static u8_t protocolCheck(void *load, void *optPoint)
 		}
 		else if (reg == proCmdTab[2].start)
 		{
-			u16 type = (cmd->ack.payload[3]<<8)|(cmd->ack.payload[4]);
+			u16_t type = (cmd->ack.payload[3]<<8)|(cmd->ack.payload[4]);
 
 			if (type >= 400){
 				*((CONVERT_TYPE)optPoint) = &huawei02DE;

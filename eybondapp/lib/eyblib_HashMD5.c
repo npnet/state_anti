@@ -3,7 +3,9 @@
 说	明：    MD5加密算法原码
 修　改：
 *******************************************************************************/
+#ifdef _PLATFORM_BC25_
 #include "ql_stdlib.h"
+#endif
 #include "eyblib_HashMD5.h"
 
 static u8_t padding[64] = {

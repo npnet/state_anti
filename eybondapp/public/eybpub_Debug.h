@@ -8,9 +8,10 @@
 #define __EYBPUB_DEBUG_H_
 
 #define EYBOND_DEBUG_ENABLE    // 打开DEBUG log
-#define EYBOND_TRACE_ENABLE    // 将DEBUG log输出改为TRACE模式,不能直接用TRACE_ENABLE做开关,会影响SDK里面的接口
+// #define EYBOND_TRACE_ENABLE    // 将DEBUG log输出改为TRACE模式,不能直接用TRACE_ENABLE做开关,会影响SDK里面的接口
+#define DBG_BUF_LEN     1024
 
-#ifndef _PLATFORM_L610_
+#ifdef _PLATFORM_BC25_
 #include "ql_stdlib.h"
 #include "ql_uart.h"      //include ql_common.h -- include ql_gpio.h
 #include "eyblib_typedef.h"
@@ -22,7 +23,6 @@
 #endif
 #define DEBUG_MSG_ID    (0x00FB00)
 
-#define DBG_BUF_LEN     1024
 #define DEBUG_PORT_BITRATE 57600
 
 #define DEBUG_INPUT_EHCO   0
@@ -54,11 +54,45 @@ extern void Debug_trace(u8_t *p, u16_t len);
 
 #else
 #define APP_DEBUG(FORMAT,...)
+#define APP_PRINT(FORMAT,...)
+#define APP_TRACE(FORMAT,...)
 #endif
 
-#else   // 添加L610 SDK相关接口
+#endif
+
+#ifdef _PLATFORM_L610_   // 添加L610 SDK相关接口
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
+#include "eyblib_typedef.h"
+
+#define DEBUG_PORT      2
+static char DebugBuffer[DBG_BUF_LEN];
+#define DEBUG_PORT_BITRATE 115200
+
+#ifdef EYBOND_DEBUG_ENABLE
+extern void Debug_output(u8_t *p, u16_t len);
+
+#define APP_DEBUG(FORMAT,...)  {\
+  memset(DebugBuffer, 0, DBG_BUF_LEN);\
+  snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__);\
+  Debug_output((u8_t*)DebugBuffer, strlen(DebugBuffer));\
+}
+//   fibo_hal_uart_put(DEBUG_PORT, (u8_t *)DebugBuffer, strlen(DebugBuffer));
+//   Debug_output((u8_t*)DebugBuffer, strlen(DebugBuffer));
+extern void Print_output(u8_t *p, u16_t len);
+#define APP_PRINT(FORMAT,...) {\
+    memset(DebugBuffer, 0, DBG_BUF_LEN);\
+    snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    Print_output((u8_t*)DebugBuffer, strlen(DebugBuffer));\
+}
+
+#else
 #define APP_DEBUG(FORMAT,...)
 #define APP_PRINT(FORMAT,...)
+#define APP_TRACE(FORMAT,...)
+#endif
+
 #endif
 void Debug_init(void);
 #endif //__EYBPUB_DEBUG_H_

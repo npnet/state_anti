@@ -113,25 +113,44 @@ if(CONFIG_APPIMG_LOAD_FILE)
     add_custom_target(${target}_pacgen ALL DEPENDS ${pac_file})
 endif()
 string(TIMESTAMP VERSION "%Y%m%d%H%M%S")
-if(CONFIG_APPIMG_LOAD_FLASH)
-    set(target 000_4G04_BP_V6.0.2.0_${VERSION})
-if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)  
-    add_appimg(${target} ${flash_ldscript} 
-    eybondapp/main/eybapp_L610Enter.c
-    eybondapp/app/eybapp_appTask.c
-    eybondapp/net/4G_net.c
-    eybondapp/server/Eybond/eybond.c
-    eybondapp/lib/eyblib_list.c
-    eybondapp/lib/eyblib_r_stdlib.c
-    eybondapp/public/eybpub_Debug.c
-    eybondapp/public/eybpub_Status.c
-    eybondapp/public/eybpub_watchdog.c
-    eybondapp/public/eybpub_run_log.c
-    eybondapp/public/eybpub_adc.c
-    eybondapp/public/eybpub_Key.c
-    eybondapp/public/Clock.c
+string(TIMESTAMP LONGDATE "%y%m%d")
+string(TIMESTAMP LONGTIME "%H%M%S")
+if(CONFIG_APPIMG_LOAD_FLASH)    
+if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
+    set(CUSTOMER_ID 000)
+    set(PLATFORM ${CUSTOMER_ID}_4G04_02_)
+    set(MEMORY BP_V)
+    set(APPVERSION 6.0.2.0)
+    set(target ${PLATFORM}${MEMORY}${APPVERSION}_${VERSION})
+    set(__FWVERSION__ ${PLATFORM}${MEMORY}${APPVERSION})
+    set(_BUILDINFO_ EybondFWG)
+    ADD_DEFINITIONS(-DMAKE_TIME=\"${VERSION}\")
+    ADD_DEFINITIONS(-DMAKE_DATE=\"${LONGDATE}\")
+    ADD_DEFINITIONS(-DMAKE_TIME2=\"${LONGTIME}\")
+    ADD_DEFINITIONS(-DFWVERSION=\"${__FWVERSION__}\")
+    ADD_DEFINITIONS(-D__APPVERSION__=\"${APPVERSION}\")
+    ADD_DEFINITIONS(-DCUSTOMER=\"${CUSTOMER_ID}\")
+    ADD_DEFINITIONS(-DBUILDINFO=\"${_BUILDINFO_}\")
+    file(GLOB MAIN_FILES eybondapp/main/*.c)
+    file(GLOB APP_FILES eybondapp/app/*.c)
+    file(GLOB NET_FILES eybondapp/net/*.c)
+    file(GLOB DEVICES_FILES eybondapp/device/*.c)
+    file(GLOB DEVICES_MANUFACTOR_FILES eybondapp/device/Manufactor/*.c)
+    file(GLOB SERVER_EYBOND_FILES eybondapp/server/Eybond/*.c)
+    file(GLOB LIB_FILES eybondapp/lib/*.c)
+    file(GLOB PUB_FILES eybondapp/public/*.c)
+    add_appimg(${target} ${flash_ldscript}
+    ${MAIN_FILES}
+    ${APP_FILES}
+    ${NET_FILES}
+    ${DEVICES_FILES}
+    ${DEVICES_MANUFACTOR_FILES}
+    ${SERVER_EYBOND_FILES}
+    ${LIB_FILES}
+    ${PUB_FILES}
     )
-    else()
+ else()
+    set(target 000_4G04_02_BP_V6.0.2.0_${VERSION})
     add_appimg(${target} ${flash_ldscript}
     app/src/app_enter.c
     app/src/net_task.c 

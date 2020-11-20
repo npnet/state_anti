@@ -2,12 +2,9 @@
   *@brief   : moso.c
   *@notes   : 2017.12.26 CGQ   
 *******************************************************************************/
-#include "ql_stdlib.h"
-#include "ql_memory.h"
-
 #include "eyblib_typedef.h"
-// #include "eyblib_memory.h"
-// #include "eyblib_r_stdlib.h"
+#include "eyblib_memory.h"
+#include "eyblib_r_stdlib.h"
 #include "eybpub_SysPara_File.h"
 
 #include "Protocol.h"
@@ -70,8 +67,6 @@ static const ModbusGetCmd_t proCmdTab[] = {
     {03,  0x00,  4},
 };
 
-
-
 static const ModbusGetCmdTab_t protocolCmd = PROTOCOL_TABER(proCmdTab, 0, 0);
 static const ModbusGetCmdTab_t moso50kProtocol = PROTOCOL_TABER(moso50k, 0, 0x0212);
 static const ModbusGetCmdTab_t moso1kProtocol = PROTOCOL_TABER(moso1k, 0, 0x0210);
@@ -80,7 +75,6 @@ static const ModbusGetCmdTab_t moso50k_1Protocol = PROTOCOL_TABER(moso50k_1, 0, 
 static const ModbusGetCmdTab_t mosoBatterProtocol = PROTOCOL_TABER(mosoBatter, 1, 0x0803);
 
 static u8_t protocolCheck(void *load, void *optPoint);
-
 
 const ModbusDeviceHead_t MOSODevice = {
     &UART_9600_N1,
@@ -122,7 +116,7 @@ static u8_t protocolCheck(void *load, void *optPoint)
 //                    SysPara_Get(3, &buf);
                     parametr_get(3, &buf);
 //                    if (r_strfind("87", (char*)buf.payload) >= 0) // mike 20200828
-                    if (Ql_strstr((char*)buf.payload, "87") != NULL)
+                    if (r_strstr((char*)buf.payload, "87") != NULL)
                     {
                         *((CONVERT_TYPE)optPoint) = &moso50k_1Protocol;//&moso3kProtocol;//
                     }
@@ -130,13 +124,9 @@ static u8_t protocolCheck(void *load, void *optPoint)
                     {
                         *((CONVERT_TYPE)optPoint) = &moso50kProtocol;
                     }
-//                    memory_release(buf.payload);
-                    if (buf.payload != NULL) {
-                        Ql_MEM_Free(buf.payload);
-                        buf.payload = NULL;
-                        buf.size = 0;
-                        buf.lenght = 0;
-                    }
+                    memory_release(buf.payload);
+                    buf.size = 0;
+                    buf.lenght = 0;
                 }
 				return 0;
 			case 0x12:

@@ -11,6 +11,7 @@
 
 #ifdef _PLATFORM_L610_
 #include "oc_uart.h"
+#include "L610_UARTConfig.h"
 #endif
 
 #include "eyblib_typedef.h"
@@ -29,7 +30,6 @@ typedef struct
     ModbusGetCmd_t *cmdTab;
 }ModbusGetCmdTab_t;
 
-#ifdef _PLATFORM_BC25_
 typedef struct
 {   
     const ST_UARTDCB 		  *hardCfg;
@@ -49,7 +49,7 @@ typedef struct
 
 typedef struct
 {
-	const u8 *addrTab;
+	const u8_t *addrTab;
     ST_UARTDCB *cfg;
     const ModbusDeviceHead_t *head;
     const int monitorCount;
@@ -73,66 +73,6 @@ extern const ST_UARTDCB UART_9600_E1;
 extern const ST_UARTDCB UART_19200_N1;
 extern const ST_UARTDCB UART_38400_N1;
 extern const ST_UARTDCB UART_115200_N1;
-#endif
-
-#ifdef _PLATFORM_L610_
-typedef struct
-{   
-    const hal_uart_port_t   *hardCfg;
-    const ModbusGetCmd_t    *findCmd;       //Find Cmd; 
-    const ModbusGetCmdTab_t *procmd;    	//protocol find command
-    const cmdProtocol       devicePro;     
-    const cmdProtocol       ackDataPro;  	//Onceage process device command ack data return 0: data is OK ,other device ack abnormal
-}ModbusDeviceHead_t;
-
-typedef struct
-{ 
-    u8_t startAddr;
-    u8_t endAddr;
-    hal_uart_port_t          *cfg;
-    const ModbusDeviceHead_t *head;
-}ADDDevice_t;
-
-typedef struct
-{
-	const u8_t *addrTab;
-    hal_uart_port_t          *cfg;
-    const ModbusDeviceHead_t *head;
-    const int monitorCount;
-}ModbusDevice_t;
-
-typedef struct
-{
-	u16_t code;
-	u8_t startAddr;
-	u8_t endAddr;
-    hal_uart_port_t cfg;
-}ProtocolAttr_t;
-
-typedef enum {
-    FC_NONE=1,  // None Flow Control
-    FC_HW,      // Hardware Flow Control 
-    FC_SW       // Software Flow Control
-} Enum_FlowCtrl;
-
-typedef struct {
-    u32_t                      baudrate; 
-    hal_uart_data_bits_t       dataBits;
-    hal_uart_stop_bits_t       stopBits;
-    hal_uart_parity_t          parity;
-    Enum_FlowCtrl              flowCtrl;
-}ST_UARTDCB;
-
-extern ModbusDevice_t ModbusDevice;
-// extern ADDDevice_t MeterDevice;  // mike 20201028 屏蔽电表查询
-extern const ST_UARTDCB UART_2400_N1;
-extern const ST_UARTDCB UART_4800_N1;
-extern const ST_UARTDCB UART_9600_N1;
-extern const ST_UARTDCB UART_9600_E1;
-extern const ST_UARTDCB UART_19200_N1;
-extern const ST_UARTDCB UART_38400_N1;
-extern const ST_UARTDCB UART_115200_N1;
-#endif
 
 void Protocol_init(void);
 void Protocol_clean(void);

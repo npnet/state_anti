@@ -14,9 +14,17 @@
 #endif
 #include "eyblib_typedef.h"
 
+#ifdef _PLATFORM_BC25_
 // #define EYBOND_DATA_PROCESS  (0x010001)
 #define EYBOND_DATA_PROCESS  MSG_ID_USER_START+0xFB0
 #define EYBOND_CMD_REPORT    MSG_ID_USER_START+0xFB1
+#endif
+
+#ifdef _PLATFORM_L610_
+#define MSG_ID_USER_EYB_START    0x4000
+#define EYBOND_DATA_PROCESS  MSG_ID_USER_EYB_START+0xFB0
+#define EYBOND_CMD_REPORT    MSG_ID_USER_EYB_START+0xFB1
+#endif
 
 #define ESP_PROCESS_FREP        (1000)       //ms
 #define EPS_ACK_OVERTIME        (15000)

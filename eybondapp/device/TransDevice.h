@@ -6,7 +6,14 @@
 #define __TRANS_DEVICE_H
 
 #include "eyblib_typedef.h"
+
+#ifdef _PLATFORM_BC25_
 #include "ql_uart.h"
+#endif
+
+#ifdef _PLATFORM_L610_
+#include "L610_UARTConfig.h"
+#endif
 
 typedef struct {
   char narration[32];

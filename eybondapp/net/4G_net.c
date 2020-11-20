@@ -2,17 +2,23 @@
   *@brief   : net.c for 4G modem
   *@notes   : 2020.08.04 MWY
 ******************************************************************************/
+#ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
+#endif
+
 #include "eyblib_list.h"
 #include "eyblib_typedef.h"
 #include "eyblib_swap.h"
 
 #include "eybpub_Debug.h"
 #include "eybpub_Status.h"
+#include "eybpub_utility.h"
+
 // #include "eybpub_watchdog.h"
 // #include "eybpub_run_log.h"
 
 #include "4G_net.h"
-#include "L610Net.h"
+// #include "L610Net.h"
 
 #include "eybapp_appTask.h"
 
@@ -32,7 +38,6 @@ static u32_t m_timeCheck = 0;
 
 static ListHandler_t netSendPakege;
 // static int netInTest(Buffer_t *buf, void_fun_bufp output);
-
 // static s32_t m_simStat = SIM_STAT_UNSPECIFIED;
 static void Net_sendData(void);
 
@@ -44,50 +49,37 @@ static void Net_sendData(void);
 *******************************************************************************/
 void proc_net_task(s32_t taskId) {
   int ret = -1;
-//  ST_MSG msg;
+  int msg = 0;
   u8_t tmpbuf[64];
 
   static int netResetCnt = 0;
   s32_t cereg = 0;
   u32_t uStackSize = 0;
 
-  /*variable Initialization*/
+  // variable Initialization
   netResetCnt = 0;
   NetOvertime = 0;
   m_timeCheck = 0;
 
+  APP_PRINT("Net task run...\r\n");
   list_init(&netSendPakege);    // 初始化网络发送队列
-
   while (1) {
-/*    Ql_OS_GetMessage(&msg);
-    switch (msg.message) {
+    int value_put = 0;
+    fibo_queue_get(EYBNET_TASK, (void *)&msg, 0);
+    switch (msg) {
       case APP_MSG_UART_READY:
-        APP_PRINT("Net task run...\r\n");
+        APP_DEBUG("Net task APP_MSG_UART_READY\r\n");
         break;
-      case NET_CMD_RESTART_ID:  // BC25 restart
+      case NET_CMD_RESTART_ID:
         break;
-      case NET_CMD_AT_ID:  // mike 20200817 注销处理AT指令，转到APP task
-        break;
-      case NET_CMD_SENDDATA_ID:
-      case APP_MSG_TIMER_ID: { // 从APP task传递过来的定时器(1000 ms)消息
+      case APP_MSG_TIMER_ID:  // 从APP task传递过来的定时器(1000 ms)消息
         APP_DEBUG("Net task get APP_USER_TIMER_ID:%d\r\n", NetOvertime);
-#if TEST_RF
-#else
-        APP_DEBUG("RF test off!!\r\n");
-#endif
-        m_timeCheck++;
-        if (m_timeCheck >= 60) {
-//          uStackSize = Ql_OS_GetCurrenTaskLeftStackSize();
-          APP_DEBUG("net task stack size:%ld!!\r\n", uStackSize);
-          m_timeCheck = 0;
-        }
-        BC25Net_manage();
-      }
-      break;
+        break;
       default:
         break;
-    }*/
+    }    
   }
+  fibo_thread_delete();
 }
 
 /*******************************************************************************
@@ -97,7 +89,8 @@ void proc_net_task(s32_t taskId) {
   * @retval None
 *******************************************************************************/
 u8_t Net_connect(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) {
-  return BC25Net_open(mode, ip, port, netCallback);
+//  return BC25Net_open(mode, ip, port, netCallback);
+  return 1;
 }
 
 /*******************************************************************************
@@ -107,7 +100,8 @@ u8_t Net_connect(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) {
   * @retval None
 *******************************************************************************/
 void Net_close() {
-  BC25Net_close();
+//  BC25Net_close();
+  return;
 }
 
 /*******************************************************************************
@@ -117,7 +111,8 @@ void Net_close() {
   * @retval None
 *******************************************************************************/
 u8_t Net_status() {
-  return BC25Net_status();
+//  return BC25Net_status();
+  return 1;
 }
 
 /*******************************************************************************
@@ -139,7 +134,6 @@ void Net_send(u8_t port, u8_t *pData, u16_t len) {
     APP_DEBUG("memory apply full!!!");
   }
 }
-#ifndef _PLATFORM_L610_
 /*******************************************************************************
   * @brief
   * @note   None
@@ -147,35 +141,15 @@ void Net_send(u8_t port, u8_t *pData, u16_t len) {
   * @retval None
 *******************************************************************************/
 static void Net_sendData(void) {
-  NetSend_t *send = (NetSend_t *)list_nextData(&netSendPakege, null);
+/*  NetSend_t *send = (NetSend_t *)list_nextData(&netSendPakege, null);
   if (send == null) {
-    // memory_trans(Debug_output);  // mike 20200805
     return;
   } else if (send->buf.lenght == 0) {
     list_nodeDelete(&netSendPakege, send);
   } else {
     int ret = 0;
-    ret = BC25Net_send(send->buf.payload, send->buf.lenght);
-    if (ret == RIL_AT_SUCCESS) {
-      list_nodeDelete(&netSendPakege, send);
-      APP_DEBUG("Send LWM2M data successfully.\r\n");
-//      Ql_Delay_ms(1000);    // NB消息之间需要延时?
-      NetOvertime = 0;
-    } else if (ret == RIL_AT_FAILED) {
-      APP_DEBUG("Send LWM2M data Fail.\r\n");
-      return;
-    } else if (ret == -520) {
-      list_nodeDelete(&netSendPakege, send);
-      APP_DEBUG("data is longer than 512.\r\n");
-    } else {
-      APP_DEBUG("Fail to connect to server, cause=%d\r\n", ret);
-    }
-  }
-//  Ql_OS_SendMessage(EYBNET_TASK, NET_CMD_SENDDATA_ID, 2, 0);
+  } */
 }
-#else
-static void Net_sendData(void) {
-}
-#endif
+
 /******************************************************************************/
 

@@ -7,6 +7,7 @@
 
 #ifdef _PLATFORM_L610_
 #include "oc_uart.h"
+#include "L610_UARTConfig.h"
 #endif
 
 #include "eyblib_typedef.h"
@@ -36,12 +37,7 @@ typedef struct Device {
   u8_t lock;        //device lock
   u16_t type;       //device type
   void *explain;    //
-#ifdef _PLATFORM_BC25_
   ST_UARTDCB *cfg;  //device config msg
-#endif
-#ifdef _PLATFORM_L610_
-  hal_uart_config_t *cfg;
-#endif  
   u8_t (*callBack)(struct Device *dev);  //command end call back function
   ListHandler_t cmdList;  //device command tab
 } Device_t; //
@@ -55,6 +51,7 @@ typedef struct DeviceCmd {
 
 extern ListHandler_t DeviceList;
 
+void proc_device_task(s32_t taskId);
 void Device_add(Device_t *device);
 void Device_inset(Device_t *device);
 void Device_remove(Device_t *device);

@@ -8,6 +8,7 @@
 #endif
 
 #ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
 #endif
 
 #include "eybpub_Debug.h"
@@ -16,8 +17,8 @@
 #include "eyblib_typedef.h"
 #include "eyblib_swap.h"
 #include "eyblib_algorithm.h"
-// #include "eyblib_memory.h"
-// #include "eyblib_r_stdlib.h"
+#include "eyblib_memory.h"
+#include "eyblib_r_stdlib.h"
 #include "eyblib_list.h"
 
 #include "Device.h"
@@ -33,7 +34,7 @@
 #include "Huawei.h"
 #include "Sofar.h"
 #include "MustSolar.h"
-#include "Growatt.h"
+#include "growatt.h"
 #include "GreatWall.h"
 #include "InnovPower.h"
 #include "East.h"
@@ -41,9 +42,9 @@
 #include "SREN.h"
 #include "Suntrio.h"
 #include "AOTAI.h"
-#include "ChunHui.h"
+#include "Chunhui.h"
 #include "EybondSmartMeter.h"
-#include "ChangLing.h"
+#include "Changling.h"
 #include "KLIE.h"
 #include "Hopewind.h"
 
@@ -352,7 +353,6 @@ static const char noFind[] = "\0";
 ModbusDevice_t ModbusDevice;
 
 static int monitorCountGet(int *num);
-// static ST_UARTDCB *bandrateGet(char *str);
 
 /*******************************************************************************
   * @brief
@@ -367,10 +367,7 @@ void Protocol_init(void) {
   Buffer_t buf;
 
   ModbusDevice.head     = null;
-  if (ModbusDevice.cfg != NULL) {
-    Ql_MEM_Free(ModbusDevice.cfg);
-    ModbusDevice.cfg    = null;
-  }
+  memory_release(ModbusDevice.cfg);  
   ModbusDevice.addrTab  = addrTab;
 
 /*  MeterDevice.startAddr   = 0;
@@ -380,7 +377,7 @@ void Protocol_init(void) {
     MeterDevice.cfg     = null;
   }
   MeterDevice.head    = null; */    // mike 20201028
-  Ql_memset(addrTab, 0, sizeof(addrTab));
+  r_memset(addrTab, 0, sizeof(addrTab));
   p = addrTab;
 
   /* 获取监控设备数量 */
@@ -389,7 +386,7 @@ void Protocol_init(void) {
   }
 
   APP_DEBUG("ModbusDevice count %d\r\n", ModbusDevice.monitorCount);
-  Ql_memset(&attr, 0, sizeof(ProtocolAttr_t));
+  r_memset(&attr, 0, sizeof(ProtocolAttr_t));
   /* 电表相关操作 */
 /*  if (protocolAttrGet(METER_PROTOCOL, &attr) == 0) {
     pro = (DeviceProtocol_t *)ALG_binaryFind(attr.code, BINARY_FIND(protocolTab));
@@ -422,7 +419,7 @@ void Protocol_init(void) {
     }
   } */  // mike 20201028
 
-  Ql_memset(&attr, 0, sizeof(ProtocolAttr_t));
+  r_memset(&attr, 0, sizeof(ProtocolAttr_t));
   if (protocolAttrGet(DEVICE_PROTOCOL, &attr) != 0) {
     goto END;
   }
@@ -451,7 +448,7 @@ void Protocol_init(void) {
     buf.lenght = 2;
     if (pro->type == DEVICE_MOBUS) {
       ModbusDevice.head = (ModbusDeviceHead_t *)pro->protocol;
-      ModbusDevice.cfg = Ql_MEM_Alloc(sizeof(ST_UARTDCB));
+      ModbusDevice.cfg = memory_apply(sizeof(ST_UARTDCB));
       if (attr.cfg.baudrate == 0) {
         APP_DEBUG("ModbusDevice UART setting config is null\r\n");
         ModbusDevice.cfg->baudrate = UART_9600_N1.baudrate;
@@ -469,7 +466,7 @@ void Protocol_init(void) {
       buf.payload = (u8_t *)modbus_mode;
     } else if (pro->type == DEVICE_TRANS) {
       parametr_get(DEVICE_VENDER, &buf);
-      ST_UARTDCB *Transdev_uartcfg = Ql_MEM_Alloc(sizeof(ST_UARTDCB));
+      ST_UARTDCB *Transdev_uartcfg = memory_apply(sizeof(ST_UARTDCB));
       if (attr.cfg.baudrate == 0) {
         APP_DEBUG("ModbusDevice UART setting config is null\r\n");
         Transdev_uartcfg->baudrate = UART_9600_N1.baudrate;
@@ -485,10 +482,7 @@ void Protocol_init(void) {
         Transdev_uartcfg->flowCtrl = attr.cfg.flowCtrl;
       }
       TransDevice_init((char *)buf.payload, Transdev_uartcfg);  // mike 20200924
-      if (buf.payload != NULL) {
-        Ql_MEM_Free(buf.payload);
-        buf.payload = NULL;
-      }
+      memory_release(buf.payload);
       buf.payload = (u8_t *)trans_mode;
     }
   }
@@ -504,104 +498,21 @@ END:
   * @param  None
   * @retval None
 *******************************************************************************/
-void Protocol_clean(void) {
-  ModbusDevice_clear();
-  TransDevice_clear();
-}
-
-/*******************************************************************************
-  * @brief
-  * @param  None
-  * @retval None
-*******************************************************************************/
-static int monitorCountGet(int *num) {
-  Buffer_t buf;
-  int ret = -1;
-
-  *num = 0;
-//  Ql_memset(&buf, 0, sizeof(Buffer_t));   // mike 20200828
-
-//  SysPara_Get(DEVICE_MONITOR_NUM, &buf);
-  parametr_get(DEVICE_MONITOR_NUM, &buf);
-  if (buf.payload != null && buf.lenght > 0) {
-    *num = Swap_charNum((char *)buf.payload);
-    if (*num == 0 || *num > 64) {
-      *num = 1;
-    }
-    ret = 0;
-  }
-
-//  memory_release(buf.payload);
-  if (buf.payload != NULL) {    // get参数以后的buf都需要释放
-    Ql_MEM_Free(buf.payload);
-    buf.payload = NULL;
-    buf.lenght = 0;
-    buf.size = 0;
-  }
-
-  return ret;
-}
-
-/*******************************************************************************
-  * @brief
-  * @param  None
-  * @retval None
-*******************************************************************************/
 int protocolAttrGet(u8_t num, ProtocolAttr_t *attr) {
   Buffer_t buf;
   int ret = -1;
 
-  Ql_memset(&buf, 0, sizeof(Buffer_t));   // mike 20200828
-//  buf.lenght = 0;
-//  buf.size = 0;
-//  SysPara_Get(num, &buf);
+  r_memset(&buf, 0, sizeof(Buffer_t));   // mike 20200828
   parametr_get(num, &buf);
   if (buf.payload != null && buf.lenght > 0) {
-    /*  ListHandler_t attrStr;
-        r_strsplit(&attrStr, (char *)buf.payload, ',');
-        APP_DEBUG("%d\r\n", attrStr.count);
-        if (attrStr.count == 0) {
-          attr->code = 0x2FF;
-          attr->startAddr = 1;
-          attr->endAddr = 1;
-          attr->cfg = null;
-        } else if (attrStr.count > 3) {
-    //      attr->code = Swap_HexCharNum((char *) * (int *)attrStr.node->payload);
-          if ((Ql_memcmp((char *) * (int *)attrStr.node->payload, "02FF", 4)) == 0
-              || (Ql_memcmp((char *) * (int *)attrStr.node->payload, "2FF", 3)) == 0) {
-            attr->code = 0x2FF;
-          } else {
-            attr->code = 0x2FE;
-    //        attr->code = Swap_HexCharNum((char *) * (int *)attrStr.node->payload);
-          }
-          attr->startAddr = Swap_charNum((char *) * (int *)attrStr.node->next->payload);
-          attr->endAddr = Swap_charNum((char *) * (int *)attrStr.node->next->next->payload);
-          attr->cfg = bandrateGet((char *) * (int *)attrStr.node->next->next->next->payload);   // mike 这个cfg会传递给ModbusDevice.cfg
-        } else {
-          attr->code = Swap_HexCharNum((char *) * (int *)attrStr.node->payload);
-          attr->startAddr = 1;
-          attr->endAddr = 1;
-          attr->cfg = null;
-        }
-        list_delete(&attrStr);
-
-        if (attr->startAddr == 0) {
-          attr->startAddr = 1;
-        }
-
-        if (attr->endAddr == 0 || attr->endAddr < attr->startAddr) {
-          attr->endAddr = attr->startAddr;
-        }
-
-        ret = 0; */
     char *str = NULL;
-    str = Ql_MEM_Alloc(sizeof(char) * 64);
+    str = memory_apply(sizeof(char) * 64);
     if (str == NULL) {
       APP_DEBUG("MEM Alloc Error\r\n");
       return ret;
     }
-    Ql_memset(str, 0, sizeof(str));
-    Ql_strncpy(str, (char *)buf.payload, Ql_strlen((char *)buf.payload));
+    r_memset(str, 0, sizeof(str));
+    r_strncpy(str, (char *)buf.payload, r_strlen((char *)buf.payload));
     ListHandler_t attrStr;
     r_strsplit(&attrStr, str, ',');
     APP_DEBUG("%d\r\n", attrStr.count);
@@ -682,14 +593,7 @@ int protocolAttrGet(u8_t num, ProtocolAttr_t *attr) {
     list_delete(&attrStr);
   }
 
-//  memory_release(buf.payload);
-  if (buf.payload != NULL) {
-    Ql_MEM_Free(buf.payload);
-    buf.payload = NULL;
-    buf.lenght = 0;
-    buf.size = 0;
-  }
-
+  memory_release(buf.payload);
   return ret;
 }
 
@@ -697,47 +601,37 @@ int protocolAttrGet(u8_t num, ProtocolAttr_t *attr) {
   * @brief
   * @param  None
   * @retval None
-  * @note   #9600-8-1-0#  #������-����λ-ֹͣλ-У��λ#
 *******************************************************************************/
-/* ST_UARTDCB *bandrateGet(char *str) {
-  ListHandler_t cmdStr;
-  ST_UARTDCB *cfg = null;
+static int monitorCountGet(int *num) {
+  Buffer_t buf;
+  int ret = -1;
 
-  r_strsplit(&cmdStr, str, '#');
-  if (cmdStr.count == 3) {
-    ListHandler_t uartCfgStr;
-    r_strsplit(&uartCfgStr, (char *) * (int *)cmdStr.node->next->payload, '-');
-    if (uartCfgStr.count != 4) {
-      APP_DEBUG("uartCfgStr error\r\n");
-    } else {
-      Node_t *node = uartCfgStr.node;
-      int tab[4] = {0, 0, 0, 0};
-      int i = 0;
-      do {
-        tab[i++] = Swap_charNum((char *) * (int *)node->payload);
-        APP_DEBUG("Band %d, %d.\r\n", i, tab[i - 1]);
-        node = node->next;
-      } while (node != uartCfgStr.node && i < 4);
+  *num = 0;
+//  r_memset(&buf, 0, sizeof(Buffer_t));   // mike 20200828
 
-      if ((tab[0] > 2000 && tab[0] < 1000000) //bandrate
-          && (tab[1] > 4 && tab[1] < 9) //data bit
-          && (tab[2] > 0 && tab[2] < 4)  //stop bit
-          && (tab[3] >= 0 && tab[3] < 5)) {
-//      cfg = memory_apply(sizeof(ST_UARTDCB));     // mike 20200828
-        cfg = Ql_MEM_Alloc(sizeof(ST_UARTDCB));
-        cfg->baudrate = tab[0];
-        cfg->dataBits = tab[1];
-        cfg->stopBits = tab[2];
-        cfg->parity = tab[3];
-        cfg->flowCtrl = FC_NONE;
-      }
+//  SysPara_Get(DEVICE_MONITOR_NUM, &buf);
+  parametr_get(DEVICE_MONITOR_NUM, &buf);
+  if (buf.payload != null && buf.lenght > 0) {
+    *num = Swap_charNum((char *)buf.payload);
+    if (*num == 0 || *num > 64) {
+      *num = 1;
     }
-    list_delete(&uartCfgStr);
+    ret = 0;
   }
-  list_delete(&cmdStr);
 
-  return cfg;
-} */
+  memory_release(buf.payload);
+  return ret;
+}
+
+/*******************************************************************************
+  * @brief
+  * @param  None
+  * @retval None
+*******************************************************************************/
+void Protocol_clean(void) {
+  ModbusDevice_clear();
+  TransDevice_clear();
+}
 
 /******************************************************************************/
 

@@ -2,23 +2,29 @@
   *@brief   : sineng.c
   *@notes   : 2017.12.29 CGQ   
 *******************************************************************************/
+#ifdef _PLATFORM_BC25_
 #include "ql_system.h"
 #include "ql_stdlib.h"
 #include "ql_memory.h"
+#endif
+
+#ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
+#endif
 
 #include "eyblib_typedef.h"
 #include "eyblib_swap.h"
 #include "eyblib_list.h"
-// #include "eyblib_r_stdlib.h"
-// #include "eyblib_memory.h"
+#include "eyblib_r_stdlib.h"
+#include "eyblib_memory.h"
 #include "eybpub_run_log.h"
+#include "eybpub_utility.h"
 
 #include "Protocol.h"
 #include "DeviceIO.h"
-#include "sineng.h"
 #include "Device.h"
-#include "sineng.h"
-#include "modbus.h"
+#include "Sineng.h"
+#include "Modbus.h"
 #define SINENG_DEVICE_FLAG			(0x55AA)
 
 static u16_t sinengDevice;
@@ -172,46 +178,46 @@ static u8_t protocolCheck(void *load, void *optPoint)
 			pvCmd = null;
 			PVScan = null;
 //			if (r_strfind("FPU-", str) >= 0)            // mike 20200828
-            if (Ql_strstr(str, "FPU-") != NULL)
+            if (r_strstr(str, "FPU-") != NULL)
 			{
 				*((CONVERT_TYPE)optPoint) = &sinengAPF;
 			}
 //			else if (r_strfind("EP-0500-A", str) >= 0 || r_strfind("EP-0630-A", str) >= 0)
-            else if (Ql_strstr(str, "EP-0500-A") != NULL || Ql_strstr(str, "EP-0630-A") != NULL)
+            else if (r_strstr(str, "EP-0500-A") != NULL || r_strstr(str, "EP-0630-A") != NULL)
 			{
 				*((CONVERT_TYPE)optPoint) = &sinengEPCP;
 			}
 //			else if (r_strfind("EF-MPPT", str) >= 0)
-            else if (Ql_strstr(str, "EF-MPPT") != NULL)
+            else if (r_strstr(str, "EF-MPPT") != NULL)
 			{
 				*((CONVERT_TYPE)optPoint) = &sinengEFMppt;
 				pvCmd = &PV_EFMppt;
 				sinengDevice = SINENG_DEVICE_FLAG;
 			}
 //			else if ((r_strfind("SP-5K", str) >= 0) || (r_strfind("SP-3K", str) >= 0))
-            else if ((Ql_strstr(str, "SP-5K") != NULL) || (Ql_strstr(str, "SP-3K") != NULL))
+            else if ((r_strstr(str, "SP-5K") != NULL) || (r_strstr(str, "SP-3K") != NULL))
 			{
 				*((CONVERT_TYPE)optPoint) = &sineng3_5K;
 				pvCmd = &PV_3_5k;
 				sinengDevice = SINENG_DEVICE_FLAG;
 			}
 //			else if (r_strfind("SP-20K", str) >= 0)
-            else if (Ql_strstr(str, "SP-20K") != NULL)
+            else if (r_strstr(str, "SP-20K") != NULL)
 			{
 				*((CONVERT_TYPE)optPoint) = &sineng20K;
 			}
 //          else if (r_strfind("SP-50K-L", str) >= 0)
-            else if (Ql_strstr(str, "SP-50K-L") != NULL)
+            else if (r_strstr(str, "SP-50K-L") != NULL)
             {
                 *((CONVERT_TYPE)optPoint) = &sineng50K_L;
             }
 //			else if (r_strfind("SP-50K", str) >= 0)
-            else if (Ql_strstr(str, "SP-50K") != NULL)
+            else if (r_strstr(str, "SP-50K") != NULL)
 			{
 				*((CONVERT_TYPE)optPoint) = &sineng50K;
 			}
 //			else if (r_strfind("SP-60K", str) >= 0)
-            else if (Ql_strstr(str, "SP-60K") != NULL)
+            else if (r_strstr(str, "SP-60K") != NULL)
 			{
 				*((CONVERT_TYPE)optPoint) = &sineng60K_L;
 			}
@@ -227,7 +233,7 @@ static u8_t protocolCheck(void *load, void *optPoint)
 		else
 		{
 //			if (r_strfind("SP-50K", str) >= 0)
-            if (Ql_strstr(str, "SP-50K") != NULL)
+            if (r_strstr(str, "SP-50K") != NULL)
 			{
 				*((CONVERT_TYPE)optPoint) = &sineng50K;
 				return 0; 
@@ -264,8 +270,7 @@ void Sineng_PVData(u8_t addr, u8_t state, u16_t *code, Buffer_t *ack)
 		if (state == 0) //start PV Scan
 		{
 			ack->size = 1;
-//			ack->payload = memory_apply(ack->size);     // mike 20200828
-            ack->payload = Ql_MEM_Alloc(ack->size);
+			ack->payload = memory_apply(ack->size);
 			ack->lenght = 1;
 
 			if (PVScan != null)
@@ -294,8 +299,7 @@ void Sineng_PVData(u8_t addr, u8_t state, u16_t *code, Buffer_t *ack)
 		else if (state == 1) //get PV data
 		{
 			ack->size = 1;
-//			ack->payload = memory_apply(ack->size);     // mike 20200828
-            ack->payload = Ql_MEM_Alloc(ack->size);
+			ack->payload = memory_apply(ack->size);
 			ack->lenght = 1;
 			
 			if (PVScan == null || PVScan->addr != addr)
@@ -316,12 +320,8 @@ void Sineng_PVData(u8_t addr, u8_t state, u16_t *code, Buffer_t *ack)
 					u8_t *p = NULL;
 
 					ack->size = PVScan->buf.lenght + (PVScan->buf.lenght/PVScan->pointSize)*4 + 4;
-//					memory_release(ack->payload);       // mike 20200828
-                    if (ack->payload != NULL) {
-                       Ql_MEM_Free(ack->payload);
-                    }
-//					ack->payload = memory_apply(ack->size);
-                    ack->payload = Ql_MEM_Alloc(ack->size);
+					memory_release(ack->payload);
+					ack->payload = memory_apply(ack->size);
 					ack->lenght = 0;
 					
 					ack->payload[0] = (0x02);
@@ -338,7 +338,7 @@ void Sineng_PVData(u8_t addr, u8_t state, u16_t *code, Buffer_t *ack)
 						*p++ = 0;
 						*p++ = 0;
 						*p++ = (PVScan->upPointCount>>1)-1;
-						Ql_memcpy(p, &PVScan->buf.payload[i*PVScan->pointSize], PVScan->pointSize);
+						r_memcpy(p, &PVScan->buf.payload[i*PVScan->pointSize], PVScan->pointSize);
 						p += PVScan->pointSize;
 					}
 
@@ -353,7 +353,13 @@ void Sineng_PVData(u8_t addr, u8_t state, u16_t *code, Buffer_t *ack)
 					{
 						PVScan->buf.lenght = 0;
 						PVScan->state = PV_RAM_DATA_WAIT;
+#ifdef _PLATFORM_BC25_
 						Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_PV_GET_ID, 0, 0);
+#endif
+#ifdef _PLATFORM_L610_
+                        int value_put = DEVICE_PV_GET_ID;
+                        fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+#endif
 					}
 	            }
 			}
@@ -378,16 +384,8 @@ void Sineng_PVData(u8_t addr, u8_t state, u16_t *code, Buffer_t *ack)
 static u8_t cmdClear(void *payload, void *point)
 {
   DeviceCmd_t * cmd = (DeviceCmd_t*)payload;
-//	memory_release(cmd->ack.payload);
-//	memory_release(cmd->cmd.payload);
-  if (cmd->ack.payload != NULL) {
-    Ql_MEM_Free(cmd->ack.payload);
-    cmd->ack.payload = NULL;
-  }
-  if (cmd->cmd.payload != NULL) {
-    Ql_MEM_Free(cmd->cmd.payload);
-    cmd->cmd.payload = NULL;
-  }
+  memory_release(cmd->ack.payload);
+  memory_release(cmd->cmd.payload);
   return 1;
 }
 static void ListCmdclear(void)
@@ -406,14 +404,13 @@ static void ListCmdclear(void)
 *******************************************************************************/
 static int PV_scanReady(u8_t addr)
 { 
-//	PVScan = memory_apply(sizeof(SinengPVScan_t));  // mike 20200828
-	PVScan = Ql_MEM_Alloc(sizeof(SinengPVScan_t));
+	PVScan = memory_apply(sizeof(SinengPVScan_t));
 
 	if (pvCmd != null && PVScan != null)
 	{
 		DeviceCmd_t *cmd;
 
-		Ql_memset(PVScan, 0, sizeof(SinengPVScan_t));
+		r_memset(PVScan, 0, sizeof(SinengPVScan_t));
 		list_init(&PVScan->cmdList);
 		PVScan->addr = addr;
 		Modbus_16SetCmd(&PVScan->cmdList, (u8_t)PVScan->addr, pvCmd->startAddr,\
@@ -425,7 +422,13 @@ static int PV_scanReady(u8_t addr)
 			PVScan->deviceHead.callback = startAck;
 			PVScan->deviceHead.waitTime = 2000;
 			DeviceIO_lock(&PVScan->deviceHead);
-			Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_PV_SCAN_ID, 0, 0);
+#ifdef _PLATFORM_BC25_
+            Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_PV_SCAN_ID, 0, 0);
+#endif
+#ifdef _PLATFORM_L610_
+            int value_put = DEVICE_PV_SCAN_ID;
+            fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+#endif            
 			return 0;
 		}	
 	}
@@ -442,11 +445,7 @@ static void PV_scanEnd(void)
 {
 	DeviceIO_unlock();
 	ListCmdclear();
-//	memory_release(PVScan);
-    if (PVScan != NULL) {
-        Ql_MEM_Free(PVScan);
-        PVScan = NULL;
-    }
+	memory_release(PVScan);
 	PVScan = null;
 }
 
@@ -466,7 +465,13 @@ void PV_Scan(void)
 		int	ret = DeviceIO_write(&PVScan->deviceHead, cmd->cmd.payload, cmd->cmd.lenght);
 		if (ret != 0)
 		{
-			Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_PV_SCAN_ID, 0, 0);
+#ifdef _PLATFORM_BC25_
+		    Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_PV_SCAN_ID, 0, 0);
+#endif
+#ifdef _PLATFORM_L610_
+            int value_put = DEVICE_PV_SCAN_ID;
+            fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+#endif            
 		}	
 	}
 	else
@@ -559,8 +564,7 @@ static void RAMAddrAck(DeviceAck_e e)
 		&& (0 == (i = Modbus_CmdCheck(&cmd->cmd, &cmd->ack)))
 		)
 	{
-//		r_memcpy(&PVScan->RAM, &cmd->ack.payload[3], sizeof(PVScan->RAM));  // mike 20200828
-        Ql_memcpy(&PVScan->RAM, &cmd->ack.payload[3], sizeof(PVScan->RAM));  
+        r_memcpy(&PVScan->RAM, &cmd->ack.payload[3], sizeof(PVScan->RAM));  
 		PVScan->RAM.addr = ENDIAN_BIG_LITTLE_32(PVScan->RAM.addr);
 		PVScan->RAM.size = ENDIAN_BIG_LITTLE_16(PVScan->RAM.size);
 		PVScan->RAM.user = ENDIAN_BIG_LITTLE_16(PVScan->RAM.user);
@@ -571,8 +575,7 @@ static void RAMAddrAck(DeviceAck_e e)
 		PVScan->pointSize = (PVScan->RAM.size/pvCmd->pointCount)<<1;
 		PVScan->buf.size = 880 - 880%PVScan->pointSize; //point buffer complete
 		PVScan->buf.lenght = 0;
-//		PVScan->buf.payload = memory_apply(PVScan->buf.size);       // mike 20200828
-        PVScan->buf.payload = Ql_MEM_Alloc(PVScan->buf.size);
+		PVScan->buf.payload = memory_apply(PVScan->buf.size);
 		switch (PVScan->pointSize)
 		{
 			case 4:
@@ -651,8 +654,7 @@ static void RAMDataAck(DeviceAck_e e)
 		
 		PVScan->RAM.addr += i/2;
 		PVScan->RAM.size -= i/2;
-//		r_memcpy((&PVScan->buf.payload[PVScan->buf.lenght]), &cmd->ack.payload[2], i);
-        Ql_memcpy((&PVScan->buf.payload[PVScan->buf.lenght]), &cmd->ack.payload[2], i);
+        r_memcpy((&PVScan->buf.payload[PVScan->buf.lenght]), &cmd->ack.payload[2], i);
 		PVScan->buf.lenght += i;
  
 		if (PVScan->buf.lenght == PVScan->buf.size || PVScan->RAM.size == 0)

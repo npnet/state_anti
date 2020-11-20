@@ -12,24 +12,32 @@
 
 #include "eyblib_list.h"
 #include "eyblib_swap.h"
-// #include "eyblib_memory.h"  // mike 20200828
+#include "eyblib_memory.h"
+#include "eyblib_r_stdlib.h"
 
 #include "eybpub_Debug.h"
 #include "eybpub_Status.h"
 #include "eybpub_watchdog.h"
 #include "eybpub_SysPara_File.h"
 #include "eybpub_run_log.h"
-#include "eybapp_appTask.h"
+#include "eybpub_utility.h"
+#include "eybpub_Clock.h"
 
+#include "eybapp_appTask.h"
+#ifdef _PLATFORM_BC25_
 #include "NB_Net.h"
+#endif
+
+#ifdef _PLATFORM_L610_
+#include "4G_net.h"
+#endif
 #include "Device.h"
 #include "DeviceIO.h"
-#include "protocol.h"
+#include "Protocol.h"
 // #include "selfUpdate.h"
 // #include "deviceUpdate.h"
 // #include "UpdateTask.h"
 #include "Sineng.h"
-#include "clock.h"
 //#include "CommonServer.h"     //mike 20200804
 
 #define DEVICE_LOCK     (0x5A)
@@ -45,9 +53,6 @@ static u32_t m_timeCheck_DEV = 0;
 static u8_t device_cmp(void *src, void *dest);
 static void device_callback(DeviceAck_e ack);
 static void deviceCmdSend(void);
-//static void deviceLEDInit(void);
-//static void deviceLEDOn(void);
-//static void deviceLEDOff(void);
 
 /*******************************************************************************
   * @brief
@@ -184,10 +189,6 @@ void proc_device_task(s32 taskId) {
   }
 }
 #endif
-#ifdef _PLATFORM_L610_
-void proc_device_task(s32_t taskId) {
-}
-#endif
 /*******************************************************************************
   * @brief
   * @note   None
@@ -212,15 +213,8 @@ void Device_clear(void) {
 static u8_t deviceCmdClear(void *payload, void *point) {
   DeviceCmd_t *cmd = (DeviceCmd_t *)payload;
 //  APP_DEBUG("deviceCmdClear\r\n");
-  if (cmd->ack.payload != NULL) {
-    Ql_MEM_Free(cmd->ack.payload);
-    cmd->ack.payload = NULL;
-  }
-
-  if (cmd->cmd.payload != NULL) {
-    Ql_MEM_Free(cmd->cmd.payload);
-    cmd->cmd.payload = NULL;
-  }
+  memory_release(cmd->ack.payload);
+  memory_release(cmd->cmd.payload);
   return 1;
 }
 
@@ -229,10 +223,6 @@ void DeviceCmd_clear(Device_t *dev) {
   list_trans(&dev->cmdList, deviceCmdClear, null);
   list_delete(&dev->cmdList);
 //  memory_release(dev->explain);       // mike 20200828
-//  if (dev->explain != NULL) {         // mike 20200926
-//    Ql_MEM_Free(dev->explain);
-//    dev->explain = NULL;
-//  }
   currentStep = 0;
 }
 
@@ -306,7 +296,7 @@ static u8_t device_cmp(void *src, void *dest) {
   Device_t *pSrc = (Device_t *)src;
   Device_t *pDest = (Device_t *)dest;
 
-  return  Ql_memcmp(&pSrc->callBack, &pDest->callBack, (int)(pSrc + 1) - (int)(&pSrc->callBack));
+  return  r_memcmp(&pSrc->callBack, &pDest->callBack, (int)(pSrc + 1) - (int)(&pSrc->callBack));
 }
 
 /*******************************************************************************
@@ -332,7 +322,13 @@ static void deviceCmdSend(void) {
         if (++DeviceOvertime >= 300) {
           APP_DEBUG("Device no command in 5 min, reset!!\r\n");
           log_save("Device no command in 5 min, reset!!");
+#ifdef _PLATFORM_BC25_        
           Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
+#endif
+#ifdef _PLATFORM_L610_
+          int value_put = DEVICE_RESTART_ID;
+          fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+#endif
         }
         APP_DEBUG("currentDevice is null or DEVICE_LOCK %d!!\r\n", DeviceOvertime);
         watiTime = 1;
@@ -409,7 +405,13 @@ static void deviceCmdSend(void) {
 //        }
 
         if (++DeviceOvertime > 180) {
+#ifdef _PLATFORM_BC25_
           Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
+#endif
+#ifdef _PLATFORM_L610_
+          int value_put = DEVICE_RESTART_ID;
+          fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+#endif
         }
       }
       break;
@@ -420,7 +422,13 @@ static void deviceCmdSend(void) {
 
 //  APP_DEBUG("watiTime %04X\r\n", watiTime);
   if (watiTime == 0x8000) {
+#ifdef _PLATFORM_BC25_    
     Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
+#endif
+#ifdef _PLATFORM_L610_
+    int value_put = DEVICE_CMD_ID;
+    fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+#endif
   }
 }
 
@@ -435,7 +443,13 @@ static void device_callback(DeviceAck_e ack) {
     deviceLEDOff();
 #if TEST_RF
     if (++DeviceOvertime > 180) {
+#ifdef _PLATFORM_BC25_        
       Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
+#endif
+#ifdef _PLATFORM_L610_
+      int value_put = DEVICE_RESTART_ID;
+      fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+#endif
       return;
     }
 #endif
@@ -448,6 +462,124 @@ static void device_callback(DeviceAck_e ack) {
     deviceLEDOn();
   }
   currentCmd->state = ack;
+#ifdef _PLATFORM_BC25_  
   Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
+#endif
+#ifdef _PLATFORM_L610_
+  int value_put = DEVICE_CMD_ID;
+  fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+#endif
 }
+
+#ifdef _PLATFORM_L610_
+void proc_device_task(s32_t taskId) {
+  int msg = 0;
+  int deviceResetCnt = 0;
+  APP_PRINT("Devce task run...\r\n");
+    
+  deviceResetCnt = 0;
+  currentStep = 0;
+  DeviceOvertime = 0;
+  watiTime = 5;   // wait 5sec start get device date
+  m_timeCheck_DEV = 0;
+    
+  while (1) {
+    fibo_queue_get(EYBDEVICE_TASK, (void *)&msg, 0);
+    switch (msg) {
+      case APP_MSG_UART_READY:  // DEBUG串口OK
+        APP_DEBUG("Get APP_CMD_UART_READY MSG\r\n");
+        list_init(&DeviceList);
+        break;
+      case NET_MSG_RIL_READY:
+        APP_DEBUG("Get NET_MSG_RIL_READY MSG\r\n");
+        DeviceIO_init(null);
+        Protocol_init();
+        break;
+      case NET_MSG_RIL_FAIL:
+        break;
+      case NET_MSG_SIM_READY:
+        APP_DEBUG("Get NET_MSG_SIM_READY MSG\r\n");
+        break;
+      case NET_MSG_SIM_FAIL:
+        break;
+      case NET_MSG_GSM_READY:    // 注网OK
+        APP_DEBUG("Get NET_MSG_GSM_READY MSG\r\n");
+        break;
+      case NET_MSG_GSM_FAIL:    // 注网FAIL
+        break;
+      case NET_MSG_NET_READY:   // 服务器OK
+        APP_DEBUG("Get NET_MSG_NET_READY MSG\r\n");
+        break;
+      case NET_MSG_NET_FAIL:    // 服务器FAIL
+        break;
+      case DEVICE_RESTART_ID:
+        APP_DEBUG("deviceResetCnt %d!!\r\n", deviceResetCnt);
+        if (++deviceResetCnt >= 12) {
+          if (0 == runTimeCheck(4, 19)) {
+            APP_PRINT("Time is from 4 to 19, not reboot!!\r\n");
+            deviceResetCnt = 0;
+            DeviceOvertime = 0;
+            watiTime = 10;
+            break;
+          }
+          APP_DEBUG("Device no command ack, reboot!!\r\n");
+          log_save("Device no command ack, reboot!!");
+          Watchdog_stop();
+          fibo_softReset();
+          break;
+        } else {
+          log_save("Device modular reset!!");
+          APP_DEBUG("Device modular reset!!\r\n");
+//        msg.param1 = DEVICE_MONITOR_NUM;    // mike 20201117
+        }
+        DeviceOvertime = 0;
+      case SYS_PARA_CHANGE:   //system parameter change
+        if (g_UARTIO_AT_enable == 1) {
+          APP_DEBUG("Device IO UART AT mode is enable, don't reset device!!\r\n");
+          break;
+        }
+/*        if (msg.param1 == DEVICE_MONITOR_NUM || msg.param1 == DEVICE_PROTOCOL
+          || msg.param1 == DEVICE_UART_SETTING || msg.param1 == DEVICE_SYSTEM) {
+          DeviceIO_reset();
+          Protocol_clean();
+          Device_clear();
+//          memory_trans(Debug_output);   //mike 20200805
+//          CommonServer_DeviceInit();    //mike 20200805
+          Protocol_init();
+          deviceLEDOff();
+        } */
+        watiTime = 10;
+        break;
+      case APP_MSG_DEVTIMER_ID:     //mike 20200915
+        m_timeCheck_DEV++;
+        if (m_timeCheck_DEV >= 5) {
+          u32_t heepsize = 0, heep_avail = 0, heep_maxblock =0;
+          fibo_get_heapinfo(&heepsize, &heep_avail, &heep_maxblock);
+          APP_DEBUG("Device task heep size:%ld avail:%ld maxblock:%ld!!\r\n", heepsize, heep_avail, heep_maxblock);
+          m_timeCheck_DEV = 0;
+        }
+        APP_DEBUG("Get APP_MSG_DEVTIMER_ID MSG,watiTime:%04X step:%d\r\n", watiTime, currentStep);
+        if ((watiTime & 0x8000) == 0x8000 || --watiTime > 0) {
+          break;
+        }
+      case DEVICE_CMD_ID:
+        watiTime = 0x8000;
+//        deviceCmdSend();
+        break;
+//    case DEVICE_UPDATE_READY_ID: //Device update    //mike 20200804
+//      Update_ready();
+//      break;
+      case DEVICE_PV_SCAN_ID:    //Device PV scan
+//        PV_Scan();
+        break;
+      case DEVICE_PV_GET_ID:   //Device PV Data Get
+//        PV_dataGet();
+        break;
+      default:
+        break;
+    }
+  }
+  fibo_thread_delete();
+}
+#endif
 /******************************************************************************/

@@ -4,9 +4,12 @@
 修　改：	2015.06.28 Unarty establish
             2017.08.11 Unarty change Swap_hexChar & Swap_charHex add ' ' 
 *******************************************************************************/
-#include "eyblib_swap.h"
-// #include "eyblib_r_stdlib.h"			//mike 20200803
+#ifdef _PLATFORM_BC25_
 #include "ql_stdlib.h"			        //mike 20200828
+#endif
+
+#include "eyblib_swap.h"
+#include "eyblib_r_stdlib.h"			//mike 20200803
 // #include "eybpub_debug.h"
 
 /*******************************************************************************
@@ -450,7 +453,7 @@ u16_t Swap_CharBCD(u8_t *bcd, char *buf)
     u16_t len, cnt;
 
 //    for (len = r_strlen(buf), cnt = 0, *bcd = 0; '0' <= *buf && *buf <= '9'; len--)
-    for (len = Ql_strlen(buf), cnt = 0, *bcd = 0; '0' <= *buf && *buf <= '9'; len--)    // mike 20200828
+    for (len = r_strlen(buf), cnt = 0, *bcd = 0; '0' <= *buf && *buf <= '9'; len--)    // mike 20200828
     {
         *bcd |= *buf - '0';
         if (0 == (len&0x01))
@@ -591,7 +594,7 @@ void Swap_StringIP6(char *ipStr, u16_t *ip)
 	u8_t i = r_strsplit(&SubStr, ipStr, ':');
 
 	i  = 8 - i;
-	Ql_memset(ip, 0, 2*8);
+	r_memset(ip, 0, 2*8);
 	
 	if (SubStr.node != null)
 	{

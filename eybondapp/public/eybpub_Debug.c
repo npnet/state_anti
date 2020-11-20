@@ -113,7 +113,7 @@ void Debug_init(void) {
 }
 
 /*******************************************************************************
- Brief    : Debug_printf
+ Brief    : Debug_buffer
  Parameter:
  return   :
 *******************************************************************************/
@@ -121,7 +121,7 @@ void Debug_init(void) {
 void  Debug_buffer(Buffer_t *buf)
 {  
 //  Debug_output(buf->payload, buf->lenght);
-  Ql_UART_Write((Enum_SerialPort)DEBUG_PORT, (u8 *)(buf->payload), buf->lenght);
+  Ql_UART_Write((Enum_SerialPort)DEBUG_PORT, (u8_t *)(buf->payload), buf->lenght);
 /*  if(buf->payload != NULL) {      // mike 打开会死机
     Ql_MEM_Free(buf->payload);
     buf->payload = null;
@@ -161,14 +161,26 @@ void Debug_trace(u8_t *p, u16_t len) {
 #endif
 
 #ifdef _PLATFORM_L610_ // 添加L610 SDK相关接口
+#define OSI_LOG_TAG OSI_MAKE_LOG_TAG('Q', 'E', 'K', 'J')
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
+#include "fibo_opencpu.h"
+
 #include "eybpub_Debug.h"
 #include "eybpub_utility.h"
+#include "eyblib_r_stdlib.h"
 #include "eyblib_typedef.h"
 #include "eybapp_appTask.h"
 
 #ifdef  EYBOND_DEBUG_ENABLE
 static Buffer_t UARTDEBUG_buf;
 #endif
+
+void UARTDEBUG_CallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg)
+{
+    OSI_PRINTFI("uartapi recv uart_port=%d len=%d, data=%s", uart_port, len, (char *)data);
+}
 
 /*******************************************************************************
  Brief    : Debug_init
@@ -177,6 +189,24 @@ static Buffer_t UARTDEBUG_buf;
 *******************************************************************************/
 void Debug_init(void) {
 #ifdef  EYBOND_DEBUG_ENABLE
+  fibo_gpio_mode_set(DEBUG_UART_TXD,6);
+  fibo_gpio_cfg(DEBUG_UART_TXD,PINDIRECTION_OUT);
+  fibo_gpio_set(DEBUG_UART_TXD,PINLEVEL_HIGH);
+
+  fibo_gpio_mode_set(DEBUG_UART_RXD,6);
+  fibo_gpio_cfg(DEBUG_UART_RXD,PINDIRECTION_IN);
+  fibo_gpio_set(DEBUG_UART_RXD,PINLEVEL_HIGH);
+  
+  hal_uart_config_t drvcfg ;
+  fibo_hal_uart_deinit(DEBUG_PORT);
+  memset(&drvcfg,0,sizeof(hal_uart_config_t));
+  drvcfg.baud = DEBUG_PORT_BITRATE;
+  drvcfg.parity = HAL_UART_NO_PARITY;
+  drvcfg.data_bits = HAL_UART_DATA_BITS_8;
+  drvcfg.stop_bits = HAL_UART_STOP_BITS_1;
+  drvcfg.rx_buf_size = UART_RX_BUF_SIZE;
+  drvcfg.tx_buf_size = UART_TX_BUF_SIZE;
+  fibo_hal_uart_init(DEBUG_PORT, &drvcfg, UARTDEBUG_CallBack, NULL);
 #endif
 }
 /*******************************************************************************
@@ -186,7 +216,8 @@ void Debug_init(void) {
 *******************************************************************************/
 #ifdef  EYBOND_DEBUG_ENABLE
 void  Debug_buffer(Buffer_t *buf)
-{  
+{
+  fibo_hal_uart_put(DEBUG_PORT, (UINT8 *)buf->payload, buf->lenght);
 }
 
 /*******************************************************************************
@@ -198,12 +229,12 @@ void Debug_output(u8_t *p, u16_t len) {
 #ifdef EYBOND_TRACE_ENABLE
 
 #else
-
+  fibo_hal_uart_put(DEBUG_PORT, (UINT8 *)p, len);
 #endif
 }
 
 void Print_output(u8_t *p, u16_t len) {
-
+  fibo_hal_uart_put(DEBUG_PORT, (UINT8 *)p, len);
 }
 
 void Debug_trace(u8_t *p, u16_t len) {

@@ -18,8 +18,8 @@
 #ifndef _PLATFORM_L610_  // 与L610 SDK冲突
 #define MAX(a, b)     ((a) > (b) ? (a) : (b))
 #define MIN(a, b)     ((a) > (b) ? (b) : (a))
-#define ABS(a, b)     (((a) > (b)) ? ((a) - (b)) : ((b) - (a)))
 #endif
+#define ABS(a, b)     (((a) > (b)) ? ((a) - (b)) : ((b) - (a)))
 
 #define SIZE(n)         (sizeof(n)/sizeof(n[0]))
 

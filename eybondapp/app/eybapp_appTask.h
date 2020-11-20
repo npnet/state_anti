@@ -28,10 +28,18 @@
 #endif
 
 #ifdef _PLATFORM_L610_
-#define  TIMER_ID_USER_START  0x100
-#define  MSG_ID_USER_START    0x1000
-#define  APP_WDG_TIMER_ID   (TIMER_ID_USER_START + 1)
-#define  APP_USER_TIMER_ID  (TIMER_ID_USER_START + 4)
+#define  MSG_ID_USER_APP_START    0x1000
+#define  APP_WDG_TIMER_ID   (0)
+#define  APP_USER_TIMER_ID  (0)
+
+#define  APP_CMD_WDG_ID     0x00FAFF
+#define  APP_CMD_BEEP_ID    0x00FA01
+#define  APP_CMD_GSM_READY  0x00FA03
+
+#define  APP_MSG_UART_READY    MSG_ID_USER_APP_START+0xFA4
+#define  APP_MSG_TIMER_ID      MSG_ID_USER_APP_START+0xFA5
+#define  APP_MSG_DEVTIMER_ID   MSG_ID_USER_APP_START+0xFA6
+#define  APP_MSG_WDG_ID        MSG_ID_USER_APP_START+0xFA7
 #endif
 
 void proc_app_task(s32_t taskId);

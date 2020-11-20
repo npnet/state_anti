@@ -9,16 +9,19 @@
 #include "ql_adc.h"
 #include "ql_timer.h"
 #include "ql_error.h"
+#define ADC_CHECKTIME_ID  (TIMER_ID_USER_START + 3)
 #endif
 
 #ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
 #include "eybapp_appTask.h"
+#define ADC_CHECKTIME_ID  (0)
 #endif
 #include "eybpub_run_log.h"
 #include "eybpub_Debug.h"
-#include "eybond.h"
+// #include "eybond.h"  // mike 20201116
 // #include "eyblib_memory.h"    //mike 20200828
-#define ADC_CHECKTIME_ID  (TIMER_ID_USER_START + 3)
+
 #define   ADC_COUNT    10
 
 u8_t g_ret_flag = 1;
@@ -84,30 +87,42 @@ void ADC_Init(void) {
 #endif
 
 #ifdef _PLATFORM_L610_
-void ADC_Timer_handler(u32_t timerId, void *param) {
+void ADC_Timer_handler(void *param) {
   static int count_1 = 0;
   static int count_2 = 0;
   u16_t adcvalue = 0;
 
-  if (ADC_timer == timerId) {
-    // stack_timer repeat
-    APP_DEBUG("read adc value = %d mV)\r\n", adcvalue);
-    if (adcvalue < 100) {   // mike 忽略极低电压的情况，适配没有断电挽救电路的设计
-      return;
-    }
-    if ((adcvalue < 700) && (1 == g_ret_flag) && (0 == (++count_1) % 3)) {
-      APP_DEBUG("power_interrupted\r\n");
-      specialData_send();
-      count_1 = 0;
-    }
-    if ((adcvalue > 700) && (0 == (++count_2) % 3)) {
-      g_ret_flag = 1;
-      count_2 = 0;
-    }
+  // stack_timer repeat
+  fibo_hal_adc_get_data_polling(2, (UINT32 *)&adcvalue); // ADC0: channel 2, ADC1: channel 3, ADC2: channel 1
+  APP_DEBUG("read adc value = %d mV)\r\n", adcvalue);
+  if (adcvalue < 500) {   // mike 忽略极低电压的情况，适配没有断电挽救电路的设计
+    return;
+  }
+  if ((adcvalue < 700) && (1 == g_ret_flag) && (0 == (++count_1) % 3)) {
+    APP_DEBUG("power_interrupted\r\n");
+//    specialData_send();   // mike 20201116
+    count_1 = 0;
+  }
+  if ((adcvalue > 700) && (0 == (++count_2) % 3)) {
+    g_ret_flag = 1;
+    count_2 = 0;
   }
 }
 
 void ADC_Init(void) {
   APP_DEBUG("ADC init...\r\n");
+  s32_t ret = fibo_hal_adc_init();
+  if (ret < 0) {
+    APP_DEBUG("Open adc failed, ret = %ld\r\n", ret);
+  } else {
+    APP_DEBUG("Open adc successfully\r\n");
+  }
+
+  ADC_timer = fibo_timer_period_new(ADC_time_Interval, ADC_Timer_handler, &m_param);
+  if (ADC_timer == 0) {
+    APP_DEBUG("Register adc timer failed!!\r\n");
+  } else {
+    APP_DEBUG("Register adc timer successfully, param = %ld\r\n", m_param);
+  }
 }
 #endif

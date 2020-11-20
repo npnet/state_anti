@@ -11,13 +11,13 @@
 #endif
 
 #ifdef _PLATFORM_L610_
-
+#include "fibo_opencpu.h"
 #endif
 
 #include "eybpub_utility.h"
 #include "eybpub_Debug.h"
 #include "eybpub_watchdog.h"
-#include "Clock.h"
+#include "eybpub_Clock.h"
 #include "eybapp_appTask.h"
 
 static u8_t FeedFlag;
@@ -91,6 +91,9 @@ void Watchdog_stop(void)
 void Watchdog_init(void) {    
   FeedFlag = 0;
   s32_t ret = 0;
+  ret = fibo_gpio_mode_set(WATCHDOG_PIN, 0);
+  ret = fibo_gpio_cfg(WATCHDOG_PIN,PINDIRECTION_OUT);
+  ret = fibo_gpio_set(WATCHDOG_PIN,PINLEVEL_HIGH);
 }
 
 /*******************************************************************************
@@ -101,6 +104,9 @@ void Watchdog_init(void) {
 void Watchdog_feed(void) {
   if (FeedFlag == 0) {
     s32_t ret = 0;
+    ret = fibo_gpio_set(WATCHDOG_PIN,PINLEVEL_LOW);
+    fibo_taskSleep(500);  //500ms翻转一次
+	ret = fibo_gpio_set(WATCHDOG_PIN,PINLEVEL_HIGH);
   }
 }
 
@@ -116,7 +122,10 @@ void Watchdog_stop(void) {
   }
   FeedFlag = 1;
   s32_t ret = 0;
+  ret = fibo_gpio_set(WATCHDOG_PIN,PINLEVEL_HIGH);
   Clock_save();
+//  Ql_OS_SendMessage(EYBAPP_TASK, APP_CMD_WDG_ID, 0, 0);
+  APP_DEBUG("feed stop!!\r\n");
 }
 #endif
 

@@ -2,17 +2,16 @@
   *@brief   : TransDevice.c  Eybond transparent transmission monitor
   *@notes   : 2017.12.28 CGQ
 *******************************************************************************/
-#include "ql_stdlib.h"
 #include "eybpub_Debug.h"
 
+#include "eyblib_r_stdlib.h"
 #include "eyblib_list.h"
 
 #include "TransDevice.h"
 #include "Device.h"
 #include "Protocol.h"
-// #include "eyblib_r_stdlib.h"
 
-static const TransCfgTab_t TransCfgTab[] = {
+static const TransCfgTab_t TransCfgTab[] = {    // 对于07,A3客户码强制绑定9600波特率
   {"07", (ST_UARTDCB *)& UART_9600_N1},
   {"A3", (ST_UARTDCB *)& UART_9600_E1},
 };
@@ -31,7 +30,7 @@ void TransDevice_init(char *str, ST_UARTDCB *cfg) {
   for (i = 0; i < sizeof(TransCfgTab) / sizeof(TransCfgTab[0]); i++) {
   // if (r_strfind(str, TransCfgTab[i].narration) >= 0)  // mike 20200828
   // APP_DEBUG("%s %s\r\n", str, TransCfgTab[i].narration);
-    if (Ql_strstr(TransCfgTab[i].narration, str) != NULL) {
+    if (r_strstr(TransCfgTab[i].narration, str) != NULL) {
       break;
     }
   }  //

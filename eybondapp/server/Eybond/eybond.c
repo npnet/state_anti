@@ -10,6 +10,7 @@
 #endif
 
 #ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
 #include "4G_net.h"
 #endif
 
@@ -17,12 +18,13 @@
 #include "eyblib_swap.h"
 #include "eyblib_algorithm.h"
 #include "eyblib_r_stdlib.h"
-#include "CRC.h"
+#include "eyblib_CRC.h"
 
 #include "eybpub_Debug.h"
 #include "eybpub_SysPara_File.h"
+#include "eybpub_utility.h"
 #include "eybpub_run_log.h"
-#include "Clock.h"
+#include "eybpub_Clock.h"
 
 #include "eybond.h"
 // #include "ESP_Update.h"
@@ -188,23 +190,7 @@ void proc_eybond_task(s32_t taskId) {
     }
   }
 }
-#endif
 
-#ifdef _PLATFORM_L610_
-void proc_eybond_task(s32_t taskId) {
-  u32_t uStackSize = 0;
-  relinkCnt = 0;
-  sPort = 0xff;
-  m_timeCheck_EYB = 0;
-  list_init(&rcveList);
-
-  int timeReport = 0;
-
-  while (1) {
-  }
-}
-
-#endif
 /*******************************************************************************
   * @brief
   * @note   None
@@ -1235,6 +1221,52 @@ static u8_t specialData_receive(ESP_t *esp) {
   }
   return 1;
 } */
+#endif
 
+#ifdef _PLATFORM_L610_
+void proc_eybond_task(s32_t taskId) {
+  int msg = 0;
+  u32_t uStackSize = 0;
+  relinkCnt = 0;
+  sPort = 0xff;
+  m_timeCheck_EYB = 0;
+  int timeReport = 60;
+  APP_PRINT("Eybond task run...\r\n");
+  list_init(&rcveList);  
+
+  while (1) {
+    fibo_queue_get(EYBOND_TASK, (void *)&msg, 0);
+    switch (msg) {
+      case APP_MSG_UART_READY:
+        APP_DEBUG("Get APP_CMD_UART_READY MSG\r\n");
+        break;
+      case SYS_PARA_CHANGE:
+        break;
+      case APP_MSG_DEVTIMER_ID: {
+        if ((m_timeCheck_EYB % 10) == 0) {
+          APP_DEBUG("Time for device report:%d %ld!!\r\n", timeReport, m_timeCheck_EYB);
+        }
+        m_timeCheck_EYB++;
+        if (m_timeCheck_EYB >= timeReport * 1) {
+          m_timeCheck_EYB = 0;
+          int value_put = EYBOND_CMD_REPORT;
+          fibo_queue_put(EYBOND_TASK, &value_put, 0);
+        }
+      }
+        break;
+      case EYBOND_DATA_PROCESS:
+        APP_DEBUG("Get EYBOND_DATA_PROCESS!!\r\n");
+//        ESP_process();
+        break;
+      case EYBOND_CMD_REPORT:
+//        onlineReport();
+        break;
+      default:
+        break;
+    }
+  }
+  fibo_thread_delete();
+}
+#endif
 /******************************************************************************/
 

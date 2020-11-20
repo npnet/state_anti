@@ -7,13 +7,8 @@
         2017.12.05 CGQ 修改相关库调用头
  * ＊ 修改 ： 暂无
  * ****************************************************************************/
-#ifdef _PLATFORM_BC25_
-#include "ql_type.h"
-#include "ql_memory.h"              // mike 20200828
-#endif
-
 #include "eyblib_list.h"
-// #include "eyblib_memory.h"       // mike 20200828
+#include "eyblib_memory.h"
 
 #define LIST_APPLY_FLAG     (0x55aa33cc)
 
@@ -39,18 +34,69 @@ void list_init(ListHandler_t *head) {
  * ****************************************************************************/
 void *list_nodeApply(mcu_t payloadSize) {
   Node_t *node = NULL;
-
-//  node = memory_apply(payloadSize + sizeof(Node_t));
-    node = Ql_MEM_Alloc(payloadSize + sizeof(Node_t));  // mike 20200828
-//  ERRR(node == NULL, goto ERR1);      // mike 20200826
+  node = memory_apply(payloadSize + sizeof(Node_t));
   ERRR(node == NULL, return NULL);
 
   /*数据空间申请成功*/
   node->front = (Node_t *)(LIST_APPLY_FLAG ^ (int)node->payload);
 
   return node->payload;
-// ERR1:
-//    return null;
+}
+/*******************************************************************************
+ * ＊ 函数名： list_nodeDelete
+ * ＊ 描述 ： 链表节点删除
+ * ＊ 参数 ： node:   目标操作节点
+ * ＊ 返回 ： 插入结果：FALSE／TRUE
+ * ****************************************************************************/
+void list_nodeDelete(ListHandler_t *head, void *payload) {
+  Node_t *node = nodeCheck((u8_t *)payload);
+  if (node != null) {
+    memory_release(node);
+    node = NULL;
+    return;
+  }
+
+  ERRR((head == NULL || head->node == NULL), return);
+  node = nodeFind(head, payload);
+  if (node != null) {
+    if (head->node == node) {
+      if (node->next == head->node) { //最后一个节点
+        head->node = null;
+      } else {
+        head->node = node->next;
+      }
+    }
+    node->front->next = node->next;
+    node->next->front = node->front;
+    if (node != NULL) {
+      memory_release(node);
+      node = NULL;
+    }
+    head->count--;
+  }
+}
+
+/*******************************************************************************
+ * ＊ 函数名： list_delete
+ * ＊ 描述 ： 链表删除
+ * ＊ 参数 ： head:   目标操作链表头
+ * ＊ 返回 ： 插入结果：FALSE／TRUE
+ * ****************************************************************************/
+void list_delete(ListHandler_t *head) {
+  Node_t *node = NULL;
+  Node_t *tail = head->node;
+
+  ERRR((head == NULL || tail == NULL), return);
+  do {
+    node = tail;
+    tail = tail->next;
+    if (node != NULL) {
+      memory_release(node);
+      node = NULL;
+    }
+  } while (tail != head->node && tail != NULL);
+
+  list_init(head);
 }
 
 /*******************************************************************************
@@ -70,7 +116,6 @@ int list_topInsert(ListHandler_t *head, void *payload) {
   return 0;
 }
 
-
 /*******************************************************************************
  * ＊ 函数名： list_bottomInsert
  * ＊ 描述 ： 链表节点前插
@@ -79,8 +124,6 @@ int list_topInsert(ListHandler_t *head, void *payload) {
  * ＊ 返回 ： 插入结果：0: 成功  or Fail
  * ****************************************************************************/
 int list_bottomInsert(ListHandler_t *head, void *payload) {
-//  Node_t *node;
-
   if (head == null) {
     return 1;
   }
@@ -125,8 +168,6 @@ int list_bottomInsert(ListHandler_t *head, void *payload) {
  * ＊ 返回 ： 节点数据存储首地址.  null；申请失败
  * ****************************************************************************/
 int list_ConfInsert(ListHandler_t *head, cmpFun cmp, void *payload) {
-//  Node_t *node, *tail;
-
   if (head == null) {
     return 1;
   }
@@ -176,7 +217,6 @@ int list_ConfInsert(ListHandler_t *head, cmpFun cmp, void *payload) {
  * ＊ 返回 ： NULL(未查找到)/节点地址
  * ****************************************************************************/
 void *list_nextData(ListHandler_t *head, void *payload) {
-//  Node_t *node = NULL;
   Node_t *node = nodeFind(head, payload);
 
   if (node == null) {
@@ -200,7 +240,6 @@ void *list_nextData(ListHandler_t *head, void *payload) {
 void *list_find(ListHandler_t *head, cmpFun cmp, void *conVal) {
   Node_t *tail = head->node;
 
-//  ERRR((head == NULL || tail == NULL), goto ERR1);
   ERRR((head == NULL || tail == NULL), return NULL);  // mike 20200826
   do {
     if (0 == cmp(tail->payload, conVal)) {
@@ -210,8 +249,6 @@ void *list_find(ListHandler_t *head, cmpFun cmp, void *conVal) {
   } while (tail != head->node);
 
   return null;
-// ERR1:
-// return NULL;
 }
 /*******************************************************************************
  * ＊ 函数名： list_trans
@@ -233,67 +270,6 @@ void list_trans(ListHandler_t *head, processorFun fun, void *optPoint) {
       break;
     }
   } while (tail != head->node && head->node != NULL);
-}
-
-/*******************************************************************************
- * ＊ 函数名： list_nodeDelete
- * ＊ 描述 ： 链表节点删除
- * ＊ 参数 ： node:   目标操作节点
- * ＊ 返回 ： 插入结果：FALSE／TRUE
- * ****************************************************************************/
-void list_nodeDelete(ListHandler_t *head, void *payload) {
-//  Node_t *node = NULL;
-  Node_t *node = nodeCheck((u8_t *)payload);
-  if (node != null) {
-//    memory_release(node); // mike 20200828
-    Ql_MEM_Free(node);      // mike 20200828
-    node = NULL;
-    return;
-  }
-
-  ERRR((head == NULL || head->node == NULL), return);
-  node = nodeFind(head, payload);
-  if (node != null) {
-    if (head->node == node) {
-      if (node->next == head->node) { //最后一个节点
-        head->node = null;
-      } else {
-        head->node = node->next;
-      }
-    }
-    node->front->next = node->next;
-    node->next->front = node->front;
-//    memory_release(node);     // mike 20200828
-    if (node != NULL) {
-      Ql_MEM_Free(node);      // mike 20200828
-      node = NULL;
-    }
-    head->count--;
-  }
-}
-
-/*******************************************************************************
- * ＊ 函数名： list_delete
- * ＊ 描述 ： 链表删除
- * ＊ 参数 ： head:   目标操作链表头
- * ＊ 返回 ： 插入结果：FALSE／TRUE
- * ****************************************************************************/
-void list_delete(ListHandler_t *head) {
-  Node_t *node = NULL;
-  Node_t *tail = head->node;
-
-  ERRR((head == NULL || tail == NULL), return);
-  do {
-    node = tail;
-    tail = tail->next;
-//    memory_release(node);     // mike 20200828
-    if (node != NULL) {
-      Ql_MEM_Free(node);      // mike 20200828
-      node = NULL;
-    }
-  } while (tail != head->node && tail != NULL);
-
-  list_init(head);
 }
 
 /*******************************************************************************
@@ -319,10 +295,6 @@ static Node_t *nodeCheck(u8_t *pLoad) {
  * ＊ 返回 ： 插入结果：FALSE／TRUE
  * ****************************************************************************/
 static Node_t *nodeFind(ListHandler_t *head, u8_t *pLoad) {
-//  Node_t *node;
-//  Node_t *tail;
-
-//  ERRR((head == null || head->node == NULL || pLoad == NULL), goto END);      // mike 20200826
   ERRR((head == null || head->node == NULL || pLoad == NULL), return NULL);
 
   Node_t *node = (Node_t *)(((u8_t *)pLoad) - sizeof(Node_t));
@@ -335,8 +307,6 @@ static Node_t *nodeFind(ListHandler_t *head, u8_t *pLoad) {
   } while (tail != head->node && tail != NULL);
 
   return null;
-// END:
-// return null;
 }
 
 /*****************************Copyright I＆S Team******************************/

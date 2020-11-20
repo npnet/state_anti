@@ -2,7 +2,6 @@
   *@brief   : East.c
   *@notes   : 2018.04.12 CGQ   
 *******************************************************************************/
-#include "ql_stdlib.h"
 #include "Protocol.h"
 #include "eyblib_typedef.h"
 #include "eyblib_swap.h"
@@ -98,8 +97,7 @@ static u8_t protocolCheck(void *load, void *optPoint)
 				}
 				else
 				{
-//					if (r_strfind("LPV", (char*)&cmd->ack.payload[3]) > 0)  // mike 20200828
-                    if (Ql_strstr((char*)&cmd->ack.payload[3], "LPV") != NULL)
+                    if (r_strstr((char*)&cmd->ack.payload[3], "LPV") != NULL)
 					{
 						*((CONVERT_TYPE)optPoint) = &east5kProtocol;
 					}

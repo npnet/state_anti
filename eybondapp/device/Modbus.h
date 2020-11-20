@@ -49,7 +49,6 @@ typedef struct
 	u16_t   crc;//data
 }ModbusFC06_t;
 
-
 typedef struct
 {
 	u8_t    addr;
@@ -59,7 +58,6 @@ typedef struct
 	u8_t    count;	//data count
 	u16_t   data[];//data
 }ModbusFC16_t;
-
 
 #pragma pack()
 
@@ -78,14 +76,12 @@ typedef struct
     u16_t *data; 	// set date;
 }ModbusSetCmd_t;
 
-
 void Modbus_GetCmdAdd(ListHandler_t *list, u8_t addr, void *tab, u16_t tabSize);
 int Modbus_CmdCheck(Buffer_t *send, Buffer_t *ack);
 void ModbusCmd_0102(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t end);
 void ModbusCmd_0304(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t end);
 void Modbus_06SetCmd(ListHandler_t *list, u8_t addr, u16_t reg, u16_t val);
 void Modbus_16SetCmd(ListHandler_t *list, u8_t addr, u16_t start, u16_t end, u8_t *data);
-
 
 #endif //__MODBUS_H end
 /******************************************************************************/

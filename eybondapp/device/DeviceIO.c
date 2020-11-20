@@ -12,10 +12,11 @@
 #include "ql_error.h"
 
 #include "ril_oceanconnect.h"
+#include "BC25Net.h"
 #endif
 
 #ifdef _PLATFORM_L610_
-
+#include "L610Net.h"
 #endif
 // #include "eyblib_memory.h"       // mike 20200828
 // #include "eyblib_r_stdlib.h"
@@ -25,7 +26,7 @@
 #include "eybpub_SysPara_File.h"
 
 #include "eybapp_appTask.h"
-#include "BC25Net.h"
+
 #include "DeviceIO.h"
 #include "Device.h"
 
@@ -38,7 +39,7 @@ static Buffer_t rcveBuf;
 s8_t g_UARTIO_AT_enable = 0;
 
 static void end(DeviceAck_e e);
-static void overtimeCallback(u32 timerId, void *param);
+static void overtimeCallback(u32_t timerId, void *param);
 
 #ifdef _PLATFORM_BC25_
 static ST_UARTDCB *IOCfg = null;
@@ -100,7 +101,7 @@ void DeviceIO_init(ST_UARTDCB *cfg) {
     } else {
       APP_DEBUG("Open DEVICE UART successfully!!port:%d\r\n", DEVICE_IO_PORT);
     }
-  } else if (IOCfg == null || Ql_memcmp(IOCfg, cfg, sizeof(ST_UARTDCB)) != 0) {
+  } else if (IOCfg == null || r_memcmp(IOCfg, cfg, sizeof(ST_UARTDCB)) != 0) {
     Ql_UART_Close(DEVICE_IO_PORT);
     IOCfg = cfg;  // Init with input setting
     APP_DEBUG("input #%d-%d-%d-%d#\r\n", cfg->baudrate, cfg->dataBits, cfg->stopBits, cfg->parity);
@@ -135,12 +136,14 @@ static void UARTIOCallBack(Enum_SerialPort port, Enum_UARTEventType msg, bool le
     case EVENT_UART_READY_TO_READ: {
       if (port == DEVICE_IO_PORT) {
         if (rcveBuf.payload != null) {    // 设备串口接收的数据统一在这里释放内存
-          Ql_MEM_Free(rcveBuf.payload);
+//          Ql_MEM_Free(rcveBuf.payload);   // mike 20201120
+          memory_release(rcveBuf.payload);
           rcveBuf.payload = NULL;
           rcveBuf.lenght = 0;
           rcveBuf.size = 0;
         }
-        rcveBuf.payload = Ql_MEM_Alloc(SERIAL_RX_BUFFER_LEN);
+//        rcveBuf.payload = Ql_MEM_Alloc(SERIAL_RX_BUFFER_LEN); // mike 20201120
+        rcveBuf.payload = memory_apply(SERIAL_RX_BUFFER_LEN);
         rcveBuf.size = SERIAL_RX_BUFFER_LEN;
         rcveBuf.lenght =  Ql_UART_Read(port, rcveBuf.payload,  rcveBuf.size);
         Ql_UART_ClrRxBuffer(DEVICE_IO_PORT);
@@ -148,28 +151,28 @@ static void UARTIOCallBack(Enum_SerialPort port, Enum_UARTEventType msg, bool le
         if (rcveBuf.lenght != 0) {
 //          APP_DEBUG("rcveBuf :%s size:%d!!\r\n", rcveBuf.payload);
         }
-        if(Ql_strncmp(CUSTOMER, "0A5", 3) == 0) {
-          if (Ql_strncmp((char *)rcveBuf.payload, "AT+", 3) == 0
+        if(r_strncmp(CUSTOMER, "0A5", 3) == 0) {
+          if (r_strncmp((char *)rcveBuf.payload, "AT+", 3) == 0
               && g_UARTIO_AT_enable == 0) { // 获取到硕日私有AT查询指令
             char strTemp[32] = {0};
-            Ql_memset(strTemp, '\0', 32);
+            r_memset(strTemp, '\0', 32);
             Buffer_t srne_buf;
             srne_buf.lenght = 0;
             srne_buf.size = 0;
             srne_buf.payload = NULL;
-            if (Ql_strncmp((char *)rcveBuf.payload, "AT+PN", 5) == 0) {
+            if (r_strncmp((char *)rcveBuf.payload, "AT+PN", 5) == 0) {
               parametr_get(DEVICE_PNID, &srne_buf);
-              Ql_strcpy(strTemp, "PN:");
-            } else if (Ql_strncmp((char *)rcveBuf.payload, "AT+IMEI", 7) == 0) {
+              r_strcpy(strTemp, "PN:");
+            } else if (r_strncmp((char *)rcveBuf.payload, "AT+IMEI", 7) == 0) {
               parametr_get(DEVICE_UID_IMEI, &srne_buf);
-              Ql_strcpy(strTemp, "IMEI:");
-            } else if (Ql_strncmp((char *)rcveBuf.payload, "AT+CCID", 7) == 0) {
+              r_strcpy(strTemp, "IMEI:");
+            } else if (r_strncmp((char *)rcveBuf.payload, "AT+CCID", 7) == 0) {
               parametr_get(GPRS_CCID_ADDR, &srne_buf);
-              Ql_strcpy(strTemp, "CCID:");
-            } else if (Ql_strncmp((char *)rcveBuf.payload, "AT+CSQ", 6) == 0) {
+              r_strcpy(strTemp, "CCID:");
+            } else if (r_strncmp((char *)rcveBuf.payload, "AT+CSQ", 6) == 0) {
               parametr_get(GPRS_CSQ_VALUE, &srne_buf);
-              Ql_strcpy(strTemp, "CSQ:");
-            } else if (Ql_strncmp((char *)rcveBuf.payload, "AT+LINK", 7) == 0) {
+              r_strcpy(strTemp, "CSQ:");
+            } else if (r_strncmp((char *)rcveBuf.payload, "AT+LINK", 7) == 0) {
               if (BC25Net_status() == REGISTERED_AND_OBSERVED) {
                 Uart_write((u8_t *)"LINK:1\r\n", 8);
               } else {
@@ -179,14 +182,15 @@ static void UARTIOCallBack(Enum_SerialPort port, Enum_UARTEventType msg, bool le
             }
             if (srne_buf.payload != NULL) {
               if (srne_buf.lenght >= 25) {
-                Ql_strncat(strTemp, (char *)srne_buf.payload, 25);
-                Ql_strcat(strTemp, "\r\n");
+                r_strncat(strTemp, (char *)srne_buf.payload, 25);
+                r_strcat(strTemp, "\r\n");
               } else {
-                Ql_strcat(strTemp, (char *)srne_buf.payload);
-                Ql_strcat(strTemp, "\r\n");
+                r_strcat(strTemp, (char *)srne_buf.payload);
+                r_strcat(strTemp, "\r\n");
               }
-              Uart_write((u8_t *)strTemp, Ql_strlen(strTemp));
-              Ql_MEM_Free(srne_buf.payload);
+              Uart_write((u8_t *)strTemp, r_strlen(strTemp));
+//              Ql_MEM_Free(srne_buf.payload);  // mike 20201120
+              memory_release(srne_buf.payload);
               srne_buf.payload = NULL;
               return;
             }
@@ -195,7 +199,7 @@ static void UARTIOCallBack(Enum_SerialPort port, Enum_UARTEventType msg, bool le
         }
         APP_DEBUG("no AT rcveBuf len:%d size:%d!!\r\n", rcveBuf.lenght, rcveBuf.size);
         if (g_UARTIO_AT_enable == 0) {  // 过滤主串口的主动输入
-          if (Ql_strncmp((char *)rcveBuf.payload, "SET_TEST=ON", 11) == 0) { // 使能主串口的主动输入
+          if (r_strncmp((char *)rcveBuf.payload, "SET_TEST=ON", 11) == 0) { // 使能主串口的主动输入
             APP_DEBUG("Enable MSG from UART port:%d!!\r\n", port);
             g_UARTIO_AT_enable = 1;
             Uart_write((u8_t *)"TEST=ON,OK\r\n", 12);
@@ -207,22 +211,22 @@ static void UARTIOCallBack(Enum_SerialPort port, Enum_UARTEventType msg, bool le
             return;
           } else {  // 有负载时将接收到的数据传递给负载设备处理
             s_device->buf->lenght = rcveBuf.lenght;
-            Ql_memcpy(s_device->buf->payload, rcveBuf.payload, s_device->buf->lenght);
+            r_memcpy(s_device->buf->payload, rcveBuf.payload, s_device->buf->lenght);
             APP_DEBUG("s_device buf len:%d size:%d!!\r\n", s_device->buf->lenght, s_device->buf->size);
           }
         } else {  // 生产测试AT指令打开后
-          if (Ql_strncmp((char *)rcveBuf.payload, "SET_TEST=OFF", 12) == 0) {
+          if (r_strncmp((char *)rcveBuf.payload, "SET_TEST=OFF", 12) == 0) {
             APP_DEBUG("Disable MSG from UART port:%d!!\r\n", port);
             g_UARTIO_AT_enable = 0;
             Uart_write((u8_t *)"TEST=OFF,OK\r\n", 13);
             return;
           }
-          if (Ql_strncmp((char *)rcveBuf.payload, "SET_TEST=ON", 11) == 0) {
+          if (r_strncmp((char *)rcveBuf.payload, "SET_TEST=ON", 11) == 0) {
             APP_DEBUG("MSG from UART port is Enabled:%d!!\r\n", port);
             Uart_write((u8_t *)"TEST=ON,OK\r\n", 12);
             return;
           }
-          if (Ql_strncmp((char *)rcveBuf.payload, "#Get", 4) == 0) {
+          if (r_strncmp((char *)rcveBuf.payload, "#Get", 4) == 0) {
             APP_DEBUG("Cancel MSG %s from UART port:%d!!\r\n", rcveBuf.payload, port);
             return;
           }
@@ -254,10 +258,11 @@ void DeviceIO_reset(void) {
   }
   s_lockDevice = null;
   IOCfg = null;
-  if (rcveBuf.payload != NULL) {    // mike 20200828
-    Ql_MEM_Free(rcveBuf.payload);
-    rcveBuf.payload = null;
-  }
+  memory_release(rcveBuf.payload);
+//  if (rcveBuf.payload != NULL) {    // mike 20200828
+//    Ql_MEM_Free(rcveBuf.payload);
+//    rcveBuf.payload = null;
+//  }
 }
 
 /*******************************************************************************

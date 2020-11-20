@@ -27,16 +27,31 @@ s32 ReadSerialPort(Enum_SerialPort port,u8* pBuffer, u32 bufLen);
 #ifdef _PLATFORM_L610_
 #include "oc_uart.h"
 
-#define NET_LED			(0)
-#define GSM_LED			(0)
-#define DEVICE_LED		(0)
-#define BEEP_PORT		(0)
+#define NET_LED			(24)
+#define GSM_LED			(26)
+#define DEVICE_LED		(30)
+#define BEEP_PORT		(27)
 
-#define KEY_PORT		(0)
-#define WATCHDOG_PIN	(0)
+#define KEY_PORT		(31)
+#define WATCHDOG_PIN	(25)
+#define ADC0_PORT	    (45)
+
 #define SERIAL_RX_BUFFER_LEN  1024
 
+#define DEBUG_UART_TXD       28
+#define DEBUG_UART_RXD       29
+
+#define PINDIRECTION_IN   0
+#define PINDIRECTION_OUT  1
+
+#define PINLEVEL_LOW      0
+#define PINLEVEL_HIGH     1
+
 s32_t ReadSerialPort(hal_uart_port_t port,u8_t* pBuffer, u32_t bufLen);
+extern UINT32 EYBAPP_TASK;
+extern UINT32 EYBNET_TASK;
+extern UINT32 EYBDEVICE_TASK;
+extern UINT32 EYBOND_TASK;
 #endif
 
 #endif //__EYBPUB_UTILITY_H_

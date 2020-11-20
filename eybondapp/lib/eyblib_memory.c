@@ -13,17 +13,25 @@
                 2019.03.26 Unarty
                 内存释放增加地址边界对齐判断，某些设备内存非对齐访问时会导致硬件异常。
  * ****************************************************************************/
+#ifdef _PLATFORM_BC25_
+#include "ql_memory.h"
+#endif
+
+#ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
+#endif
+
 #include "eyblib_memory.h"
 
-#define MEMORY_FLAG   (0xA55A55AA)//((void*)0x4885A112)
-#define MEMORY_ALIGNMENT (4)                //内存最小边界对齐
+// #define MEMORY_FLAG   (0xA55A55AA)//((void*)0x4885A112)
+// #define MEMORY_ALIGNMENT (4)                //内存最小边界对齐
 
-typedef struct memArea {
+/* typedef struct memArea {
   struct memArea  *nextArea;
   mcu_t     areaSize;
-} MemArea_t;  //内存区域块描述
+} MemArea_t;  //内存区域块描述 */
 
-static MemArea_t *mem;
+// static MemArea_t *mem;
 
 /*******************************************************************************
  * ＊ 函数名： memory_init
@@ -34,9 +42,9 @@ static MemArea_t *mem;
  * ＊ 注意 ： 无
  * ****************************************************************************/
 void memory_init(void *memAddr, mcu_t memSize) {
-  mem = (MemArea_t *)memAddr;
+/*  mem = (MemArea_t *)memAddr;
   mem->areaSize = memSize;
-  mem->nextArea = null;
+  mem->nextArea = null; */
 }
 
 /*******************************************************************************
@@ -46,10 +54,10 @@ void memory_init(void *memAddr, mcu_t memSize) {
  * ＊ 返回 ： 申请的地址，null（申请失败）／有效内存地址（申请成功)
  * ****************************************************************************/
 void *memory_apply(mcu_t size) {
-  MemArea_t *tail, *pion;
+/*   MemArea_t *tail, *pion;
   void *memAddr;
 
-  /*字节对齐*/
+  // 字节对齐
   size += sizeof(MemArea_t) + (MEMORY_ALIGNMENT - 1);
   size &= ~(MEMORY_ALIGNMENT - 1);
 
@@ -71,8 +79,14 @@ void *memory_apply(mcu_t size) {
 
       return ((u8_t *)memAddr + sizeof(MemArea_t));
     }
-  }
+  } */
+#ifdef _PLATFORM_BC25_
+  return Ql_MEM_Alloc(size);
+#endif
 
+#ifdef _PLATFORM_L610_
+  return fibo_malloc(size);
+#endif
   return null;
 }
 /*******************************************************************************
@@ -82,12 +96,12 @@ void *memory_apply(mcu_t size) {
  * ＊ 返回 ： 无
  * ****************************************************************************/
 void memory_release(void *addr) {
-  if (null != addr && (((int)addr & (MEMORY_ALIGNMENT - 1)) == 0)) {
+/*   if (null != addr && (((int)addr & (MEMORY_ALIGNMENT - 1)) == 0)) {
     MemArea_t *tail, *pion;
     MemArea_t *rlsArea = (MemArea_t *)((mcu_t)addr - sizeof(MemArea_t));
 
     if ((void *)(rlsArea->areaSize ^ MEMORY_FLAG) == rlsArea->nextArea) {
-      /*找到插入节点*/
+      // 找到插入节点
       for (pion = (MemArea_t *)&mem, tail = mem; (tail < rlsArea) && (tail != null); pion = tail, tail = tail->nextArea)
       {}
 
@@ -105,7 +119,19 @@ void memory_release(void *addr) {
         }
       }
     }
+  } */
+#ifdef _PLATFORM_BC25_
+  if (addr != NULL) {
+    Ql_MEM_Free(addr);
   }
+#endif
+    
+#ifdef _PLATFORM_L610_
+  if (addr != NULL) {
+    fibo_free(addr);
+  }
+#endif
+  addr = NULL;
 }
 
 /******************************************************************************/

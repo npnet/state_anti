@@ -2,19 +2,22 @@
  *@brief   : Modbus.c
  *@notes   : 2017.04.20 CGQ 创建
 *******************************************************************************/
+#ifdef _PLATFORM_BC25_
 #include "ql_stdlib.h"
 #include "ql_memory.h"
+#endif
 
+#include "eyblib_typedef.h"
 #include "eyblib_list.h"
+#include "eyblib_memory.h"
+#include "eyblib_CRC.h"
 
 #include "eybpub_Debug.h"
 
-#include "modbus.h"
-#include "CRC.h"
+#include "Modbus.h"
 #include "Device.h"
 
 // #include "eyblib_r_stdlib.h"
-// #include "eyblib_memory.h"
 
 /*******************************************************************************
   * @brief
@@ -83,10 +86,8 @@ void ModbusCmd_0102(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t
   u16_t startReg = MIN(start, end);
 
   cmd = list_nodeApply(sizeof(DeviceCmd_t));
-// pLoad = memory_apply(sizeof(ModbusFC0102_t));     // mike 20200828
-// ackBuf = memory_apply(ackSize + 5);
-  pLoad = Ql_MEM_Alloc(sizeof(ModbusFC0102_t));
-  ackBuf = Ql_MEM_Alloc(ackSize + 5);
+  pLoad = memory_apply(sizeof(ModbusFC0102_t));
+  ackBuf = memory_apply(ackSize + 5);
   if (cmd != null && pLoad != null && ackBuf != null) {
     list_bottomInsert(list, cmd);
     cmd->waitTime = 2000;
@@ -104,14 +105,8 @@ void ModbusCmd_0102(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t
     pLoad->crc = crc16_standard(CRC_RTU, (u8_t *)pLoad, sizeof(ModbusFC0304_t) - sizeof(pLoad->crc));
   } else {
     list_nodeDelete(list, cmd);
-//  memory_release(pLoad);
-//  memory_release(ackBuf);
-    if (pLoad != NULL) {
-      Ql_MEM_Free(pLoad);
-    }
-    if (ackBuf != NULL) {
-      Ql_MEM_Free(ackBuf);
-    }
+    memory_release(pLoad);
+    memory_release(ackBuf);
   }
 }
 
@@ -133,10 +128,8 @@ void ModbusCmd_0304(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t
   while (cmdSize > 0) {
     len = cmdSize > MODEBUS_MAX_LOAD ? MODEBUS_MAX_LOAD : cmdSize;
     cmd = list_nodeApply(sizeof(DeviceCmd_t));
-    // pLoad = memory_apply(sizeof(ModbusFC0304_t));
-    // ackBuf = memory_apply(len + 5);
-    pLoad = Ql_MEM_Alloc(sizeof(ModbusFC0304_t));
-    ackBuf = Ql_MEM_Alloc(len + 5);
+    pLoad = memory_apply(sizeof(ModbusFC0304_t));
+    ackBuf = memory_apply(len + 5);
     if (cmd != null && pLoad != null && ackBuf != null) {
       list_bottomInsert(list, cmd);
       cmd->waitTime = 2000;
@@ -154,14 +147,8 @@ void ModbusCmd_0304(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t
       pLoad->crc = crc16_standard(CRC_RTU, (u8_t *)pLoad, sizeof(ModbusFC0304_t) - sizeof(pLoad->crc));
     } else {
       list_nodeDelete(list, cmd);
-//    memory_release(pLoad);
-//    memory_release(ackBuf);
-      if (pLoad != NULL) {
-        Ql_MEM_Free(pLoad);
-      }
-      if (ackBuf != NULL) {
-        Ql_MEM_Free(ackBuf);
-      }
+      memory_release(pLoad);
+      memory_release(ackBuf);
     }
     startReg += len >> 1;
     cmdSize -= len;
@@ -179,10 +166,8 @@ void Modbus_06SetCmd(ListHandler_t *list, u8_t addr, u16_t reg, u16_t val) {
   DeviceCmd_t *cmd;
 
   cmd = list_nodeApply(sizeof(DeviceCmd_t));
-//    pLoad = memory_apply(sizeof(ModbusFC06_t));
-//    ackBuf = memory_apply(sizeof(ModbusFC06_t));
-  pLoad = Ql_MEM_Alloc(sizeof(ModbusFC06_t));
-  ackBuf = Ql_MEM_Alloc(sizeof(ModbusFC06_t));
+  pLoad = memory_apply(sizeof(ModbusFC06_t));
+  ackBuf = memory_apply(sizeof(ModbusFC06_t));
   if (cmd != null && pLoad != null && ackBuf != null) {
     list_bottomInsert(list, cmd);
     cmd->waitTime = 2000;
@@ -200,14 +185,8 @@ void Modbus_06SetCmd(ListHandler_t *list, u8_t addr, u16_t reg, u16_t val) {
     pLoad->crc = crc16_standard(CRC_RTU, (u8_t *)pLoad, sizeof(ModbusFC06_t) - MODEBUS_CRC_SIZE);
   } else {
     list_nodeDelete(list, cmd);
-//  memory_release(pLoad);
-//  memory_release(ackBuf);
-    if (pLoad != NULL) {
-      Ql_MEM_Free(pLoad);
-    }
-    if (ackBuf != NULL) {
-      Ql_MEM_Free(ackBuf);
-    }
+    memory_release(pLoad);
+    memory_release(ackBuf);
   }
 }
 
@@ -225,10 +204,8 @@ void Modbus_16SetCmd(ListHandler_t *list, u8_t addr, u16_t start, u16_t end, u8_
   u16_t startReg = MIN(start, end);
 
   cmd = list_nodeApply(sizeof(DeviceCmd_t));
-// pLoad = memory_apply(sizeof(ModbusFC16_t) + MODEBUS_CRC_SIZE + cmdSize);
-// ackBuf = memory_apply(8);
-  pLoad = Ql_MEM_Alloc(sizeof(ModbusFC16_t) + MODEBUS_CRC_SIZE + cmdSize);
-  ackBuf = Ql_MEM_Alloc(8);
+  pLoad = memory_apply(sizeof(ModbusFC16_t) + MODEBUS_CRC_SIZE + cmdSize);
+  ackBuf = memory_apply(8);
   if (cmd != null && pLoad != null && ackBuf != null) {
     list_bottomInsert(list, cmd);
     cmd->waitTime = 2000;
@@ -244,21 +221,15 @@ void Modbus_16SetCmd(ListHandler_t *list, u8_t addr, u16_t start, u16_t end, u8_
     pLoad->reg = ENDIAN_BIG_LITTLE_16(startReg);
     pLoad->num = ENDIAN_BIG_LITTLE_16(cmdSize >> 1);
     pLoad->count = cmdSize;
-    Ql_memcpy(pLoad->data, data, cmdSize);
+    r_memcpy(pLoad->data, data, cmdSize);
     crc = crc16_standard(CRC_RTU, (u8_t *)pLoad, sizeof(ModbusFC16_t) + cmdSize);
     ackBuf = ((u8_t *)pLoad->data) + cmdSize;
     *ackBuf++ = crc;
     *ackBuf++ = crc >> 8;
   } else {
     list_nodeDelete(list, cmd);
-//  memory_release(pLoad);
-//  memory_release(ackBuf);
-    if (pLoad != NULL) {
-      Ql_MEM_Free(pLoad);
-    }
-    if (ackBuf != NULL) {
-      Ql_MEM_Free(ackBuf);
-    }
+    memory_release(pLoad);
+    memory_release(ackBuf);
   }
 }
 /******************************************************************************/

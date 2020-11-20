@@ -3,7 +3,7 @@
   *@notes   : 2020.08.04 MWY
 *******************************************************************************/
 #ifndef __EYBLIB_MEMORY_H_
-#define	__EYBLIB_MEMORY_H_
+#define __EYBLIB_MEMORY_H_
 
 #include "eyblib_typedef.h"
 

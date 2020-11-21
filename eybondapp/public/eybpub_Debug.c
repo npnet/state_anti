@@ -188,7 +188,7 @@ void UARTDEBUG_CallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void
  return   :
 *******************************************************************************/
 void Debug_init(void) {
-#ifdef  EYBOND_DEBUG_ENABLE
+// #ifdef  EYBOND_DEBUG_ENABLE
   fibo_gpio_mode_set(DEBUG_UART_TXD,6);
   fibo_gpio_cfg(DEBUG_UART_TXD,PINDIRECTION_OUT);
   fibo_gpio_set(DEBUG_UART_TXD,PINLEVEL_HIGH);
@@ -207,7 +207,7 @@ void Debug_init(void) {
   drvcfg.rx_buf_size = UART_RX_BUF_SIZE;
   drvcfg.tx_buf_size = UART_TX_BUF_SIZE;
   fibo_hal_uart_init(DEBUG_PORT, &drvcfg, UARTDEBUG_CallBack, NULL);
-#endif
+// #endif
 }
 /*******************************************************************************
  Brief    : Debug_printf
@@ -239,6 +239,10 @@ void Print_output(u8_t *p, u16_t len) {
 
 void Debug_trace(u8_t *p, u16_t len) {
 
+}
+#else
+void Print_output(u8_t *p, u16_t len) {
+  fibo_hal_uart_put(DEBUG_PORT, (UINT8 *)p, len);
 }
 #endif
 #endif

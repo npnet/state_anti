@@ -41,6 +41,9 @@ static ListHandler_t netSendPakege;
 // static s32_t m_simStat = SIM_STAT_UNSPECIFIED;
 static void Net_sendData(void);
 
+static void restart_net(void);
+static void get_simstatus(void);
+
 /*******************************************************************************
   * @brief
   * @note   None
@@ -61,6 +64,10 @@ void proc_net_task(s32_t taskId) {
   NetOvertime = 0;
   m_timeCheck = 0;
 
+  //开机重连网络
+  msg=NET_CMD_RESTART_ID;
+  fibo_queue_put(EYBNET_TASK,&msg,0);
+
   APP_PRINT("Net task run...\r\n");
   list_init(&netSendPakege);    // 初始化网络发送队列
   while (1) {
@@ -71,6 +78,7 @@ void proc_net_task(s32_t taskId) {
         APP_DEBUG("Net task APP_MSG_UART_READY\r\n");
         break;
       case NET_CMD_RESTART_ID:
+        restart_net();
         break;
       case APP_MSG_TIMER_ID:  // 从APP task传递过来的定时器(1000 ms)消息
         APP_DEBUG("Net task get APP_USER_TIMER_ID:%d\r\n", NetOvertime);
@@ -152,4 +160,48 @@ static void Net_sendData(void) {
 }
 
 /******************************************************************************/
+//******************************************************************************            
+//name:             static void restart_net()          
+//introduce:        检测到信号量，重连网络，+连网稳定机制        
+//parameter:        none                 
+//return:           none         
+//author:           Luee                                              
+//******************************************************************************
+static void restart_net(void)
+{
+        APP_PRINT("\r\nget queue : restart net\r\n");
+        //检测SIM卡插入否？
+        get_simstatus();
+}
 
+//******************************************************************************            
+//name:             static void get_simstatus(void)        
+//introduce:        得到SIM卡插拔状态        
+//parameter:        none                 
+//return:           none         
+//author:           Luee                                              
+//******************************************************************************
+static void get_simstatus(void)
+{
+    u8_t simstatus;
+    //u8 simimsi;
+    s32_t simret;
+    u8_t test = 1;
+    while(test)
+    {
+        //得到SIM卡插拔状态   
+        simret=fibo_get_sim_status(&simstatus);
+        //延时1S
+		fibo_taskSleep(1000);
+		if((simstatus==1)&&(simret==0))
+		{
+            //SIM卡已插入
+			test = 0;
+            APP_PRINT("\r\nsim is insert !\r\n");            
+		}
+        else
+        {
+            APP_PRINT("\r\nsim no checked,please insert sim & retry\r\n");
+        }
+    }   //end of while
+}   //end of get_simstatus

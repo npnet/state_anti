@@ -176,6 +176,9 @@ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
     app/src/xmodem_server.c
     app/src/gpio_operate.c
     app/src/device_access_information.c
+    
+    app/src/protobuf-c.c
+    app/src/l610_conn_aliyun.c
     )
 endif()
 

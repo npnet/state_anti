@@ -113,6 +113,8 @@ void * appimg_enter(void *param) {
 //    fibo_thread_create(device_update_task,"DEVICE UPDATE TASK",1024*8*3, NULL, OSI_PRIORITY_NORMAL);
 //    fibo_thread_create(feed_dog_task,     "FEED DOG TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
 //    fibo_thread_create(rec_check_task,    "REC  CHECK TASK",   1024*8*2, NULL, OSI_PRIORITY_NORMAL);
+//  fibo_thread_create(mqtt_conn_ali_task, "mqtt_conn_ali",	 1024 * 16, NULL, OSI_PRIORITY_NORMAL);
+
 
   int value_put = APP_MSG_UART_READY;
   fibo_queue_put(EYBAPP_TASK, &value_put, 0);

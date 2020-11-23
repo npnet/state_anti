@@ -111,7 +111,7 @@ void * appimg_enter(void *param) {
   fibo_thread_create_ex(proc_device_task, "Eybond DEVICE TASK", 1024*8*2, NULL, OSI_PRIORITY_NORMAL, &dev_thread_id);
   fibo_thread_create_ex(proc_eybond_task, "Eybond CMD TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &eyb_thread_id);
 //    fibo_thread_create(device_update_task,"DEVICE UPDATE TASK",1024*8*3, NULL, OSI_PRIORITY_NORMAL);
-//    fibo_thread_create(feed_dog_task,     "FEED DOG TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
+//  fibo_thread_create(feed_dog_task,     "FEED DOG TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
 //    fibo_thread_create(rec_check_task,    "REC  CHECK TASK",   1024*8*2, NULL, OSI_PRIORITY_NORMAL);
 //  fibo_thread_create(mqtt_conn_ali_task, "mqtt_conn_ali",	 1024 * 16, NULL, OSI_PRIORITY_NORMAL);
 

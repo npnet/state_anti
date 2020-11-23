@@ -13,6 +13,10 @@ man
 # hidden files
 .*
 
+# workspace
+*.code-workspace
+chi_lu.code-workspace
+
 # cscope files
 cscope.*
 ncscope.*

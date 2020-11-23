@@ -570,7 +570,7 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
     {3,   "",                       },         /* 生产厂家 */
     {4,   "1.6",                    },         /* 协议版本 */
     {5,   __APPVERSION__,           },         /* 固件版本 */
-    {6,   "5.0.0.0",                },         /* 硬件版本 */
+    {6,   "6.0.0.0",                },         /* 硬件版本 */
     {7,   "",                       },         /* 出厂时间 */
     //业务属性
     {8,   "",                       },         /* 应用协议 */
@@ -589,7 +589,7 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
     {21,  "www.shinemonitor.com",   },         /* 远端服务器1的IP地址或域名 */
     {22,  "",                       },         /* 远端服务器2的IP地址或域名 */
     {23,  "",                       },         /* 远端服务器3的IP地址或域名 */
-    {24,  "5683",                   },         /* 远端的端口号 */
+    {24,  "502",                   },         /* 远端的端口号 */
     {25,  "20",                     },         /* 系统时区 */
     {26,  "",                       },         /* 系统时间 */
     {27,  "",                       },         /* 系统告警信息 */
@@ -642,7 +642,7 @@ struct _ParamDescripTable_t PDT[] = {
   {21,  "www.shinemonitor.com",    setServer1IPAddr,           getServer1IPAddr},        /* 远端服务器1的IP地址或域名 */
   {22,  "0",                       setServer2IPAddr,           getServer2IPAddr},        /* 远端服务器2的IP地址或域名 */
   {23,  "0",                       setServer3IPAddr,           getServer3IPAddr},        /* 远端服务器3的IP地址或域名 */
-  {24,  "5683",                    setServerPort,              getServerPort},           /* 远端的端口号 */
+  {24,  "502",                     setServerPort,              getServerPort},           /* 远端的端口号 */
   {25,  "20",                      setSysTimeZone,             getSysTimeZone},          /* 系统时区 */
   {26,  "0000-00-00 00:00:00",     setSysTime,                 getSysTime},              /* 系统时间 */
   {27,  "0",                       setSysWarning,              getSysWarning},           /* 系统告警信息 */
@@ -662,11 +662,10 @@ struct _ParamDescripTable_t PDT[] = {
   {54,  "0",                       setrunlog,                  getrunlog},
   {55,  "20",                      setCSQ,                     getCSQ},                   /* 信号强度 */
   {56,  "0",                       setEthernetSerial,          getEthernetSerial},        /* 通信卡CCID */
-  {57,  "\"IP\",\"CTNB\",\"\",\"\",0", setAPN,                 getAPN},
+  {57,  "apn:user,pwd",            setAPN,                     getAPN},
   {58,  "0",                       setCPUID,                   getCPUID},
   {82,  "300",                     setReportTime,              getReportTime}
 };
-//  {57,  "apn:user,pwd",            setAPN,                     getAPN},
 /*----------------------------------------------------------------------------*
 **                             Global Vars                                    *
 **----------------------------------------------------------------------------*/

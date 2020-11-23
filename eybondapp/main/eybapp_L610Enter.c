@@ -17,11 +17,15 @@
 #include "eybapp_appTask.h"
 #include "Device.h"
 #include "eybond.h"
+#include "L610_conn_ali_net.h"
 
 UINT32 EYBAPP_TASK = 0;
 UINT32 EYBNET_TASK = 0;
 UINT32 EYBDEVICE_TASK = 0;
 UINT32 EYBOND_TASK = 0;
+
+UINT32 ALIYUN_TASK = 0;
+
 #endif
 
 static void prvInvokeGlobalCtors(void) {
@@ -105,7 +109,7 @@ void * appimg_enter(void *param) {
   EYBNET_TASK = fibo_queue_create(5, sizeof(int));
   EYBDEVICE_TASK = fibo_queue_create(5, sizeof(int));
   EYBOND_TASK = fibo_queue_create(5, sizeof(int));
-
+  ALIYUN_TASK = fibo_queue_create(5, sizeof(int));
   fibo_thread_create_ex(proc_net_task,    "Eybond NET TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &net_thread_id);
   fibo_thread_create_ex(proc_app_task,    "Eybond APP TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &app_thread_id);
   fibo_thread_create_ex(proc_device_task, "Eybond DEVICE TASK", 1024*8*2, NULL, OSI_PRIORITY_NORMAL, &dev_thread_id);
@@ -113,7 +117,7 @@ void * appimg_enter(void *param) {
 //    fibo_thread_create(device_update_task,"DEVICE UPDATE TASK",1024*8*3, NULL, OSI_PRIORITY_NORMAL);
 //  fibo_thread_create(feed_dog_task,     "FEED DOG TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
 //    fibo_thread_create(rec_check_task,    "REC  CHECK TASK",   1024*8*2, NULL, OSI_PRIORITY_NORMAL);
-//  fibo_thread_create(mqtt_conn_ali_task, "mqtt_conn_ali",	 1024 * 16, NULL, OSI_PRIORITY_NORMAL);
+  fibo_thread_create(mqtt_conn_ali_task, "mqtt_conn_ali",	 1024 * 16, NULL, OSI_PRIORITY_NORMAL);
 
 
   int value_put = APP_MSG_UART_READY;

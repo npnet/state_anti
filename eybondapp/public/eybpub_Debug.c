@@ -180,6 +180,7 @@ static Buffer_t UARTDEBUG_buf;
 void UARTDEBUG_CallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg)
 {
     OSI_PRINTFI("uartapi recv uart_port=%d len=%d, data=%s", uart_port, len, (char *)data);
+    APP_DEBUG("Read data in DEBUG_PORT buffer!\r\n");
 }
 
 /*******************************************************************************
@@ -215,8 +216,7 @@ void Debug_init(void) {
  return   :
 *******************************************************************************/
 #ifdef  EYBOND_DEBUG_ENABLE
-void  Debug_buffer(Buffer_t *buf)
-{
+void  Debug_buffer(Buffer_t *buf) {
   fibo_hal_uart_put(DEBUG_PORT, (UINT8 *)buf->payload, buf->lenght);
 }
 

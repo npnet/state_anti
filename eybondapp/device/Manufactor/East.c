@@ -2,9 +2,11 @@
   *@brief   : East.c
   *@notes   : 2018.04.12 CGQ   
 *******************************************************************************/
-#include "Protocol.h"
 #include "eyblib_typedef.h"
 #include "eyblib_swap.h"
+#include "eyblib_r_stdlib.h"
+
+#include "Protocol.h"
 #include "Modbus.h"
 #include "Device.h"
 

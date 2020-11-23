@@ -26,5 +26,8 @@ doxygen-warning-log.txt
 # misc
 \#*#
 
+# vs code file
+*.code-workspace
+
 # to include anyway
 !.gitignore

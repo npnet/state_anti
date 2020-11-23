@@ -6,6 +6,9 @@
 #include "ql_stdlib.h"
 #include "ql_memory.h"
 #endif
+#ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
+#endif
 
 #include "eyblib_list.h"
 #include "eyblib_swap.h"

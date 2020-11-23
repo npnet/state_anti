@@ -18,6 +18,7 @@
 #include "eyblib_swap.h"
 #include "eyblib_algorithm.h"
 #include "eyblib_r_stdlib.h"
+#include "eyblib_memory.h"
 #include "eyblib_CRC.h"
 
 #include "eybpub_Debug.h"
@@ -190,6 +191,7 @@ void proc_eybond_task(s32_t taskId) {
     }
   }
 }
+#endif
 
 /*******************************************************************************
   * @brief
@@ -200,11 +202,7 @@ void ESP_callback(u8_t port, Buffer_t *buf) { // 网络数据解析
 //  overtime_ESP = 0;
   sPort = port;
   ESP_cmd(buf, NetMsgAck_Eybond);
-//  memory_release(buf);
-  if (buf->payload != NULL) {   // 释放申请的输入指令内存
-    Ql_MEM_Free(buf->payload);
-    buf->payload = NULL;
-  }
+  memory_release(buf->payload);  // 释放申请的输入指令内存
 }
 
 static void NetMsgAck_Eybond(Buffer_t *buf) { // 网络数据解析返回结果函数
@@ -224,8 +222,7 @@ static void output(Buffer_t *buf) {
   u32_t displayNum = 0;
   APP_DEBUG("Eybond len: %d value: \r\n", buf->lenght);
   if (buf->lenght < 512) {
-//    char *str = memory_apply(buf->lenght * 3 + 8);
-    u8_t *str = Ql_MEM_Alloc(buf->lenght * 3 + 8);
+    u8_t *str = memory_apply(buf->lenght * 3 + 8);
     if (str != null) {
 //      int l = Swap_hexChar((char *)str, buf->payload, buf->lenght, ' ');  // mike 重点检测函数
       hextostr(buf->payload, str, buf->lenght);   // 和Swap_hexChar是反的
@@ -246,10 +243,7 @@ static void output(Buffer_t *buf) {
       }
 //      Debug_output(str, l);
 //      APP_DEBUG("\r\n");
-//      memory_release(str);
-      if (str != NULL) {
-        Ql_MEM_Free(str);
-      }
+      memory_release(str);
     }
   }
 }
@@ -293,8 +287,9 @@ u8_t ESP_cmd(Buffer_t *buf, AckCh ch) {
 #ifdef _PLATFORM_BC25_
       Ql_OS_SendMessage(EYBOND_TASK, EYBOND_DATA_PROCESS, 0, 0);
 #endif
-
 #ifdef _PLATFORM_L610_
+    int value_put = EYBOND_DATA_PROCESS;
+    fibo_queue_put(EYBOND_TASK, &value_put, 0);
 #endif
     }
   }
@@ -450,8 +445,7 @@ static u8_t paraGet(ESP_t *esp) {
 
   i = esp->PDULen - sizeof(EybondHeader_t);
 
-  // ackBufTab = memory_apply(i * sizeof(Buffer_t) + 8);
-  ackBufTab = Ql_MEM_Alloc(i * sizeof(Buffer_t) + 8);
+  ackBufTab = memory_apply(i * sizeof(Buffer_t) + 8);
   ackBuf = (u8_t *)ackBufTab;
   paraBufTab = ackBufTab;
   len = 0;
@@ -463,7 +457,6 @@ static u8_t paraGet(ESP_t *esp) {
     // SysPara_Get(*para, &buf);
     parametr_get(*para, &buf);
     len += buf.lenght;
-    // r_memcpy(ackBuf, &buf, sizeof(Buffer_t));
     r_memcpy(ackBuf, &buf, sizeof(Buffer_t));
     ackBuf += sizeof(Buffer_t);
     para++;
@@ -472,20 +465,17 @@ static u8_t paraGet(ESP_t *esp) {
   i = esp->PDULen - sizeof(EybondHeader_t);
 
   buf.lenght = i * 2 + len + (i * sizeof(EybondHeader_t));
-  // buf.payload = memory_apply(buf.lenght + 20);
-  buf.payload = Ql_MEM_Alloc(buf.lenght + 20);
+  buf.payload = memory_apply(buf.lenght + 20);
   ackBuf = buf.payload;
   para = esp->PDU;
 
   while (i--) {
     ackHead = (EybondHeader_t *)ackBuf;
-    // r_memcpy(ackHead, &esp->head, sizeof(EybondHeader_t));
     r_memcpy(ackHead, &esp->head, sizeof(EybondHeader_t));
     ackBuf += sizeof(EybondHeader_t);
     if (ackBufTab->lenght > 0 && ackBufTab->payload != null) {
       *ackBuf++ = 0;
       *ackBuf++ = *para++;
-      // r_memcpy(ackBuf, ackBufTab->payload, ackBufTab->lenght);
       r_memcpy(ackBuf, ackBufTab->payload, ackBufTab->lenght);
       ackBuf += ackBufTab->lenght;
     } else {
@@ -498,23 +488,12 @@ static u8_t paraGet(ESP_t *esp) {
     *(((u8_t *)ackHead) + 5) = (ackBufTab->lenght + 4); //
 
     // ackHead->msgLen = ENDIAN_BIG_LITTLE_16(ackBufTab->lenght + 4);
-    // memory_release(ackBufTab->payload);
-    if (ackBufTab->payload != NULL) {
-      Ql_MEM_Free(ackBufTab->payload);
-      ackBufTab->payload = NULL;
-    }
+    memory_release(ackBufTab->payload);    
     ackBufTab++;
   }
   esp->ack(&buf);
-//  memory_release(paraBufTab);
-//  memory_release(buf.payload);
-  if (paraBufTab != NULL) {
-    Ql_MEM_Free(paraBufTab);
-  }
-  if (buf.payload != NULL) {
-    Ql_MEM_Free(buf.payload);
-    buf.payload = NULL;
-  }
+  memory_release(paraBufTab);
+  memory_release(buf.payload);
   return 0;
 }
 
@@ -539,7 +518,7 @@ static u8_t paraSet(ESP_t *esp) {
     APP_DEBUG("ESP=PDU %02X\r\n", esp->PDU[i]);
   }
 
-  buf.payload = Ql_MEM_Alloc(buf.lenght + 1);
+  buf.payload = memory_apply(buf.lenght + 1);
   buf.size = buf.lenght + 1;
   r_memcpy(buf.payload, para + 1, buf.lenght);
   buf.payload[buf.lenght] = '\0';
@@ -547,10 +526,7 @@ static u8_t paraSet(ESP_t *esp) {
   APP_DEBUG("Set para: %d %s\r\n", *para, buf.payload);
   ret = parametr_set(*para, &buf);  // 设置参数
 
-  if (buf.payload != NULL) {    // free old buf
-    Ql_MEM_Free(buf.payload);
-    buf.payload = NULL;
-  }
+  memory_release(buf.payload);  // free old buf
 
   ackHead = &esp->head;
   ackHead->msgLen = ENDIAN_BIG_LITTLE_16(4);
@@ -558,16 +534,12 @@ static u8_t paraSet(ESP_t *esp) {
   para[0] = ret;
 
   buf.lenght = sizeof(EybondHeader_t) + 2;
-  buf.payload = Ql_MEM_Alloc(buf.lenght + 1);
+  buf.payload = memory_apply(buf.lenght + 1);
   //  buf.payload = (u8_t *)ackHead;
   r_memcpy(buf.payload, (u8_t *)ackHead, buf.lenght);
   esp->ack(&buf);   // 设置指令成功、失败返回
   APP_DEBUG("Set para callback %d %s\r\n", buf.lenght, buf.payload);
-  //  memory_release(buf.payload);
-  if (buf.payload != NULL) {
-    Ql_MEM_Free(buf.payload);
-    buf.payload = NULL;
-  }
+  memory_release(buf.payload);
 
   return 0;
 }
@@ -591,13 +563,11 @@ static u8_t devtrans(ESP_t *esp) {
 //  cmd->ack.size = 0;      // mike 20200926
 //  cmd->ack.payload = null;  // 指令返回数据初始化
   cmd->ack.size = DEVICE_ACK_SIZE;
-  cmd->ack.payload = Ql_MEM_Alloc(cmd->ack.size);
+  cmd->ack.payload = memory_apply(cmd->ack.size);
   cmd->ack.lenght = 0;
   cmd->cmd.size = ENDIAN_BIG_LITTLE_16(esp->head.msgLen) - 2;
   cmd->cmd.lenght = cmd->cmd.size;
-  // cmd->cmd.payload = memory_apply(cmd->cmd.size);
-  cmd->cmd.payload = Ql_MEM_Alloc(cmd->cmd.size);   // 重新申请存放输入指令的内存
-  // r_memcpy(cmd->cmd.payload, esp->PDU, cmd->cmd.size);
+  cmd->cmd.payload = memory_apply(cmd->cmd.size);  // 重新申请存放输入指令的内存
   r_memcpy(cmd->cmd.payload, esp->PDU, cmd->cmd.size);
 
   output(&cmd->cmd);
@@ -632,19 +602,14 @@ static u8_t devtransAck(Device_t *dev) {
     cmd = (DeviceCmd_t *)dev->cmdList.node->payload;
 
     buf.lenght = cmd->ack.lenght + sizeof(EybondHeader_t);
-    // buf.payload = memory_apply(buf.lenght);
-    buf.payload = Ql_MEM_Alloc(buf.lenght);
+    buf.payload = memory_apply(buf.lenght);
 
     ackHead = (EybondHeader_t *)buf.payload;
     r_memcpy(ackHead, &esp->head, sizeof(EybondHeader_t));
     r_memcpy(ackHead + 1, cmd->ack.payload, cmd->ack.lenght);
     ackHead->msgLen = ENDIAN_BIG_LITTLE_16(cmd->ack.lenght + 2);
     esp->ack(&buf); // 执行NetMsgAck_Eybond
-    // memory_release(buf.payload);
-    if (buf.payload != NULL) {
-      Ql_MEM_Free(buf.payload);
-      buf.payload = NULL;
-    }
+    memory_release(buf.payload);
     list_nodeDelete(&rcveList, esp);
   }
   Device_remove(dev);
@@ -673,8 +638,7 @@ static u8_t deviceDataGet(ESP_t *esp) {
   overTime++;
   buf.lenght = 0;
   buf.size = MAX_CMD_LEN;
-  // buf.payload = memory_apply(buf.size);
-  buf.payload = Ql_MEM_Alloc(buf.size);
+  buf.payload = memory_apply(buf.size);
 
   tail = onlineDeviceList.node;
 
@@ -797,15 +761,15 @@ static u8_t deviceDataGet(ESP_t *esp) {
     para[1] = 0;
   }
   esp->ack(&buf);
-  // memory_release(buf.payload);
-  if (buf.payload != NULL) {
-    Ql_MEM_Free(buf.payload);
-    buf.payload = NULL;
-  }
+  memory_release(buf.payload);  
   if (overTime > 5) {
     log_save("No device online reboot!");
 #ifdef _PLATFORM_BC25_
     Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
+#endif
+#ifdef _PLATFORM_L610_
+    int value_put = DEVICE_RESTART_ID;
+    fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
 #endif
     overTime = 0;
   }
@@ -1027,7 +991,7 @@ static void onlineReport(void) {
   APP_DEBUG("online device Report!\r\n");
   buf.lenght = 0;
   buf.size = MAX_CMD_LEN;
-  buf.payload = Ql_MEM_Alloc(buf.size);
+  buf.payload = memory_apply(buf.size);
   tail = onlineDeviceList.node;
 
   if (buf.payload != null) {
@@ -1127,10 +1091,7 @@ static void onlineReport(void) {
       }
     } while (tail != onlineDeviceList.node && onlineDeviceList.node != null);
   }
-  if (buf.payload != NULL) {
-    Ql_MEM_Free(buf.payload);
-    buf.payload = NULL;
-  }
+  memory_release(buf.payload);
 }
 
 void specialData_send(void) {
@@ -1221,7 +1182,6 @@ static u8_t specialData_receive(ESP_t *esp) {
   }
   return 1;
 } */
-#endif
 
 #ifdef _PLATFORM_L610_
 void proc_eybond_task(s32_t taskId) {

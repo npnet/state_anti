@@ -43,14 +43,14 @@
 #include "eyblib_typedef.h"
 #include "eyblib_swap.h"
 #include "eyblib_r_stdlib.h"
-// #include "eyblib_memory.h"   // mike 20200828
+#include "eyblib_memory.h"
 #include "eybapp_appTask.h"
 
 #include "4G_net.h"
 
 #include "Device.h"
 // #include "DeviceIO.h"
-// #include "eybond.h"
+#include "eybond.h"
 // #include "x25Qxx.h"  // mike 20200805
 // #include "Eybond.h"  // mike 20200805
 // #include "CommonServer.h"  // mike 20200805
@@ -547,14 +547,14 @@ void proc_app_task(s32_t taskId) {
         s32_t file_a_size = fibo_file_getSize(g_recName_parameter_aa);
         APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
         if (file_a_size > 0) {
-          APP_DEBUG("para_file_a is exist, size:%d\r\n", file_a_size);
+          APP_DEBUG("para_file_a is exist, size:%ld\r\n", file_a_size);
         //    fibo_file_delete(g_recName_parameter_aa);   // for testing
         }
         APP_DEBUG("Check para_file_b \r\n");
         s32_t file_b_size = fibo_file_getSize(g_recName_parameter_ab);
         APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
         if (file_b_size > 0) {
-          APP_DEBUG("para_file_b is exist, size:%d\r\n", file_b_size);
+          APP_DEBUG("para_file_b is exist, size:%ld\r\n", file_b_size);
         //    fibo_file_delete(g_recName_parameter_ab);   // for testing
         }
         s32_t file_log_size = fibo_file_getSize(run_log_aa);

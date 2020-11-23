@@ -18,6 +18,7 @@
 #ifdef _PLATFORM_L610_  // 广和通L610 SDK
 #include "oc_uart.h"
 #include "eyblib_typedef.h"
+#include "L610_UARTConfig.h"
 #endif
 
 typedef enum {
@@ -43,8 +44,8 @@ ST_UARTDCB *DeviceIO_cfgGet(void);
 #endif
 
 #ifdef _PLATFORM_L610_
-void DeviceIO_init(hal_uart_config_t *cfg);
-hal_uart_config_t *DeviceIO_cfgGet(void);
+void DeviceIO_init(ST_UARTDCB *cfg);
+ST_UARTDCB *DeviceIO_cfgGet(void);
 #endif
 
 void DeviceIO_reset(void);

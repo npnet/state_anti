@@ -7,7 +7,7 @@
 #ifndef __EYBPUB_DEBUG_H_
 #define __EYBPUB_DEBUG_H_
 
-//#define EYBOND_DEBUG_ENABLE    // 打开DEBUG log
+#define EYBOND_DEBUG_ENABLE    // 打开DEBUG log
 // #define EYBOND_TRACE_ENABLE    // 将DEBUG log输出改为TRACE模式,不能直接用TRACE_ENABLE做开关,会影响SDK里面的接口
 #define DBG_BUF_LEN     1024
 
@@ -78,23 +78,21 @@ extern void Debug_output(u8_t *p, u16_t len);
   snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__);\
   Debug_output((u8_t*)DebugBuffer, strlen(DebugBuffer));\
 }
-//   fibo_hal_uart_put(DEBUG_PORT, (u8_t *)DebugBuffer, strlen(DebugBuffer));
-//   Debug_output((u8_t*)DebugBuffer, strlen(DebugBuffer));
 extern void Print_output(u8_t *p, u16_t len);
 #define APP_PRINT(FORMAT,...) {\
-    memset(DebugBuffer, 0, DBG_BUF_LEN);\
-    snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
-    Print_output((u8_t*)DebugBuffer, strlen(DebugBuffer));\
+  memset(DebugBuffer, 0, DBG_BUF_LEN);\
+  snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+  Print_output((u8_t*)DebugBuffer, strlen(DebugBuffer));\
 }
 
 #else
 #define APP_DEBUG(FORMAT,...)
-//#define APP_PRINT(FORMAT,...)
+// #define APP_PRINT(FORMAT,...)
 extern void Print_output(u8_t *p, u16_t len);
 #define APP_PRINT(FORMAT,...) {\
-    memset(DebugBuffer, 0, DBG_BUF_LEN);\
-    snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
-    Print_output((u8_t*)DebugBuffer, strlen(DebugBuffer));\
+  memset(DebugBuffer, 0, DBG_BUF_LEN);\
+  snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+  Print_output((u8_t*)DebugBuffer, strlen(DebugBuffer));\
 }
 #define APP_TRACE(FORMAT,...)
 #endif

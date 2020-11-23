@@ -81,7 +81,7 @@ void proc_net_task(s32_t taskId) {
         restart_net();
         break;
       case APP_MSG_TIMER_ID:  // 从APP task传递过来的定时器(1000 ms)消息
-        APP_DEBUG("Net task get APP_USER_TIMER_ID:%d\r\n", NetOvertime);
+        APP_DEBUG("Net task get APP_USER_TIMER_ID:%ld\r\n", NetOvertime);
         break;
       default:
         break;

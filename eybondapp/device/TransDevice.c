@@ -38,7 +38,7 @@ void TransDevice_init(char *str, ST_UARTDCB *cfg) {
   if (i >= sizeof(TransCfgTab) / sizeof(TransCfgTab[0])) {
     i = 0;
   }
-  APP_DEBUG("%d %d\r\n", i, cfg->baudrate);
+  APP_DEBUG("%d %ld\r\n", i, cfg->baudrate);
 
   dev = list_nodeApply(sizeof(Device_t));
   if (dev == NULL) {

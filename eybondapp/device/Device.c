@@ -9,6 +9,9 @@
 #include "ql_memory.h"
 #include "ql_error.h"
 #endif
+#ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
+#endif
 
 #include "eyblib_list.h"
 #include "eyblib_swap.h"
@@ -27,10 +30,10 @@
 #ifdef _PLATFORM_BC25_
 #include "NB_Net.h"
 #endif
-
 #ifdef _PLATFORM_L610_
 #include "4G_net.h"
 #endif
+
 #include "Device.h"
 #include "DeviceIO.h"
 #include "Protocol.h"
@@ -337,7 +340,7 @@ static void deviceCmdSend(void) {
         currentStep = 3;
         currentCmd = null;
         if (currentDevice->cfg != null) {
-          APP_DEBUG("currentDevice->cfg is %d!!\r\n", currentDevice->cfg->baudrate);
+          APP_DEBUG("currentDevice->cfg is %ld!!\r\n", currentDevice->cfg->baudrate);
           DeviceIO_init(currentDevice->cfg);
           watiTime = 1;
         } else if (DeviceIO_cfgGet() == null) {

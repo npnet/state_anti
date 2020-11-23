@@ -343,17 +343,20 @@ static void end(DeviceAck_e e) {
 #endif
 
 #ifdef _PLATFORM_L610_
-static hal_uart_config_t *IOCfg = null;
+static ST_UARTDCB *IOCfg = null;
 static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg);
-void DeviceIO_init(hal_uart_config_t *cfg) {
+void DeviceIO_init(ST_UARTDCB *cfg) {
 }
-hal_uart_config_t *DeviceIO_cfgGet(void) {
+ST_UARTDCB *DeviceIO_cfgGet(void) {
+  return IOCfg;
 }
 static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg) {
 }
 void DeviceIO_reset(void) {
 }
 DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
+  DeviceAck_e result = DEVICE_ACK_FINISH;
+  return result;
 }
 void Uart_write(u8_t *data, u16_t len) {
 }

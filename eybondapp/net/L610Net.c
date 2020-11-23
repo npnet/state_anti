@@ -200,7 +200,7 @@ s8_t Update_PN_For_OCMSG() {
   Buffer_t buf;
   int i = 0;
   char strTemp[3] = {0};  
-  APP_DEBUG("Server %s port %d\r\n", g_SrvADDR, g_SrvPort);
+  APP_DEBUG("Server %s port %ld\r\n", g_SrvADDR, g_SrvPort);
   return ret;
 }
 #endif

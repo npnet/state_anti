@@ -9,6 +9,7 @@
 
 #include "eyblib_typedef.h"
 #include "eyblib_list.h"
+#include "eyblib_r_stdlib.h"
 #include "eyblib_memory.h"
 #include "eyblib_CRC.h"
 

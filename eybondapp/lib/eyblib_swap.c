@@ -505,7 +505,7 @@ u16_t Swap_numBCD(u8_t *bcd, u64_t num)
 
     for (i = 0, p = bcd; nTemp_num > 0; nTemp_num /= 10)
     {
-        if (i*0x01)
+        if (i && 0x01)  // mike 20201123
         {
             *p++ |= (nTemp_num%10)<<4;
         }

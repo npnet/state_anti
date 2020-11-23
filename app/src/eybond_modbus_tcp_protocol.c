@@ -678,7 +678,7 @@ static UINT8 Transparent_Transm(void)               //0x04完全透传命令
     memset(uart1_recv_data, 0, sizeof(uart1_recv_data));                //接收清零
 	uart1_recv_len = 0;
     uart_write(UART1, (UINT8 *)serial_write_buffer, write_len);
-    fibo_taskSleep(1500);
+    fibo_taskSleep(500);
     res_ADU_t 	*res 	    =   (res_ADU_t *)fibo_malloc(sizeof(res_ADU_t));
     res->MBAP.msgNum	    =	ADU->MBAP.msgNum;               //通讯编号
     res->MBAP.deviceCode	=	swap_endian(0x0103);            //设备编码

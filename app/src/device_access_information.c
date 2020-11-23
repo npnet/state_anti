@@ -153,13 +153,7 @@ void dev_access_info()
 			fibo_free(uart1_recv_APN);
 			memset(uart1_recv_data, 0, sizeof(uart1_recv_data)); 
 			uart1_recv_len = 0;
-			
 			parameter_check();
-
-			registered_network();			//设置完APN后重新注册网络
-			tcp_connection(); 				//设置完APN后重新连接网络
 		}
 	}
-
-	
 }   

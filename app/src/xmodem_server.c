@@ -623,21 +623,15 @@ void DeviceUpdateTask()
     }
 }
 
-
 void device_update_task(void *param)
 {	
 	while(1)
 	{
-        // log_d("\r\n%s()\r\n",__func__);
-		fibo_taskSleep(5000);//不能删除、给其他任务运行时间
+        log_d("\r\n%s()\r\n",__func__);
+	    fibo_taskSleep(1000);//不能删除、给其他任务运行时间
 		if(1 == g_device_update_flag)
 		{
 			DeviceUpdateTask();
 		}
-
-
 	}
 }
-
-
-

@@ -150,7 +150,7 @@ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
     ${PUB_FILES}
     )
  else()
-    set(target 000_4G04_02_BP_V6.0.2.0_${VERSION})
+    set(target 000_4G04_01_BP_V6.0.0.0_${VERSION})
     add_appimg(${target} ${flash_ldscript}
     app/src/app_enter.c
     app/src/net_task.c 
@@ -176,9 +176,6 @@ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
     app/src/xmodem_server.c
     app/src/gpio_operate.c
     app/src/device_access_information.c
-    
-    app/src/protobuf-c.c
-    app/src/l610_conn_aliyun.c
     )
 endif()
 

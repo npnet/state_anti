@@ -97,7 +97,6 @@ void STRCMD_AtTest(void *para)
     {
         COMMON_DataInit();
         COMMON_SetEvent(flag);
-        uart_write(UART1, (UINT8 *)"+OK\r\n", strlen("+OK\r\n"));	
         tcp_connection();    	//发起TCP连接
     } 
 }

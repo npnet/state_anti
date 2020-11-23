@@ -11,9 +11,12 @@
 #include "eybond_modbus_tcp_protocol.h"
 #include "big_little_endian_swap.h"
 #include "gpio_operate.h"
+// #include "time_function.h"
 
 // static void     un_modbus_tcp_Transparent_Transm();
 
+// extern UINT32 g_queue_id_net;
+INT32           g_connectret      = -1;
 extern UINT8 	g_29;           	//29号参数
 extern UINT8 	g_34;           	//34号参数
 extern UINT8 	g_54;           	//54号参数
@@ -173,7 +176,7 @@ int launch_tcp_connection()
         }
 
 		log_d("\r\nproduction test u16Port:%d\r\n",u16Port);
-		log_d("\r\nproduction test g_RemoteIp:%s\r\n",g_RemoteIp);
+		log_d("\r\nproduction test g_RemoteIp:%s\r\n",g_RemoteIp); 
 	}
     else
     {
@@ -224,8 +227,16 @@ int launch_tcp_connection()
     addr.sin_port               = htons_special(u16Port);
     addr.sin_addr.u_addr.ip4    = addr_para.u_addr.ip4;
     addr.sin_addr.type          = AF_INET;
-    INT32 retcode               = fibo_sock_connect(socketid, &addr);
-    if(0 == retcode)
+
+    g_connectret = fibo_sock_connect(socketid, &addr);
+
+    if(1 == g_EventFlag)
+    {
+        uart_write(UART1, (UINT8 *)"+OK\r\n", strlen("+OK\r\n"));	
+        log_d("\r\nuart1_write output +OK\r\n");
+    }
+
+    if(0 == g_connectret)
     {
         log_d("\r\nfibo_sock_connect success\r\n");
         return 0;
@@ -233,6 +244,7 @@ int launch_tcp_connection()
     else
     {
         log_d("\r\nfibo_sock_connect fail\r\n");
+        fibo_sock_close(socketid);
         return -1;
     } 
 }
@@ -262,12 +274,21 @@ void tcp_connection()
             srv_lamp_off();
         }
 
-        tcp_try_count++;
-        fibo_taskSleep(1000);   //不能删
-        if(60 == tcp_try_count) //60*1000 1分钟未联网成功则退出
+        if(1 == g_EventFlag)
         {
-            tcp_cycle_flag = 0;   
+           tcp_cycle_flag = 0; 
         }
+
+        if(0 == g_EventFlag)
+        {
+            tcp_try_count++;
+            fibo_taskSleep(1000);   //不能删
+            if(60 == tcp_try_count) //60*1000 1分钟未联网成功则退出
+            {
+                tcp_cycle_flag = 0;   
+            }
+        }
+
     }
 }
 
@@ -302,15 +323,12 @@ void net_task(void *param)
 {
     log_d("\r\n%s()\r\n",__func__);
 	log_d("\r\nSRNE AT init ok\r\n"); 
-    live_a_and_b();
-    // build_moment(CM_BUILD_TIME);
-	update_version();//更新版本
+
     uart1_cfg_update();             //更新串口配置
     uint32_t relink = 0;            //重连计数器
 
     net_lamp_off();
 	registered_network();			//注册网络
-    
     
     srv_lamp_off();
     tcp_connection(); 			    //连接网络
@@ -318,16 +336,14 @@ void net_task(void *param)
     while(1)
     {
         fibo_taskSleep(1000);//不能删除、给其他任务运行时间
-        log_d("\r\napp working\r\n"); 
-        g_RecvDataLen = fibo_sock_recv(socketid, (UINT8 *)g_RecvData, sizeof(g_RecvData));
         log_d("\r\ng_RecvDataLen is %d\r\n",g_RecvDataLen); 
-        log_hex((UINT8 *)g_RecvData,g_RecvDataLen);
-        if(g_RecvDataLen >= 0)
+        if(g_RecvDataLen > 0)
         {
             relink  = 0;		//重连计数器清零
             g_i     = 0;		//重启计数器清零
             if(TRUE == data_frame_legal_checking((UINT8 *)g_RecvData))	                            /*判断数据帧是否为modbus_tcp*/
             {
+                log_hex((UINT8 *)g_RecvData,g_RecvDataLen);
                 receiving_processing(g_RecvData[7]);
                 memset(g_RecvData, 0, sizeof(g_RecvData));		//接收buff清零
                 g_RecvDataLen = 0;								//接收长度清零
@@ -338,10 +354,14 @@ void net_task(void *param)
             {
                 // un_modbus_tcp_Transparent_Transm();	
                 // g_RecvDataLen = 0;	
+                memset(g_RecvData, 0, sizeof(g_RecvData));		//接收buff清零
+                g_RecvDataLen = 0;								//接收长度清零
             }
         }
         else
         {
+            memset(g_RecvData, 0, sizeof(g_RecvData));		//接收buff清零
+            g_RecvDataLen = 0;								//接收长度清零
             if(0 == g_EventFlag)
             {
                 g_i 	= g_i+1;		    //重启计数器
@@ -378,7 +398,7 @@ static void un_modbus_tcp_Transparent_Transm()
 	uart1_recv_len = 0;
 	uart_write(UART1, (UINT8 *)g_RecvData, g_RecvDataLen);	//接收到服务器发送的数据及长度
 	memset(g_RecvData, 0, sizeof(g_RecvData));
-	fibo_taskSleep(1500);
+	fibo_taskSleep(500);
 	// log_d("\r\nuart1_recv_len is %d\r\n",uart1_recv_len); 
 	log_hex((UINT8 *)uart1_recv_data, uart1_recv_len);
 	memcpy(g_SendData,uart1_recv_data,uart1_recv_len);
@@ -437,7 +457,7 @@ void parameter_check()
 
 void update_version()
 {
-    char firmware_version[] = "6.0.2.0";
+    char firmware_version[] = "6.0.0.0";
 
 	UINT16 		len 			= 64;    						//参数值长度
 
@@ -493,4 +513,13 @@ void update_version()
 	}
 
 	parameter_check();//更新版本号
+}
+
+void netrecv_task(void *param)
+{
+    while(1)
+    {
+        fibo_taskSleep(1000);//不能删除、给其他任务运行时间
+        g_RecvDataLen = fibo_sock_recv(socketid, (UINT8 *)g_RecvData, sizeof(g_RecvData));
+    }
 }

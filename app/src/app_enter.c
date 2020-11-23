@@ -32,15 +32,16 @@ static void prvInvokeGlobalCtors(void)
         __init_array_start[i]();
 }
 
-void rec_check_task(void);
+void rec_check_task(void *param);
 
-void rec_check_task()
+void rec_check_task(void *param)
 {
     UINT8 recovery_flag =  1;
     INT32 get_ret       =  0;
 
     INT32 adc_ret       = -1;
     UINT32 adc_data     =  0;
+
     while(1)
     {
         fibo_taskSleep(1000);        
@@ -93,18 +94,29 @@ void * appimg_enter(void *param)
     COMMON_DataInit();
     prvInvokeGlobalCtors();
 
+    live_a_and_b();
+    // build_moment(CM_BUILD_TIME);
+	update_version();//更新版本
+    
     INT8 *hardware_version = NULL;
     INT8 *software_version = NULL;
 
     hardware_version   = fibo_get_hw_verno();               //获取当前的硬件版本（客户定制）
     software_version   = fibo_get_sw_verno();               //获取当前的软件版本（客户定制）
-    INT32 disret = fibo_watchdog_disable();
-
     for (int j = 0; j < 2; j++)
     {
         log_d("\r\nhardware_version %s\r\n",hardware_version); 
         log_d("\r\nsoftware_version %s\r\n",software_version); 
-        log_d("\r\ndisret is %d\r\n",disret); 
+    }
+
+    INT32 enret = fibo_watchdog_enable(600);                //600秒=10分钟 无任何语句执行则重启      
+    if(0 == enret)
+    {
+        log_d("\r\ninside watchdog enable success\r\n"); 
+    }
+    if(enret < 0)
+    {
+        log_d("\r\ninside watchdog enable fail\r\n"); 
     }
 
     INT32 adc_init_ret = fibo_hal_adc_init();        //ADC打开接口
@@ -112,17 +124,17 @@ void * appimg_enter(void *param)
     {
         log_d("\r\nadc_init success\r\n"); 
     }
-
     if(adc_init_ret < 0)
     {
         log_d("\r\nadc_init fail\r\n");   
     }
 
-    fibo_thread_create(net_task,          "NET TASK",          1024*8*5, NULL, OSI_PRIORITY_NORMAL);
-    fibo_thread_create(device_update_task,"DEVICE UPDATE TASK",1024*8*3, NULL, OSI_PRIORITY_NORMAL);
+    fibo_thread_create(net_task,          "NET TASK",          1024*8*2, NULL, OSI_PRIORITY_NORMAL);
+    fibo_thread_create(device_update_task,"DEVICE UPDATE TASK",1024*8*2, NULL, OSI_PRIORITY_NORMAL);
     fibo_thread_create(feed_dog_task,     "FEED DOG TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
     fibo_thread_create(rec_check_task,    "REC  CHECK TASK",   1024*8*2, NULL, OSI_PRIORITY_NORMAL);
-	fibo_thread_create(mqtt_conn_ali_task, "mqtt_conn_ali",    1024 * 16, NULL, OSI_PRIORITY_NORMAL);
+    fibo_thread_create(netrecv_task,      "NET RECV TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
+
     return 0;
 }
 

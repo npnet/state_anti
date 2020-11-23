@@ -16,11 +16,11 @@ void feed_the_dog()
 
 void heap_status(void);
 
-
 void watch_dog_task()
 {
     while(1)
     {
+        log_d("\r\n%s()\r\n",__func__);
         if(0 == g_stop_dog_flag)
         {
             feed_the_dog();

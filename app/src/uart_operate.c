@@ -6,6 +6,9 @@
 #include "data_collector_parameter_table.h"
 #include "fibo_opencpu.h"
 #include "device_access_information.h"
+#include "net_task.h"
+
+extern INT32           g_connectret;
 
 extern int 	g_stop_dog_flag;
 extern int 	number_of_array_elements;
@@ -139,18 +142,33 @@ void uart1_recv_cb(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg
 	uart1_recv_len = len;
     memcpy(uart1_recv_data,data,uart1_recv_len); 
 
-    log_hex((UINT8 *)data,uart1_recv_len);
+    log_hex((UINT8 *)uart1_recv_data,uart1_recv_len);
 	int cmp = 1;
 	char *buf="AT+TEST";
-	cmp = memcmp(data,buf,7);
+	cmp = memcmp(uart1_recv_data,buf,7);
+
+    static int production_test = 0;//进入生产测试的次数
 
 	if(0 == cmp)
 	{
-		char uart1_recv_data_copy[UART_BUFFER_SIZE]={0};
-		memcpy(uart1_recv_data_copy,data,uart1_recv_len); 
-		STRCMD_AtTest(uart1_recv_data_copy);
-		memset(uart1_recv_data, 0, sizeof(uart1_recv_data)); 
-		uart1_recv_len = 0;
+        if(production_test < 3)
+        {
+            production_test++;
+            char uart1_recv_data_copy[UART_BUFFER_SIZE]={0};
+            memcpy(uart1_recv_data_copy,uart1_recv_data,uart1_recv_len); 
+            STRCMD_AtTest(uart1_recv_data_copy);
+            memset(uart1_recv_data, 0, sizeof(uart1_recv_data)); 
+            uart1_recv_len = 0;
+        }
+        else
+        {
+            if(0 != g_connectret)//连接测试服不成功
+            {
+                tcp_connection();    	//发起TCP连接
+            }
+            memset(uart1_recv_data, 0, sizeof(uart1_recv_data)); 
+            uart1_recv_len = 0;  
+        }
 	}
 
 	dev_access_info();  //硕日专用

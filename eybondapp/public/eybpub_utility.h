@@ -57,6 +57,21 @@ extern UINT32 EYBNET_TASK;
 extern UINT32 EYBDEVICE_TASK;
 extern UINT32 EYBOND_TASK;
 extern UINT32 ALIYUN_TASK;
+
+/* typedef struct {
+  u8_t  message;    // message
+  void  *param1;    // 参数1
+  void  *param2;    // 参数2
+} ST_MSG; */
+
+typedef struct {
+  u32_t  message;
+  u32_t  param1;
+  u32_t  param2;
+  u32_t  srcTaskId;
+} ST_MSG;
+
+s32_t Eybpub_UT_SendMessage(s32_t destTaskId, u32_t msgId, u32_t param1, u32_t param2);
 #endif
 
 #endif //__EYBPUB_UTILITY_H_

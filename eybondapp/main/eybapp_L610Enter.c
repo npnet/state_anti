@@ -1,10 +1,11 @@
+#ifdef _PLATFORM_L610_
 #include "fibo_opencpu.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
 
-#ifdef _PLATFORM_L610_
 #define OSI_LOG_TAG OSI_MAKE_LOG_TAG('Q', 'E', 'K', 'J')
+
 #include "eybpub_Debug.h"
 #include "eybpub_Status.h"
 #include "eybpub_utility.h"
@@ -24,10 +25,7 @@ UINT32 EYBAPP_TASK = 0;
 UINT32 EYBNET_TASK = 0;
 UINT32 EYBDEVICE_TASK = 0;
 UINT32 EYBOND_TASK = 0;
-
 UINT32 ALIYUN_TASK = 0;
-
-#endif
 
 static void prvInvokeGlobalCtors(void) {
   extern void (*__init_array_start[])();
@@ -69,7 +67,8 @@ static void sig_res_callback(GAPP_SIGNAL_ID_T sig, va_list arg) {
 
 static void at_res_callback(UINT8 *buf, UINT16 len) {
   OSI_PRINTFI("FIBO <--%s", buf);
-  APP_DEBUG("FIBO <--%s\r\n", buf);
+//  APP_DEBUG("FIBO <--%s len:%d\r\n", buf, len);
+  fibo_hal_uart_put(DEBUG_PORT, buf, len);
 }
 
 static FIBO_CALLBACK_T user_callback = {
@@ -79,7 +78,7 @@ static FIBO_CALLBACK_T user_callback = {
 
 void * appimg_enter(void *param) {
   OSI_LOGI(0, "application image enter");
-  Debug_init();//上电配置串口
+  Debug_init(); // 上电配置串口
   DeviceIO_STinit(NULL);//上电配置设备口
   APP_PRINT("Eybond 4G L610 Application!!\r\n");
   APP_PRINT("Version: %s\r\n", FWVERSION);
@@ -107,27 +106,24 @@ void * appimg_enter(void *param) {
   UINT32 app_thread_id = 0;
   UINT32 dev_thread_id = 0;
   UINT32 eyb_thread_id = 0;
-  EYBAPP_TASK = fibo_queue_create(5, sizeof(int));
-  EYBNET_TASK = fibo_queue_create(5, sizeof(int));
-  EYBDEVICE_TASK = fibo_queue_create(5, sizeof(int));
-  EYBOND_TASK = fibo_queue_create(5, sizeof(int));
-  ALIYUN_TASK = fibo_queue_create(5, sizeof(int));
+  UINT32 ali_thread_id = 0;
+
+  EYBAPP_TASK = fibo_queue_create(5, sizeof(ST_MSG));
+  EYBNET_TASK = fibo_queue_create(5, sizeof(ST_MSG));
+  EYBDEVICE_TASK = fibo_queue_create(5, sizeof(ST_MSG));
+  EYBOND_TASK = fibo_queue_create(5, sizeof(ST_MSG));
+  ALIYUN_TASK = fibo_queue_create(5, sizeof(ST_MSG));
   fibo_thread_create_ex(proc_net_task,    "Eybond NET TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &net_thread_id);
   fibo_thread_create_ex(proc_app_task,    "Eybond APP TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &app_thread_id);
   fibo_thread_create_ex(proc_device_task, "Eybond DEVICE TASK", 1024*8*2, NULL, OSI_PRIORITY_NORMAL, &dev_thread_id);
   fibo_thread_create_ex(proc_eybond_task, "Eybond CMD TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &eyb_thread_id);
-//    fibo_thread_create(device_update_task,"DEVICE UPDATE TASK",1024*8*3, NULL, OSI_PRIORITY_NORMAL);
-//  fibo_thread_create(feed_dog_task,     "FEED DOG TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
-//    fibo_thread_create(rec_check_task,    "REC  CHECK TASK",   1024*8*2, NULL, OSI_PRIORITY_NORMAL);
+  fibo_thread_create_ex(mqtt_conn_ali_task,"MQTT CONN ALI TASK",1024*8*2, NULL, OSI_PRIORITY_NORMAL, &ali_thread_id);
 
-  fibo_thread_create(mqtt_conn_ali_task, "mqtt_conn_ali",	 1024 * 16, NULL, OSI_PRIORITY_NORMAL);
-
-
-  int value_put = APP_MSG_UART_READY;
-  fibo_queue_put(EYBAPP_TASK, &value_put, 0);
-  fibo_queue_put(EYBNET_TASK, &value_put, 0);
-  fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
-  fibo_queue_put(EYBOND_TASK, &value_put, 0);
+  Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_UART_READY, 0, 0);
+  Eybpub_UT_SendMessage(EYBNET_TASK, APP_MSG_UART_READY, 0, 0);
+  Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_UART_READY, 0, 0);
+  Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_UART_READY, 0, 0);
+  Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_UART_READY, 0, 0);
 
   return (void *)&user_callback;
 }
@@ -135,3 +131,5 @@ void * appimg_enter(void *param) {
 void appimg_exit(void) {
   OSI_LOGI(0, "application image exit");
 }
+
+#endif

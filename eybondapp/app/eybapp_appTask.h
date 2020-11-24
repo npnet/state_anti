@@ -40,6 +40,7 @@
 #define  APP_MSG_TIMER_ID      MSG_ID_USER_APP_START+0xFA5
 #define  APP_MSG_DEVTIMER_ID   MSG_ID_USER_APP_START+0xFA6
 #define  APP_MSG_WDG_ID        MSG_ID_USER_APP_START+0xFA7
+#define  APP_DEBUG_MSG_ID      MSG_ID_USER_APP_START+0xFA8
 #endif
 
 void proc_app_task(s32_t taskId);

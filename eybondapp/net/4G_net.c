@@ -51,7 +51,7 @@ static void Net_sendData(void);
 *******************************************************************************/
 void proc_net_task(s32_t taskId) {
   int ret = -1;
-  int msg = 0;
+  ST_MSG msg;
   u8_t tmpbuf[64];
 
   static int netResetCnt = 0;
@@ -63,28 +63,27 @@ void proc_net_task(s32_t taskId) {
   NetOvertime = 0;
   m_timeCheck = 0;
 
+//  r_memset(&msg, 0, sizeof(ST_MSG));
   //开机重连网络
-  msg=NET_CMD_RESTART_ID;
-  fibo_queue_put(EYBNET_TASK,&msg,0);
+  Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_RESTART_ID, 0, 0);
 
   APP_PRINT("Net task run...\r\n");
   list_init(&netSendPakege);    // 初始化网络发送队列
   while (1) {
-    int value_put = 0;
     fibo_queue_get(EYBNET_TASK, (void *)&msg, 0);
-    switch (msg) {
+    switch (msg.message) {
       case APP_MSG_UART_READY:
         APP_DEBUG("Net task APP_MSG_UART_READY\r\n");
         break;
       case NET_CMD_RESTART_ID:
-        restart_net();
+//        restart_net();
         break;
       case APP_MSG_TIMER_ID:  // 从APP task传递过来的定时器(1000 ms)消息
-        APP_DEBUG("Net task get APP_USER_TIMER_ID:%ld\r\n", NetOvertime);
+//        APP_DEBUG("Net task get APP_USER_TIMER_ID:%ld\r\n", NetOvertime);
         break;
       default:
         break;
-    }    
+    }
   }
   fibo_thread_delete();
 }

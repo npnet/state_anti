@@ -441,11 +441,13 @@ mcu_t r_strcmp(const char *trg, const char *src) {
         srcLen 比较字符的长度
 返 回 值：0(OK)/!0(不相等)
 *******************************************************************************/
+// #include "osi_log.h"
 mcu_t r_strncmp(const char *trg, const char *src, mcu_t srcLen) {
   ERRR(null == trg || null == src, return 0);
 
   while (srcLen>0 && '\0' != *trg && '\0' != *src) {
-    if (*trg == *src) {
+//    OSI_PRINTFI("r_strncmp trg =%c src=%c", *trg, *src);
+    if (*trg == *src) {      
       trg++;
       src++;
     } else if(*trg > *src) { 
@@ -454,12 +456,6 @@ mcu_t r_strncmp(const char *trg, const char *src, mcu_t srcLen) {
       return -1;
     }
     srcLen--;
-  }
-  if( *trg != '\0' && *src == '\0') {
-    return 1;
-  }
-  if( *trg == '\0' && *src != '\0') {
-    return -1;
   }
 
   return 0;
@@ -526,7 +522,7 @@ char *r_strstr(const char *trg, const char *src) {
   const char *s = NULL;
 
   ERRR(null == trg || null == src, return null);
-  if ('\0' == *q) {  //子字符串为空则返回母字符串
+  if ('\0' == *q) {  // 子字符串为空则返回母字符串
     return (char*)p;
   }
   while(*p) {
@@ -535,13 +531,13 @@ char *r_strstr(const char *trg, const char *src) {
       p++;
       q++;
     }
-    if('\0' == *q) {  //子字符串指向‘\0’则说明母字符串包含子字符串
+    if('\0' == *q) {  // 子字符串指向‘\0’则说明母字符串包含子字符串
       return (char *)s;
     }
-    p = s+1;  //否则从母字符串下一个元素比较
+    p = s+1;  // 否则从母字符串下一个元素比较
     q = src;
   }
-  return NULL;  //直至str1指向空时还未找到则返回空
+  return NULL;  // 直至str1指向空时还未找到则返回空
 }
 
 /*******************************************************************************

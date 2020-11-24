@@ -288,8 +288,7 @@ u8_t ESP_cmd(Buffer_t *buf, AckCh ch) {
       Ql_OS_SendMessage(EYBOND_TASK, EYBOND_DATA_PROCESS, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-    int value_put = EYBOND_DATA_PROCESS;
-    fibo_queue_put(EYBOND_TASK, &value_put, 0);
+    Eybpub_UT_SendMessage(EYBOND_TASK, EYBOND_DATA_PROCESS, 0, 0);
 #endif
     }
   }
@@ -768,8 +767,7 @@ static u8_t deviceDataGet(ESP_t *esp) {
     Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-    int value_put = DEVICE_RESTART_ID;
-    fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+    Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
     overTime = 0;
   }
@@ -1185,18 +1183,19 @@ static u8_t specialData_receive(ESP_t *esp) {
 
 #ifdef _PLATFORM_L610_
 void proc_eybond_task(s32_t taskId) {
-  int msg = 0;
+  ST_MSG msg;
   u32_t uStackSize = 0;
   relinkCnt = 0;
   sPort = 0xff;
   m_timeCheck_EYB = 0;
   int timeReport = 60;
   APP_PRINT("Eybond task run...\r\n");
+//  r_memset(&msg, 0, sizeof(ST_MSG));
   list_init(&rcveList);  
 
   while (1) {
     fibo_queue_get(EYBOND_TASK, (void *)&msg, 0);
-    switch (msg) {
+    switch (msg.message) {
       case APP_MSG_UART_READY:
         APP_DEBUG("Get APP_CMD_UART_READY MSG\r\n");
         break;
@@ -1209,8 +1208,7 @@ void proc_eybond_task(s32_t taskId) {
         m_timeCheck_EYB++;
         if (m_timeCheck_EYB >= timeReport * 1) {
           m_timeCheck_EYB = 0;
-          int value_put = EYBOND_CMD_REPORT;
-          fibo_queue_put(EYBOND_TASK, &value_put, 0);
+          Eybpub_UT_SendMessage(EYBOND_TASK, EYBOND_CMD_REPORT, 0, 0);
         }
       }
         break;

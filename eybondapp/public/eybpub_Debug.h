@@ -70,7 +70,10 @@ extern void Debug_trace(u8_t *p, u16_t len);
 static char DebugBuffer[DBG_BUF_LEN];
 #define DEBUG_PORT_BITRATE 115200
 
+#define DEBUG_INPUT_EHCO   1
+
 #ifdef EYBOND_DEBUG_ENABLE
+void  Debug_buffer(Buffer_t *buf);
 extern void Debug_output(u8_t *p, u16_t len);
 
 #define APP_DEBUG(FORMAT,...)  {\

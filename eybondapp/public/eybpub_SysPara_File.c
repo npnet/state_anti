@@ -852,8 +852,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
             case '2':  // 恢复出厂设置 -- 指示按defult参数表恢复，生产时写的数据如果改了就恢复不了了
               log_save("System Para Reset!");
               parametr_default();
-              int value_put = SYS_PARA_CHANGE;
-              fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+              Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, 0, 0);
               break;
             case '3':  // 看门狗停狗重启
               log_save("System Hardware Reset!");
@@ -964,8 +963,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
     a_copy_to_b();
     parameter_init();  // 保持统一
     if (number == DEVICE_MONITOR_NUM || number == DEVICE_PROTOCOL || number == DEVICE_UART_SETTING) {
-      int value_put = SYS_PARA_CHANGE;
-      fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+      Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, 0, 0);
     } else if (number == DEVICE_PNID || number == NB_SERVER_ADDR || number == NB_SERVER_PORT) {
       Net_close();
     }

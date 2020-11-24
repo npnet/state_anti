@@ -143,14 +143,14 @@ void proc_app_task(s32_t taskId) {
   APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
   if (file_a_size > 0) {
     APP_DEBUG("para_file_a is exist, size:%d\r\n", file_a_size);
-  //    Ql_FS_Delete(g_recName_parameter_aa);   // for testing
+    //    Ql_FS_Delete(g_recName_parameter_aa);   // for testing
   }
   APP_DEBUG("Check para_file_b \r\n");
   s32_t file_b_size = Ql_FS_GetSize(g_recName_parameter_ab);
   APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
   if (file_b_size > 0) {
     APP_DEBUG("para_file_b is exist, size:%d\r\n", file_b_size);
-  //    Ql_FS_Delete(g_recName_parameter_ab);   // for testing
+    //    Ql_FS_Delete(g_recName_parameter_ab);   // for testing
   }
   s32_t file_log_size = Ql_FS_GetSize(run_log_aa);
   APP_DEBUG("file_log_size is %ld\r\n", file_log_size);
@@ -198,12 +198,12 @@ void proc_app_task(s32_t taskId) {
         break;
       case NET_MSG_GSM_READY:  // 注网成功消息
         APP_DEBUG("Get NET_MSG_GSM_READY MSG\r\n");
-/*        ret = Ql_Timer_Start(APP_timer, APP_time_Interval, TRUE);
-        if (ret < 0) {
-          log_save("Start app timer failed, ret = %d", ret);
-        } else {
-          APP_DEBUG("Start app timerId(%d) successfully, timer interval = %d, ret = %d\r\n", APP_timer, APP_time_Interval, ret);
-        } */
+        /*        ret = Ql_Timer_Start(APP_timer, APP_time_Interval, TRUE);
+                if (ret < 0) {
+                  log_save("Start app timer failed, ret = %d", ret);
+                } else {
+                  APP_DEBUG("Start app timerId(%d) successfully, timer interval = %d, ret = %d\r\n", APP_timer, APP_time_Interval, ret);
+                } */
         Ql_OS_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_READY, 1, 0);
         break;
       case NET_MSG_GSM_FAIL:
@@ -344,7 +344,7 @@ static void UserTimerAPPscallback(u32 timerId, void *param) {
  return   :
 *******************************************************************************/
 static void UserTimerWDGcallback(u32 timerId, void *param) {
-  if (timerId == WDG_timer) {    
+  if (timerId == WDG_timer) {
     Ql_OS_SendMessage(EYBAPP_TASK, APP_MSG_WDG_ID, 0, 0);
   }
 }
@@ -371,6 +371,134 @@ static s32 APP_ATResponse_Handler(char *line, u32 len, void *userData) {
   }
   return RIL_ATRSP_CONTINUE;  // continue wait
 }
+#endif
+
+#ifdef _PLATFORM_L610_
+void proc_app_task(s32_t taskId) {
+//  int msg = 0;
+  ST_MSG msg;
+  Buffer_t *buf;
+
+  outputFun = null;
+  logGetFlag = 0;
+  deviceLockTime = 0;
+
+  // Disable sleep mode.
+  fibo_setSleepMode(0);
+  APP_PRINT("App task run...\r\n");
+  r_memset(&msg, 0, sizeof(ST_MSG));
+
+  WDG_timer = fibo_timer_period_new(WDG_time_Interval, UserTimerWDGcallback, NULL);  // 注册外部看门狗Timer
+  if (WDG_timer == 0) {
+    log_save("Register WGD timer(%d) failed!!\r\n");
+  }
+
+  while (1) {
+    fibo_queue_get(EYBAPP_TASK, (void *)&msg, 0);
+    switch (msg.message) {
+      case APP_MSG_UART_READY:
+        APP_DEBUG("App task APP_MSG_UART_READY\r\n");
+#ifdef __TEST_FOR_UFS__
+        APP_DEBUG("FILE System TEST!\r\n");
+        s8_t space = 0;      // 注意不要做%和/运算
+        // check freespace
+        space  = fibo_file_getFreeSize();
+        APP_DEBUG("fibo_file_getFreeSize=%d \r\n", space);
+        // check total space
+        s32_t file_a_size = fibo_file_getSize(g_recName_parameter_aa);
+        APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
+        if (file_a_size > 0) {
+          APP_DEBUG("para_file_a is exist, size:%ld\r\n", file_a_size);
+          //    fibo_file_delete(g_recName_parameter_aa);   // for testing
+        }
+        APP_DEBUG("Check para_file_b \r\n");
+        s32_t file_b_size = fibo_file_getSize(g_recName_parameter_ab);
+        APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
+        if (file_b_size > 0) {
+          APP_DEBUG("para_file_b is exist, size:%ld\r\n", file_b_size);
+          //    fibo_file_delete(g_recName_parameter_ab);   // for testing
+        }
+        s32_t file_log_size = fibo_file_getSize(run_log_aa);
+        APP_DEBUG("file_log_size is %ld\r\n", file_log_size);
+        if (file_log_size > 0) {
+          APP_DEBUG("run_log_a is exist, size:%ld\r\n", file_log_size);
+          if (file_log_size >  152756) {
+            APP_DEBUG("file_log_size is too big, delete it!\r\n");
+            fibo_file_delete(run_log_aa);
+          }
+        }
+#endif
+        log_init();
+        Clock_init();
+        SysPara_init();  // mike 重点死机问题函数, RIL库完成加载后初始化所有现场参数
+        APP_timer = fibo_timer_period_new(APP_time_Interval, UserTimerAPPscallback, &m_timeCnt);    // 注册APPTimer
+        if (APP_timer == 0) {
+          log_save("Register app timer(%d) fail", APP_timer);
+        }
+        break;
+      case APP_MSG_WDG_ID:
+//        APP_DEBUG("App task APP_MSG_WDG_ID %ld\r\n", m_wdgCnt);
+        Watchdog_feed();
+        m_wdgCnt++;
+        if (m_wdgCnt == 1) {  // 开机后三秒跑马灯
+          deviceLEDOff();
+        } else if (m_wdgCnt == 2) {
+          GSMLED_Off();
+        } else if (m_wdgCnt == 3) {
+          NetLED_Off();
+        } else if (m_wdgCnt > 3) {
+          m_wdgCnt = 4;
+        }
+        break;
+      case APP_MSG_TIMER_ID: {
+//        APP_DEBUG("App task APP_MSG_TIMER_ID\r\n");
+        Eybpub_UT_SendMessage(EYBNET_TASK, APP_MSG_TIMER_ID, 0, 0);
+        Key_scan();
+      }
+      break;
+      case APP_DEBUG_MSG_ID:
+        buf = (Buffer_t *)msg.param1;
+        APP_DEBUG("App task APP_DEBUG_MSG_ID:%s %d\r\n", (char *) buf->payload, buf->lenght);
+        if (buf->lenght > 2 && 0 == r_strncmp((char *)buf->payload, "AT", 2)) {
+          r_memcpy(&buf->payload[buf->lenght], "\r\n", 3);
+          buf->lenght += 3;
+          fibo_at_send(buf->payload, buf->lenght);
+        } else {
+          strCmp(buf, (void_fun_bufp)((void *)msg.param2));
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  fibo_thread_delete();
+}
+
+/*******************************************************************************
+ Brief    : void
+ Parameter:
+ return   :
+*******************************************************************************/
+static void UserTimerAPPscallback(void *param) {
+  if (*((s32_t *)param) == 0) {
+    Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
+    Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
+    *((s32_t *)param) += 1;
+  } else {
+    Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_TIMER_ID, 0, 0);
+    *((s32_t *)param) -= 1;;
+  }
+}
+/*******************************************************************************
+ Brief    : void
+ Parameter:
+ return   :
+*******************************************************************************/
+static void UserTimerWDGcallback(void *param) {
+  Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_WDG_ID, 0, 0);
+}
+#endif
 
 /*******************************************************************************
  Brief    : void
@@ -378,6 +506,7 @@ static s32 APP_ATResponse_Handler(char *line, u32 len, void *userData) {
  return   :
 *******************************************************************************/
 static void strCmp(Buffer_t *strBuf, void_fun_bufp callback_output) {
+  APP_DEBUG("strCmp:%s %d\r\n", (char *) strBuf->payload, strBuf->lenght);
   const char testServer[] = "solar.eybond.com";
   char *str = NULL;
   int offset = 0;
@@ -429,14 +558,24 @@ static void strCmp(Buffer_t *strBuf, void_fun_bufp callback_output) {
       if (offset == 0) {
         char setOk[32] = {0};
         r_memset(setOk, 0, 32);
+#ifdef _PLATFORM_BC25_
         Ql_sprintf(setOk, "%d,OK", num);
+#endif
+#ifdef _PLATFORM_L610_
+        snprintf(setOk, sizeof(setOk), "%ld,OK", num);
+#endif
         r_strcat(setOk, "\r\n");
         buf.lenght = r_strlen(setOk);
         buf.payload = (u8_t *)setOk;
       } else {
         char setFail[32] = {0};
         r_memset(setFail, 0, 32);
+#ifdef _PLATFORM_BC25_
         Ql_sprintf(setFail, "%d,NG,%d", num, offset);
+#endif
+#ifdef _PLATFORM_L610_
+        snprintf(setFail, sizeof(setFail), "%ld,NG,%d", num, offset);
+#endif
         r_strcat(setFail, "\r\n");
         buf.lenght = r_strlen(setFail);
         buf.payload = (u8_t *)setFail;
@@ -453,7 +592,7 @@ static void strCmp(Buffer_t *strBuf, void_fun_bufp callback_output) {
       sw_loghead_rp = 0;
     } else {
       num = Swap_charNum(str + 4);
-      APP_DEBUG("get num:%d\r\n", num);
+      APP_DEBUG("get num:%ld\r\n", num);
       if (num == 0 || (r_strstr(str, "=?") == NULL)) {
         char getNote[32] = {0};
         r_memset(getNote, 0, 32);
@@ -467,27 +606,26 @@ static void strCmp(Buffer_t *strBuf, void_fun_bufp callback_output) {
         parametr_get(num, &buf);
         if (buf.lenght > 0 && buf.payload != null) {
           u8_t *pd = buf.payload;       // mike 格式打印输出num=xxxxxxxx
-          buf.payload = (u8_t *)Ql_MEM_Alloc(buf.lenght + 16);
+          buf.payload = (u8_t *)memory_apply(buf.lenght + 16);
           Swap_numChar((char *)buf.payload, num);
           r_strcat((char *)buf.payload, "=");
           r_strcat((char *)buf.payload, (char *)pd);
           r_strcat((char *)buf.payload, "\r\n");
           buf.lenght = r_strlen((char *)buf.payload);
-          if (pd != NULL) {
-            Ql_MEM_Free(pd);
-          }
+          memory_release(pd);
           callback_output(&buf);
-
-          if (buf.payload != NULL) {
-            Ql_MEM_Free(buf.payload);
-            buf.payload = NULL;
-            buf.lenght = 0;
-            buf.size = 0;
-          }
+          memory_release(buf.payload);
+          buf.lenght = 0;
+          buf.size = 0;
         } else {
           char getFail[32] = {0};
           r_memset(getFail, 0, 32);
+#ifdef _PLATFORM_BC25_
           Ql_sprintf(getFail, "%d=NG", num);
+#endif
+#ifdef _PLATFORM_L610_
+          snprintf(getFail, sizeof(getFail), "%ld=NG", num);
+#endif
           r_strcat(getFail, "\r\n");
           buf.lenght = r_strlen(getFail);
           buf.payload = (u8_t *)getFail;
@@ -498,8 +636,7 @@ static void strCmp(Buffer_t *strBuf, void_fun_bufp callback_output) {
   } else if (ESP_check(strBuf) == 0) {
     outputFun = callback_output;
     ESP_cmd(strBuf, outputCh);
-// cmdHead.buf = memory_apply(1056);
-    cmdHead.buf = Ql_MEM_Alloc(1056);
+    cmdHead.buf = memory_apply(1056);
     cmdHead.buf->size = 1040;
     cmdHead.buf->lenght = 0;
     cmdHead.buf->payload = (u8_t *)(cmdHead.buf + 1);
@@ -513,127 +650,6 @@ static void strCmp(Buffer_t *strBuf, void_fun_bufp callback_output) {
     Net_send(0xFF, strBuf->payload, r_strlen((char *)strBuf->payload));
   }
 }
-#endif
-
-#ifdef _PLATFORM_L610_
-void proc_app_task(s32_t taskId) {  
-  int msg = 0;
-
-  outputFun = null;
-  logGetFlag = 0;
-  deviceLockTime = 0;
-    
-  // Disable sleep mode.
-  fibo_setSleepMode(0);
-  APP_PRINT("App task run...\r\n");
-  
-  WDG_timer = fibo_timer_period_new(WDG_time_Interval, UserTimerWDGcallback, NULL);  // 注册外部看门狗Timer
-  if (WDG_timer == 0) {
-    log_save("Register WGD timer(%d) failed!!\r\n");
-  }
-
-  while (1) {
-    fibo_queue_get(EYBAPP_TASK, (void *)&msg, 0);
-    switch (msg) {
-      case APP_MSG_UART_READY:
-        APP_DEBUG("App task APP_MSG_UART_READY\r\n");
-#ifdef __TEST_FOR_UFS__
-        APP_DEBUG("FILE System TEST!\r\n");
-        s8_t space = 0;      // 注意不要做%和/运算
-        // check freespace
-        space  = fibo_file_getFreeSize();
-        APP_DEBUG("fibo_file_getFreeSize=%d \r\n", space);
-        // check total space
-        s32_t file_a_size = fibo_file_getSize(g_recName_parameter_aa);
-        APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
-        if (file_a_size > 0) {
-          APP_DEBUG("para_file_a is exist, size:%ld\r\n", file_a_size);
-        //    fibo_file_delete(g_recName_parameter_aa);   // for testing
-        }
-        APP_DEBUG("Check para_file_b \r\n");
-        s32_t file_b_size = fibo_file_getSize(g_recName_parameter_ab);
-        APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
-        if (file_b_size > 0) {
-          APP_DEBUG("para_file_b is exist, size:%ld\r\n", file_b_size);
-        //    fibo_file_delete(g_recName_parameter_ab);   // for testing
-        }
-        s32_t file_log_size = fibo_file_getSize(run_log_aa);
-        APP_DEBUG("file_log_size is %ld\r\n", file_log_size);
-        if (file_log_size > 0) {
-          APP_DEBUG("run_log_a is exist, size:%ld\r\n", file_log_size);
-          if (file_log_size >  152756) {
-            APP_DEBUG("file_log_size is too big, delete it!\r\n");
-            fibo_file_delete(run_log_aa);
-          }
-        }
-#endif
-        log_init();
-        Clock_init();
-        SysPara_init();  // mike 重点死机问题函数, RIL库完成加载后初始化所有现场参数
-        APP_timer = fibo_timer_period_new(APP_time_Interval, UserTimerAPPscallback, &m_timeCnt);    // 注册APPTimer
-        if (APP_timer == 0) {
-          log_save("Register app timer(%d) fail");
-        }
-        
-        break;
-      case APP_MSG_WDG_ID:
-//      APP_DEBUG("App task APP_MSG_WDG_ID %d\r\n", m_wdgCnt);
-        Watchdog_feed();
-        m_wdgCnt++;
-        if (m_wdgCnt == 1) {  // 开机后三秒跑马灯
-          deviceLEDOff();
-        } else if (m_wdgCnt == 2) {
-          GSMLED_Off();
-        } else if (m_wdgCnt == 3) {
-          NetLED_Off();
-        } else if (m_wdgCnt > 3) {
-          m_wdgCnt = 4;
-        }
-        break;
-      case APP_MSG_TIMER_ID:
-        APP_DEBUG("App task APP_MSG_TIMER_ID\r\n");
-        int value_put = APP_MSG_TIMER_ID;
-        fibo_queue_put(EYBNET_TASK, &value_put, 0);
-        Key_scan();
-        break;
-      default:
-        break;
-    }
-  }
-
-  fibo_thread_delete();
-}
-
-/*******************************************************************************
- Brief    : void
- Parameter:
- return   :
-*******************************************************************************/
-static void UserTimerAPPscallback(void *param) {  
-  if (*((s32_t *)param) == 0) {
-    int value_put = APP_MSG_DEVTIMER_ID;
-    fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
-    fibo_queue_put(EYBOND_TASK, &value_put, 0);
-    *((s32_t *)param) += 1;
-  } else {
-    int value_put = APP_MSG_TIMER_ID;
-    fibo_queue_put(EYBAPP_TASK, &value_put, 0);
-    *((s32_t *)param) -= 1;;
-  }
-}
-/*******************************************************************************
- Brief    : void
- Parameter:
- return   :
-*******************************************************************************/
-static void UserTimerWDGcallback(void *param) {
-  int value_put = APP_MSG_WDG_ID;
-  fibo_queue_put(EYBAPP_TASK, &value_put, 0);
-}
-
-static void strCmp(Buffer_t *strBuf, void_fun_bufp callback_output) {
-}
-#endif
 
 /*******************************************************************************
  Brief    : void

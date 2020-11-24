@@ -357,8 +357,7 @@ void Sineng_PVData(u8_t addr, u8_t state, u16_t *code, Buffer_t *ack)
 						Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_PV_GET_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-                        int value_put = DEVICE_PV_GET_ID;
-                        fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+                        Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_PV_GET_ID, 0, 0);
 #endif
 					}
 	            }
@@ -426,8 +425,7 @@ static int PV_scanReady(u8_t addr)
             Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_PV_SCAN_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-            int value_put = DEVICE_PV_SCAN_ID;
-            fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+            Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_PV_SCAN_ID, 0, 0);
 #endif            
 			return 0;
 		}	
@@ -469,8 +467,7 @@ void PV_Scan(void)
 		    Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_PV_SCAN_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-            int value_put = DEVICE_PV_SCAN_ID;
-            fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+            Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_PV_SCAN_ID, 0, 0);
 #endif            
 		}	
 	}

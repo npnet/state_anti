@@ -88,7 +88,7 @@ void Key_scan(void) {
   static int cnt = 0;
   UINT8 nKey_Level = 0;
   ret = fibo_gpio_get(KEY_PORT, &nKey_Level);
-  APP_DEBUG("Key PORT GPIO get ret:%ld direction: %d\r\n", ret, nKey_Level);
+//  APP_DEBUG("Key PORT GPIO get ret:%ld direction: %d\r\n", ret, nKey_Level);
   if (nKey_Level == 0) {
     if (++cnt > 5) {			
       APP_DEBUG("Reset key user.\r\n");

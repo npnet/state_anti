@@ -94,7 +94,7 @@ void ADC_Timer_handler(void *param) {
 
   // stack_timer repeat
   fibo_hal_adc_get_data_polling(2, (UINT32 *)&adcvalue); // ADC0: channel 2, ADC1: channel 3, ADC2: channel 1
-  APP_DEBUG("read adc value = %d mV)\r\n", adcvalue);
+//  APP_DEBUG("read adc value = %d mV)\r\n", adcvalue);
   if (adcvalue < 500) {   // mike 忽略极低电压的情况，适配没有断电挽救电路的设计
     return;
   }

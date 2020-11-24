@@ -380,8 +380,7 @@ static void onlineDeviceAddr(Device_t *dev) {
       Ql_OS_SendMessage(EYBOND_TASK, EYBOND_CMD_REPORT, 0, 0);  // mike Report first message when device online
 #endif
 #ifdef _PLATFORM_L610_
-      int value_put = EYBOND_CMD_REPORT;
-      fibo_queue_put(EYBOND_TASK, &value_put, 0);
+      Eybpub_UT_SendMessage(EYBOND_TASK, EYBOND_CMD_REPORT, 0, 0);
 #endif
     } else {
       APP_DEBUG("Monitor num over!!\r\n");

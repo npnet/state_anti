@@ -325,12 +325,11 @@ static void deviceCmdSend(void) {
         if (++DeviceOvertime >= 300) {
           APP_DEBUG("Device no command in 5 min, reset!!\r\n");
           log_save("Device no command in 5 min, reset!!");
-#ifdef _PLATFORM_BC25_        
+#ifdef _PLATFORM_BC25_
           Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-          int value_put = DEVICE_RESTART_ID;
-          fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+          Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
         }
         APP_DEBUG("currentDevice is null or DEVICE_LOCK %d!!\r\n", DeviceOvertime);
@@ -341,7 +340,12 @@ static void deviceCmdSend(void) {
         currentCmd = null;
         if (currentDevice->cfg != null) {
           APP_DEBUG("currentDevice->cfg is %ld!!\r\n", currentDevice->cfg->baudrate);
+#ifdef _PLATFORM_BC25_          
           DeviceIO_init(currentDevice->cfg);
+#endif
+#ifdef _PLATFORM_L610_
+          DeviceIO_STinit(currentDevice->cfg);
+#endif
           watiTime = 1;
         } else if (DeviceIO_cfgGet() == null) {
           APP_DEBUG("Uart No Init!!\r\n");
@@ -412,8 +416,7 @@ static void deviceCmdSend(void) {
           Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-          int value_put = DEVICE_RESTART_ID;
-          fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+          Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
         }
       }
@@ -429,8 +432,7 @@ static void deviceCmdSend(void) {
     Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-    int value_put = DEVICE_CMD_ID;
-    fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+    Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
 #endif
   }
 }
@@ -450,8 +452,7 @@ static void device_callback(DeviceAck_e ack) {
       Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-      int value_put = DEVICE_RESTART_ID;
-      fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+      Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
       return;
     }
@@ -469,20 +470,19 @@ static void device_callback(DeviceAck_e ack) {
   Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-  int value_put = DEVICE_CMD_ID;
-  fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+  Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
 #endif
 }
 
 
-#ifdef _PLATFORM_L610_
-  void proc_device_task(s32_t taskId) {
-  int msg = 0;
+#ifdef _PLATFORM_L610_    
+void proc_device_task (s32_t taskId) {
+  ST_MSG msg;
   int deviceResetCnt = 0;
   APP_PRINT("Devce task run...\r\n");
-  //DeviceIO_STinit(NULL);
+  // DeviceIO_STinit(NULL);
   DevAPP_PRINT("DevAPP_PRINT running");
-  
+  r_memset(&msg, 0, sizeof(ST_MSG));
   deviceResetCnt = 0;
   currentStep = 0;
   DeviceOvertime = 0;
@@ -491,20 +491,9 @@ static void device_callback(DeviceAck_e ack) {
     
   while (1) {
     APP_DEBUG("wait fibo_queue_get message\r\n");
-    fibo_queue_get(EYBDEVICE_TASK, (void *)&msg, 0);
-    APP_DEBUG("receive fibo_queue_get message\r\n");
-    if(msg ==APP_MSG_UART_READY)
-    {
-        APP_DEBUG("msg APP_MSG_UART_READY \r\n");
-    }
-    else
-    {
-        APP_DEBUG("no msg APP_MSG_UART_READY\r\n");
-    }
-    
-
-    switch (msg) {
-      case APP_MSG_UART_READY:  // 设备串口OK
+    fibo_queue_get(EYBDEVICE_TASK, (void *)&msg, 0);  
+    switch (msg.message) {
+      case APP_MSG_UART_READY:  // DEBUG串口OK
         APP_DEBUG("Get APP_CMD_UART_READY MSG\r\n");
         list_init(&DeviceList);
         break;
@@ -570,13 +559,13 @@ static void device_callback(DeviceAck_e ack) {
         break;
       case APP_MSG_DEVTIMER_ID:     //mike 20200915
         m_timeCheck_DEV++;
-        if (m_timeCheck_DEV >= 5) {
+        if (m_timeCheck_DEV >= 10) {
           u32_t heepsize = 0, heep_avail = 0, heep_maxblock =0;
           fibo_get_heapinfo(&heepsize, &heep_avail, &heep_maxblock);
           APP_DEBUG("Device task heep size:%ld avail:%ld maxblock:%ld!!\r\n", heepsize, heep_avail, heep_maxblock);
           m_timeCheck_DEV = 0;
         }
-        APP_DEBUG("Get APP_MSG_DEVTIMER_ID MSG,watiTime:%04X step:%d\r\n", watiTime, currentStep);
+//        APP_DEBUG("Get APP_MSG_DEVTIMER_ID MSG,watiTime:%04X step:%d\r\n", watiTime, currentStep);
         if ((watiTime & 0x8000) == 0x8000 || --watiTime > 0) {
           break;
         }

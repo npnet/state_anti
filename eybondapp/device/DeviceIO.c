@@ -16,14 +16,17 @@
 #endif
 
 #ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
 #include "L610Net.h"
 #endif
-// #include "eyblib_memory.h"       // mike 20200828
-// #include "eyblib_r_stdlib.h"
+#include "eyblib_memory.h"
+#include "eyblib_r_stdlib.h"
+
 #include "eybpub_utility.h"
 #include "eybpub_Debug.h"
 #include "eybpub_run_log.h"
 #include "eybpub_SysPara_File.h"
+
 #include "eybapp_appTask.h"
 #include "DeviceIO.h"
 #include "Device.h"
@@ -31,9 +34,8 @@
 
 s8_t g_UARTIO_AT_enable = 0;
 #define DEV_UART_BUFFER_SIZE    1024
-UINT16 	dev_uart_recv_len					          =	  0;			
-char 	dev_uart_recv_data[DEV_UART_BUFFER_SIZE]      =  {0}; 
-
+UINT16  dev_uart_recv_len                   =   0;
+char  dev_uart_recv_data[DEV_UART_BUFFER_SIZE]      =  {0};
 
 static DeviceInfo_t *s_device;
 static DeviceInfo_t *s_lockDevice;
@@ -41,10 +43,6 @@ static Buffer_t rcveBuf;
 
 static void end(DeviceAck_e e);
 static void overtimeCallback(u32_t timerId, void *param);
-
-
-
-
 
 #ifdef _PLATFORM_BC25_
 static ST_UARTDCB *IOCfg = null;
@@ -156,7 +154,7 @@ static void UARTIOCallBack(Enum_SerialPort port, Enum_UARTEventType msg, bool le
         if (rcveBuf.lenght != 0) {
 //          APP_DEBUG("rcveBuf :%s size:%d!!\r\n", rcveBuf.payload);
         }
-        if(r_strncmp(CUSTOMER, "0A5", 3) == 0) {
+        if (r_strncmp(CUSTOMER, "0A5", 3) == 0) {
           if (r_strncmp((char *)rcveBuf.payload, "AT+", 3) == 0
               && g_UARTIO_AT_enable == 0) { // 获取到硕日私有AT查询指令
             char strTemp[32] = {0};
@@ -347,156 +345,181 @@ static void end(DeviceAck_e e) {
 }
 #endif
 
-
-
 #ifdef _PLATFORM_L610_
-
-
 static hal_uart_config_t *IOCfg = null;
 static ST_UARTDCB *StIOCfg = null;
-
 static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg);
 
 /*******************************************************************************
-  * @brief  device 
+  * @brief  device
   * @note   None
   * @param  None
   * @retval None
 *******************************************************************************/
+void DevIO_stcfg(ST_UARTDCB *hardcfg) {
+  INT32 ret = 0;
+  fibo_gpio_mode_set(DEVICE_UART_TXD, 6);
+  fibo_gpio_cfg(DEVICE_UART_TXD, PINDIRECTION_OUT);
+  fibo_gpio_set(DEVICE_UART_TXD, PINLEVEL_HIGH);
 
-void DevIO_stcfg(ST_UARTDCB* hardcfg) 
-{
-    INT32 ret = 0;
-    fibo_gpio_mode_set(DEVICE_UART_TXD,6);
-    fibo_gpio_cfg(DEVICE_UART_TXD,PINDIRECTION_OUT);
-    fibo_gpio_set(DEVICE_UART_TXD,PINLEVEL_HIGH);
+  fibo_gpio_mode_set(DEVICE_UART_RXD, 6);
+  fibo_gpio_cfg(DEVICE_UART_RXD, PINDIRECTION_IN);
+  fibo_gpio_set(DEVICE_UART_RXD, PINLEVEL_HIGH);
 
-    fibo_gpio_mode_set(DEVICE_UART_RXD,6);
-    fibo_gpio_cfg(DEVICE_UART_RXD,PINDIRECTION_IN);
-    fibo_gpio_set(DEVICE_UART_RXD,PINLEVEL_HIGH);
+  hal_uart_config_t drvcfg ;
+  fibo_hal_uart_deinit(DEVICE_IO_PORT);
+  memset(&drvcfg, 0, sizeof(hal_uart_config_t));
+  drvcfg.baud = hardcfg->baudrate;
+  drvcfg.parity = hardcfg->parity;
+  drvcfg.data_bits = hardcfg->dataBits;
+  drvcfg.stop_bits = hardcfg->stopBits;
+  drvcfg.rx_buf_size = UART_RX_BUF_SIZE;
+  drvcfg.tx_buf_size = UART_TX_BUF_SIZE;
+  ret = fibo_hal_uart_init(DEVICE_IO_PORT, &drvcfg, UARTIOCallBack, NULL);
+  if (0 == ret) {
+    int value_put = APP_MSG_UART_READY;
+    fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+    APP_PRINT("fibo_queue_put message\r\n");
+  }
+}
 
-    hal_uart_config_t drvcfg ;
+/*******************************************************************************
+  * @brief  device
+  * @note   None
+  * @param  None
+  * @retval None
+*******************************************************************************/
+void DevIO_halcfg(hal_uart_config_t *hardcfg) {
+  INT32 ret = 0;
+  fibo_gpio_mode_set(DEVICE_UART_TXD, 6);
+  fibo_gpio_cfg(DEVICE_UART_TXD, PINDIRECTION_OUT);
+  fibo_gpio_set(DEVICE_UART_TXD, PINLEVEL_HIGH);
+
+  fibo_gpio_mode_set(DEVICE_UART_RXD, 6);
+  fibo_gpio_cfg(DEVICE_UART_RXD, PINDIRECTION_IN);
+  fibo_gpio_set(DEVICE_UART_RXD, PINLEVEL_HIGH);
+
+  hal_uart_config_t drvcfg ;
+  fibo_hal_uart_deinit(DEVICE_IO_PORT);
+  memset(&drvcfg, 0, sizeof(hal_uart_config_t));
+  drvcfg.baud = hardcfg->baud;
+  drvcfg.parity = hardcfg->parity;
+  drvcfg.data_bits = hardcfg->data_bits;
+  drvcfg.stop_bits = hardcfg->stop_bits;
+  drvcfg.rx_buf_size = UART_RX_BUF_SIZE;
+  drvcfg.tx_buf_size = UART_TX_BUF_SIZE;
+  ret = fibo_hal_uart_init(DEVICE_IO_PORT, &drvcfg, UARTIOCallBack, NULL);
+  if (0 == ret) {
+    int value_put = APP_MSG_UART_READY;
+    fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+    APP_PRINT("fibo_queue_put message\r\n");
+  }
+}
+
+/*******************************************************************************
+  * @brief  device opt end
+  * @note   None
+  * @param  None
+  * @retval None
+*******************************************************************************/
+void DeviceIO_init(hal_uart_config_t *cfg) {
+  s32_t ret = 0;
+
+  if (cfg == null) {
+    // Init device IO UART setting with default 9600 setting
+    s_device = null;  // Clear old data
+    s_lockDevice = null;
+    IOCfg = null;
+    rcveBuf.payload = null;
+
+    ProtocolAttr_t attr;
+    ST_UARTDCB SetCfg;
+    if (protocolAttrGet(DEVICE_PROTOCOL, &attr) != 0) {
+      // 获取默认配置的采集口UART设置
+      SetCfg = UART_9600_N1;
+    } else {
+      if (attr.cfg.baudrate == 0) {
+        APP_DEBUG("DEVICE_PROTOCAL UART config is NULL\r\n");
+        SetCfg.baudrate = 9600;
+        SetCfg.dataBits = HAL_UART_DATA_BITS_8;
+        SetCfg.stopBits = HAL_UART_STOP_BITS_1;
+        SetCfg.parity   = HAL_UART_NO_PARITY;
+        SetCfg.flowCtrl = FC_NONE;
+      } else {
+        SetCfg.baudrate = attr.cfg.baudrate;
+        SetCfg.dataBits = attr.cfg.dataBits;
+        SetCfg.stopBits = attr.cfg.stopBits;
+        SetCfg.parity = attr.cfg.parity;
+        SetCfg.flowCtrl = attr.cfg.flowCtrl;
+      }
+    }
+    DevIO_stcfg(&SetCfg);
+
+  } else if ((IOCfg == null && cfg != NULL) || r_memcmp(IOCfg, cfg, sizeof(hal_uart_config_t)) != 0) {
+    IOCfg = cfg;
+
+    //关闭串口
     fibo_hal_uart_deinit(DEVICE_IO_PORT);
-    memset(&drvcfg,0,sizeof(hal_uart_config_t));
-    drvcfg.baud = hardcfg->baudrate;
-    drvcfg.parity =hardcfg->parity;
-    drvcfg.data_bits = hardcfg->dataBits;
-    drvcfg.stop_bits = hardcfg->stopBits;
-    drvcfg.rx_buf_size = UART_RX_BUF_SIZE;
-    drvcfg.tx_buf_size = UART_TX_BUF_SIZE;
-    ret = fibo_hal_uart_init(DEVICE_IO_PORT, &drvcfg, UARTIOCallBack, NULL);
-    if(0 == ret)
-    {
-        int value_put = APP_MSG_UART_READY;
-        fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
-        APP_PRINT("fibo_queue_put message\r\n");
-    }
+    //延时
+    fibo_taskSleep(1000);
+    //串口初始化
+    DevIO_halcfg(cfg);
 
+  }
 }
-   
-        
-  
 
 /*******************************************************************************
-  * @brief  device 
+  * @brief  device opt end
   * @note   None
   * @param  None
   * @retval None
 *******************************************************************************/
+void DeviceIO_STinit(ST_UARTDCB *cfg) {
+  s32_t ret = 0;
+  if (cfg == null) {
+    // Init device IO UART setting with default 9600 setting
+    s_device = null;  // Clear old data
+    s_lockDevice = null;
+    StIOCfg = null;
+    rcveBuf.payload = null;
 
-void DevIO_halcfg(hal_uart_config_t* hardcfg) 
-{
-    INT32 ret = 0;
-    fibo_gpio_mode_set(DEVICE_UART_TXD,6);
-    fibo_gpio_cfg(DEVICE_UART_TXD,PINDIRECTION_OUT);
-    fibo_gpio_set(DEVICE_UART_TXD,PINLEVEL_HIGH);
+    ProtocolAttr_t attr;
+    ST_UARTDCB SetCfg;
+    APP_PRINT("cfg is null \r\n");
+#if 0 //测试输出
+    SetCfg = UART_9600_N1;
+    DevIO_stcfg(&SetCfg);
+#endif
+    if (protocolAttrGet(DEVICE_PROTOCOL, &attr) != 0) {
+      // 获取默认配置的采集口UART设置
 
-    fibo_gpio_mode_set(DEVICE_UART_RXD,6);
-    fibo_gpio_cfg(DEVICE_UART_RXD,PINDIRECTION_IN);
-    fibo_gpio_set(DEVICE_UART_RXD,PINLEVEL_HIGH);
-
-    hal_uart_config_t drvcfg ;
+      SetCfg = UART_9600_N1;
+    } else {
+      if (attr.cfg.baudrate == 0) {
+        APP_DEBUG("DEVICE_PROTOCAL UART config is NULL\r\n");
+        SetCfg.baudrate = 9600;
+        SetCfg.dataBits = HAL_UART_DATA_BITS_8;
+        SetCfg.stopBits = HAL_UART_STOP_BITS_1;
+        SetCfg.parity   = HAL_UART_NO_PARITY;
+        SetCfg.flowCtrl = FC_NONE;
+      } else {
+        SetCfg.baudrate = attr.cfg.baudrate;
+        SetCfg.dataBits = attr.cfg.dataBits;
+        SetCfg.stopBits = attr.cfg.stopBits;
+        SetCfg.parity = attr.cfg.parity;
+        SetCfg.flowCtrl = attr.cfg.flowCtrl;
+      }
+    }
+    DevIO_stcfg(&SetCfg);
+  } else if ((StIOCfg == null && cfg != NULL) || r_memcmp(IOCfg, cfg, sizeof(ST_UARTDCB)) != 0) {
+    IOCfg = cfg;
+    //关闭串口
     fibo_hal_uart_deinit(DEVICE_IO_PORT);
-    memset(&drvcfg,0,sizeof(hal_uart_config_t));
-    drvcfg.baud = hardcfg->baud;
-    drvcfg.parity = hardcfg->parity;
-    drvcfg.data_bits = hardcfg->data_bits;
-    drvcfg.stop_bits = hardcfg->stop_bits;
-    drvcfg.rx_buf_size = UART_RX_BUF_SIZE;
-    drvcfg.tx_buf_size = UART_TX_BUF_SIZE;
-    ret = fibo_hal_uart_init(DEVICE_IO_PORT, &drvcfg, UARTIOCallBack, NULL);
-    if(0 == ret)
-    {
-        int value_put = APP_MSG_UART_READY;
-        fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
-        APP_PRINT("fibo_queue_put message\r\n");
-    }
-
-
-}
-   
-
-/*******************************************************************************
-  * @brief  device opt end
-  * @note   None
-  * @param  None
-  * @retval None
-*******************************************************************************/
-void DeviceIO_init(hal_uart_config_t *cfg) 
-{
-    s32_t ret = 0;
-
-   
-
-    if (cfg == null) 
-    { // Init device IO UART setting with default 9600 setting
-        s_device = null;  // Clear old data
-        s_lockDevice = null;
-        IOCfg = null;
-        rcveBuf.payload = null;
-
-        ProtocolAttr_t attr;
-        ST_UARTDCB SetCfg;
-        if (protocolAttrGet(DEVICE_PROTOCOL, &attr) != 0) 
-        { // 获取默认配置的采集口UART设置
-            SetCfg = UART_9600_N1;
-        } 
-        else
-        {
-            if (attr.cfg.baudrate == 0) 
-            {
-                APP_DEBUG("DEVICE_PROTOCAL UART config is NULL\r\n");
-                SetCfg.baudrate = 9600;
-                SetCfg.dataBits = HAL_UART_DATA_BITS_8;
-                SetCfg.stopBits = HAL_UART_STOP_BITS_1;
-                SetCfg.parity   = HAL_UART_NO_PARITY;
-                SetCfg.flowCtrl = FC_NONE;
-            } 
-            else 
-            {
-                SetCfg.baudrate = attr.cfg.baudrate;
-                SetCfg.dataBits = attr.cfg.dataBits;
-                SetCfg.stopBits = attr.cfg.stopBits;
-                SetCfg.parity = attr.cfg.parity;
-                SetCfg.flowCtrl = attr.cfg.flowCtrl;
-            }
-        }
-        DevIO_stcfg(&SetCfg);
-        
-
-    }
-    else if ((IOCfg == null&&cfg != NULL) || r_memcmp(IOCfg,cfg,sizeof(hal_uart_config_t))!=0)
-    {
-        IOCfg =cfg;
-        
-        //关闭串口
-        fibo_hal_uart_deinit(DEVICE_IO_PORT);
-        //延时
-        fibo_taskSleep(1000);
-        //串口初始化
-        DevIO_halcfg(cfg);
-      
-    }
+    //延时
+    fibo_taskSleep(1000);
+    //串口初始化
+    DevIO_stcfg(cfg);
+  }
 }
 
 /*******************************************************************************
@@ -505,137 +528,49 @@ void DeviceIO_init(hal_uart_config_t *cfg)
   * @param  None
   * @retval None
 *******************************************************************************/
-void DeviceIO_STinit(ST_UARTDCB *cfg) 
-{
-    s32_t ret = 0;
+#if 0
+hal_uart_config_t *DeviceIO_cfgGet(void) {
 
-   
- 
-    if (cfg == null) 
-    { // Init device IO UART setting with default 9600 setting
-        s_device = null;  // Clear old data
-        s_lockDevice = null;
-        StIOCfg = null;
-        rcveBuf.payload = null;
-
-        ProtocolAttr_t attr;
-        ST_UARTDCB SetCfg;
-        APP_PRINT("cfg is null \r\n");
-
-        #if 0 //测试输出
-        SetCfg = UART_9600_N1;
-        DevIO_stcfg(&SetCfg);
-        #endif
-
-        if (protocolAttrGet(DEVICE_PROTOCOL, &attr) != 0) 
-        { // 获取默认配置的采集口UART设置
-
-            SetCfg = UART_9600_N1;
-        } 
-      
-        else
-        {
-            if (attr.cfg.baudrate == 0) 
-            {
-                APP_DEBUG("DEVICE_PROTOCAL UART config is NULL\r\n");
-                SetCfg.baudrate = 9600;
-                SetCfg.dataBits = HAL_UART_DATA_BITS_8;
-                SetCfg.stopBits = HAL_UART_STOP_BITS_1;
-                SetCfg.parity   = HAL_UART_NO_PARITY;
-                SetCfg.flowCtrl = FC_NONE;
-            } 
-            else 
-            {
-                SetCfg.baudrate = attr.cfg.baudrate;
-                SetCfg.dataBits = attr.cfg.dataBits;
-                SetCfg.stopBits = attr.cfg.stopBits;
-                SetCfg.parity = attr.cfg.parity;
-                SetCfg.flowCtrl = attr.cfg.flowCtrl;
-            }
-        }
-        DevIO_stcfg(&SetCfg);
-        
-       
-
-    }
-
-   
-    else if ((StIOCfg == null&&cfg != NULL) || r_memcmp(IOCfg,cfg,sizeof(ST_UARTDCB))!=0)
-    {
-        IOCfg =cfg;
-        
-        //关闭串口
-        fibo_hal_uart_deinit(DEVICE_IO_PORT);
-        //延时
-        fibo_taskSleep(1000);
-        //串口初始化
-        DevIO_stcfg(cfg);
-      
-    }
-    
-}    
+}
+#endif
 
 /*******************************************************************************
-  * @brief  device opt end
+  * @brief
   * @note   None
   * @param  None
   * @retval None
 *******************************************************************************/
-    #if 0
-    hal_uart_config_t *DeviceIO_cfgGet(void) 
-    {
-
+static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg) {
+#if 0
+  APP_PRINT("UARTIOCallBack recv uart_port=%d len=%d, data=%s", uart_port, len, (char *)data);
+  if (len > 0) {
+    if (dev_uart_recv_len >= (sizeof(dev_uart_recv_data) - 1)) {
+      return;
+    } else {
+      memcpy(dev_uart_recv_data[dev_uart_recv_len], data, len);
+      dev_uart_recv_len += len;
     }
-    #endif
+  }
+#endif
 
-/*******************************************************************************
-  * @brief  
-  * @note   None
-  * @param  None
-  * @retval None
-*******************************************************************************/
-
-
-static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg) 
-{
-    #if 0
-    APP_PRINT("UARTIOCallBack recv uart_port=%d len=%d, data=%s", uart_port, len, (char *)data);
-    if(len>0)
-    {
-        if(dev_uart_recv_len >=(sizeof(dev_uart_recv_data)-1) )
-        {
-            return;
-        }
-        else
-        {
-            memcpy(dev_uart_recv_data[dev_uart_recv_len],data,len); 
-            dev_uart_recv_len += len;
-        }
-    }
-    #endif
-
-    if (uart_port == DEVICE_IO_PORT) 
-    {
-        if (rcveBuf.payload != null) 
-        {    // 设备串口接收的数据统一在这里释放内存
-          memory_release(rcveBuf.payload);
-          rcveBuf.payload = NULL;
-          rcveBuf.lenght = 0;
-          rcveBuf.size = 0;
-        }
-
-        rcveBuf.payload = memory_apply(SERIAL_RX_BUFFER_LEN);
-        rcveBuf.size = SERIAL_RX_BUFFER_LEN;
-        rcveBuf.lenght = len;
-     
-        APP_DEBUG("rcveBuf len:%d size:%d!!\r\n", rcveBuf.size, rcveBuf.lenght);
-        if (rcveBuf.lenght != 0) 
-        {
-            APP_DEBUG("rcveBuf :%s size:%d!!\r\n", rcveBuf.payload);
-        }
-
+  if (uart_port == DEVICE_IO_PORT) {
+    if (rcveBuf.payload != null) {
+      // 设备串口接收的数据统一在这里释放内存
+      memory_release(rcveBuf.payload);
+      rcveBuf.payload = NULL;
+      rcveBuf.lenght = 0;
+      rcveBuf.size = 0;
     }
 
+    rcveBuf.payload = memory_apply(SERIAL_RX_BUFFER_LEN);
+    rcveBuf.size = SERIAL_RX_BUFFER_LEN;
+    rcveBuf.lenght = len;
+
+    APP_DEBUG("rcveBuf len:%d size:%d!!\r\n", rcveBuf.size, rcveBuf.lenght);
+    if (rcveBuf.lenght != 0) {
+      APP_DEBUG("rcveBuf :%s size:%d!!\r\n", rcveBuf.payload, rcveBuf.lenght);
+    }
+  }
 }
 
 DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
@@ -644,6 +579,17 @@ DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
 
 }
 
+/*******************************************************************************
+  * @brief  device opt end
+  * @note   None
+  * @param  None
+  * @retval None
+*******************************************************************************/
+#if 0
+DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
+
+}
+#endif
 
 /*******************************************************************************
   * @brief  device opt end
@@ -651,21 +597,7 @@ DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
   * @param  None
   * @retval None
 *******************************************************************************/
-    #if 0
-    DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght)
-    {
-
-    }
-    #endif
-
-/*******************************************************************************
-  * @brief  device opt end
-  * @note   None
-  * @param  None
-  * @retval None
-*******************************************************************************/
-void Uart_write(u8_t *data, u16_t len) 
-{
+void Uart_write(u8_t *data, u16_t len) {
 
 }
 
@@ -675,8 +607,7 @@ void Uart_write(u8_t *data, u16_t len)
   * @param  None
   * @retval None
 *******************************************************************************/
-static void end(DeviceAck_e e) 
-{
+static void end(DeviceAck_e e) {
 
 }
 
@@ -744,7 +675,6 @@ static void wrtie(Buffer_t *buf) {
 *******************************************************************************/
 
 void Dev_Print_output(u8_t *p, u16_t len) {
-   fibo_hal_uart_put(DEVICE_IO_PORT, (UINT8 *)p, (u32_t)len);
-    
+  fibo_hal_uart_put(DEVICE_IO_PORT, (UINT8 *)p, (u32_t)len);
 }
 /*********************************FILE END*************************************/

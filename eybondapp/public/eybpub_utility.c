@@ -38,8 +38,10 @@
 #endif
 
 #ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
 #endif
 
+#include "eyblib_r_stdlib.h"
 #include "eybpub_utility.h"
 
 #ifdef _PLATFORM_BC25_
@@ -76,5 +78,15 @@ s32_t ReadSerialPort(hal_uart_port_t port, u8_t* pBuffer, u32_t bufLen) {
   s32_t rdLen = 0;
   s32_t rdTotalLen = 0;
   return rdTotalLen;
+}
+
+s32_t Eybpub_UT_SendMessage(s32_t destTaskId, u32_t msgId, u32_t param1, u32_t param2) {
+  ST_MSG msg;
+  r_memset(&msg, 0, sizeof(ST_MSG));
+  msg.message = msgId;
+  msg.param1 = param1;
+  msg.param2 = param2;
+//  if (fibo_queue_space_available(destTaskId))
+  return fibo_queue_put(destTaskId, &msg, 0);
 }
 #endif

@@ -2,6 +2,9 @@
 #include "L610_conn_ali_net.h"
 #include "ginlong_monitor.pb-c.h"
 #include "eybpub_Debug.h"
+
+#include "eybpub_SysPara_File.h"
+
 //char product_key[64] = "a1zFSNAQ8G0" ;
 //char device_name[64] = "device1";
 //char device_secret[64]  = "ff378340b0453de58c2f06cb5f52b4a8";
@@ -225,6 +228,21 @@ void mqtt_conn_ali_task(void *param)
 //            default:
 //                break;
 //        }
+
+#if 0
+        Buffer_t setbuf = {0};
+     
+        char str[] = "800" ;
+		setbuf.lenght =strlen(str);
+		setbuf.size   =sizeof(str);
+		setbuf.payload = str;
+		parametr_set(24, &setbuf) ;
+//		parametr_default();
+
+		Buffer_t read_buf = {0};
+		parametr_get(24, &read_buf);
+		APP_PRINT("read_buf = %s \r\n",read_buf.payload);
+#endif		
 
         send_monitor_packet(aliyun_mqtt_thread_handle);
         fibo_taskSleep(5 * 1000);

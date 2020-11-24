@@ -281,6 +281,61 @@ static u8_t setReportTime(struct _ParamDescripTable_t *element, void *buf, u16_t
   return 0;
 }
 
+//ProdectKey
+static u8_t setProdectKey(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+//DevName
+static u8_t setDevName(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+//DevSecret
+static u8_t setDevSecret(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+//setPubTopic
+static u8_t setPubTopic(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+//setSubTopic
+static u8_t setSubTopic(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+static u8_t setTotoalWorkTime(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+static u8_t setCurWorkTime(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+static u8_t setCollectorVersion(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+        
+
+
 //读 类型
 static u8_t getflag(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
   *paramLen = r_strlen(element->a);
@@ -562,6 +617,57 @@ static u8_t getReportTime(struct _ParamDescripTable_t *element, void *buf, u16_t
   return 0;
 }
 
+static u8_t getProdectKey(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+static u8_t getDevName(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+static u8_t getDevSecret(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+
+static u8_t getPubTopic(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+static u8_t getSubTopic(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+static u8_t getTotoalWorkTime(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+static u8_t getCurWorkTime(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+static u8_t getCollectorVersion(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+
+
 const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽略
     {0,   "",                       },
     //出厂属性
@@ -611,7 +717,15 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
     {56,  "",                       },         /* 通信卡CCID */
     {57,  "",                       },
     {58,  "",                       },
-    {82,  "300",                    }          /* 主动上报间隔时间 */
+    {82,  "300",                    },          /* 主动上报间隔时间 */
+
+	{92,  ""                        },         /*product_key*/
+  	{93,  ""                        },		   /*device_name*/
+  	{94,  ""                        },         /*device_secret*/
+	{95,  ""                        },         /*pub_topic*/
+	{96,  ""                        },         /*sub_topic*/
+	{97,  "0"                       },         /*total_working_time 累计工作时间*/
+	{98,  ""                        },         /*采集器版本*/
 };
 
 /* 数采器参数读写接口 */
@@ -664,7 +778,16 @@ struct _ParamDescripTable_t PDT[] = {
   {56,  "0",                       setEthernetSerial,          getEthernetSerial},        /* 通信卡CCID */
   {57,  "apn:user,pwd",            setAPN,                     getAPN},
   {58,  "0",                       setCPUID,                   getCPUID},
-  {82,  "300",                     setReportTime,              getReportTime}
+  {82,  "300",                     setReportTime,              getReportTime},
+
+  {92,  "0",                       setProdectKey,              getProdectKey },         /*product_key*/
+  {93,  "0",                       setDevName,                 getDevName    },		    /*device_name*/
+  {94,  "0",                       setDevSecret,               getDevSecret  },         /*device_secret*/
+  {95,  "0",                       setPubTopic,                getPubTopic   },         /*pub_topic*/
+  {96,  "0",                       setSubTopic,                getSubTopic   },          /*sub_topic*/
+  {97,  "0",                       setTotoalWorkTime,          getTotoalWorkTime },     /*total_working_time 累计工作时间*/
+  {98,  "00000000",                 setCollectorVersion,         getCollectorVersion},    /*采集器版本*/                                                                         
+  
 };
 /*----------------------------------------------------------------------------*
 **                             Global Vars                                    *

@@ -41,6 +41,10 @@ s32 ReadSerialPort(Enum_SerialPort port,u8* pBuffer, u32 bufLen);
 #define DEBUG_UART_TXD       28
 #define DEBUG_UART_RXD       29
 
+#define DEVICE_UART_TXD      67
+#define DEVICE_UART_RXD      68
+
+
 #define PINDIRECTION_IN   0
 #define PINDIRECTION_OUT  1
 

@@ -66,7 +66,7 @@ extern void Debug_trace(u8_t *p, u16_t len);
 #include "string.h"
 #include "eyblib_typedef.h"
 
-#define DEBUG_PORT      2
+#define DEBUG_PORT      2 //调试串口
 static char DebugBuffer[DBG_BUF_LEN];
 #define DEBUG_PORT_BITRATE 115200
 

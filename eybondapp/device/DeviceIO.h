@@ -18,7 +18,10 @@
 #ifdef _PLATFORM_L610_  // 广和通L610 SDK
 #include "oc_uart.h"
 #include "eyblib_typedef.h"
-#include "L610_UARTConfig.h"
+
+#define  DEVICE_IO_PORT      0 //设备串口
+#define  DEVICE_PORT_BITRATE 9600
+
 #endif
 
 typedef enum {
@@ -43,9 +46,38 @@ void DeviceIO_init(ST_UARTDCB *cfg);
 ST_UARTDCB *DeviceIO_cfgGet(void);
 #endif
 
+
+
+
 #ifdef _PLATFORM_L610_
-void DeviceIO_init(ST_UARTDCB *cfg);
-ST_UARTDCB *DeviceIO_cfgGet(void);
+
+#include "L610_UARTConfig.h"
+#include "oc_uart.h"
+//#define MYAPP_PRINT(FORMAT,...)
+
+void DeviceIO_init(hal_uart_config_t *cfg);
+void DeviceIO_STinit(ST_UARTDCB *cfg); 
+void DevIO_stcfg(ST_UARTDCB* hardcfg); 
+void DevIO_halcfg(hal_uart_config_t* hardcfg);
+hal_uart_config_t *DeviceIO_cfgGet(void);
+
+
+/*******************************************************************************
+  * @brief  设备口打印函数
+  * @note   None
+  * @param  None
+  * @retval None
+*******************************************************************************/
+char DevBuffer[1024];
+void Dev_Print_output(u8_t *p, u16_t len);
+
+ #define DevAPP_PRINT(FORMAT,...) {\
+    memset(DevBuffer, 0, 1024);\
+    snprintf(DevBuffer, 1024, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
+    Dev_Print_output((u8_t*)DevBuffer, strlen(DevBuffer));\
+}
+
+
 #endif
 
 void DeviceIO_reset(void);

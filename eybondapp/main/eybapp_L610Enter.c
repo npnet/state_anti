@@ -16,6 +16,7 @@
 #include "4G_net.h"
 #include "eybapp_appTask.h"
 #include "Device.h"
+#include "DeviceIO.h"
 #include "eybond.h"
 #include "L610_conn_ali_net.h"
 
@@ -78,7 +79,8 @@ static FIBO_CALLBACK_T user_callback = {
 
 void * appimg_enter(void *param) {
   OSI_LOGI(0, "application image enter");
-  Debug_init();
+  Debug_init();//上电配置串口
+  DeviceIO_STinit(NULL);//上电配置设备口
   APP_PRINT("Eybond 4G L610 Application!!\r\n");
   APP_PRINT("Version: %s\r\n", FWVERSION);
   APP_PRINT("Time: %s\r\n", MAKE_TIME);
@@ -117,6 +119,7 @@ void * appimg_enter(void *param) {
 //    fibo_thread_create(device_update_task,"DEVICE UPDATE TASK",1024*8*3, NULL, OSI_PRIORITY_NORMAL);
 //  fibo_thread_create(feed_dog_task,     "FEED DOG TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
 //    fibo_thread_create(rec_check_task,    "REC  CHECK TASK",   1024*8*2, NULL, OSI_PRIORITY_NORMAL);
+
   fibo_thread_create(mqtt_conn_ali_task, "mqtt_conn_ali",	 1024 * 16, NULL, OSI_PRIORITY_NORMAL);
 
 

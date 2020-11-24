@@ -474,12 +474,15 @@ static void device_callback(DeviceAck_e ack) {
 #endif
 }
 
+
 #ifdef _PLATFORM_L610_
-void proc_device_task(s32_t taskId) {
+  void proc_device_task(s32_t taskId) {
   int msg = 0;
   int deviceResetCnt = 0;
   APP_PRINT("Devce task run...\r\n");
-    
+  //DeviceIO_STinit(NULL);
+  DevAPP_PRINT("DevAPP_PRINT running");
+  
   deviceResetCnt = 0;
   currentStep = 0;
   DeviceOvertime = 0;
@@ -487,9 +490,21 @@ void proc_device_task(s32_t taskId) {
   m_timeCheck_DEV = 0;
     
   while (1) {
+    APP_DEBUG("wait fibo_queue_get message\r\n");
     fibo_queue_get(EYBDEVICE_TASK, (void *)&msg, 0);
+    APP_DEBUG("receive fibo_queue_get message\r\n");
+    if(msg ==APP_MSG_UART_READY)
+    {
+        APP_DEBUG("msg APP_MSG_UART_READY \r\n");
+    }
+    else
+    {
+        APP_DEBUG("no msg APP_MSG_UART_READY\r\n");
+    }
+    
+
     switch (msg) {
-      case APP_MSG_UART_READY:  // DEBUG串口OK
+      case APP_MSG_UART_READY:  // 设备串口OK
         APP_DEBUG("Get APP_CMD_UART_READY MSG\r\n");
         list_init(&DeviceList);
         break;
@@ -584,5 +599,10 @@ void proc_device_task(s32_t taskId) {
   }
   fibo_thread_delete();
 }
+
 #endif
+
 /******************************************************************************/
+
+
+

@@ -100,7 +100,7 @@ void * appimg_enter(void *param) {
   Beep_Init();
   Key_init();
   ADC_Init();
-    
+
   prvInvokeGlobalCtors();
   
   UINT32 net_thread_id = 0;

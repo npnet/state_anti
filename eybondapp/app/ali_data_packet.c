@@ -1,14 +1,72 @@
+#include <time.h>
 #include "fibo_opencpu.h"
 #include "ginlong_monitor.pb-c.h"
 #include "eybpub_Debug.h"
 #include "L610_conn_ali_net.h"
+#include "eybpub_SysPara_File.h"
+#include "sci_types.h"
+
+typedef struct _X_UN_64_T
+{
+    uint32 hiDWORD;
+    uint32 loDWORD;
+} X_UN_64_T;
+typedef X_UN_64_T uint64;
+
+
 
 static GinlongMonitor__MNotification notification = {0} ;
-static GinlongMonitor__MCollector1 collector1 	=  {0};
-static GinlongMonitor__Packet	packet = {0};
-static GinlongMonitor__Packet	*unpacket = NULL;
+static GinlongMonitor__MCollector1 collector1   =  {0};
+static GinlongMonitor__Packet   packet = {0};
+static GinlongMonitor__Packet   *unpacket = NULL;
 static GinlongMonitor__MInverter1 ** inverter = NULL;
 
+typedef struct
+{
+	uint32_t software_ver;
+	char product_key[64];
+	char device_name[64];
+	char device_secret[64];
+	char pub_topic[64];
+	char sub_topic[64];
+	char TotoalWorkTime[21];
+
+	uint32_t data_upload_cycle;
+	uint32_t factory_time;
+
+} Para_Table;
+Para_Table para_table;
+
+
+/*******************************************************************************
+ * 将时间格式字符串转成时间戳形式
+ * 如 2011-12-31 11:43:07 转成 1325302987
+*******************************************************************************/
+
+uint32_t get_tick(char *str_time)
+{
+    struct tm stm;
+    int iY, iM, iD, iH, iMin, iS;
+    APP_PRINT("tick = %s\r\n",str_time); 
+    memset(&stm,0,sizeof(stm));
+ 
+    iY = atoi(str_time);
+    iM = atoi(str_time+5);
+    iD = atoi(str_time+8);
+    iH = atoi(str_time+11);
+    iMin = atoi(str_time+14);
+    iS = atoi(str_time+17);
+     
+    stm.tm_year=iY-1900;
+    stm.tm_mon=iM-1;
+    stm.tm_mday=iD;
+    stm.tm_hour=iH;
+    stm.tm_min=iMin;
+    stm.tm_sec=iS;    
+ 
+    return mktime(&stm);
+}
+ 
 
 
 uint64_t str_to_hex(char *str)
@@ -24,22 +82,43 @@ uint64_t str_to_hex(char *str)
 			get_int += *str-0x30;
 		}
 		else if( (*str>=0x41) && (*str<=0x46))//A-F
-				get_int += (*str-0x41+10);
-			else if((*str>=0x61) && (*str<=0x66))//a-f
-				get_int += (*str-0x61+10);
-			else
-				return 0;
-			str++;
-			}
-		return get_int ;
+			get_int += (*str-0x41+10);
+		else if((*str>=0x61) && (*str<=0x66))//a-f
+			get_int += (*str-0x61+10);
+		else
+			return 0;
+		str++;
+	}
+	return get_int ;
 }
+
+/*******************************************************************************
+ * 将5号参数固件版本中的'.'替换成'0',并转成无符号整数
+ * uint32_t collector_version_convert()
+*******************************************************************************/
+uint32_t collector_version_convert(char * str)
+{
+	int i=0;
+	for(i=0; i<strlen(str); i++)
+	{
+
+		if(str[i] == '.')
+		{
+			str[i] = '0';
+		}
+	}
+	str[i] = 0;
+	return(str_to_hex(str));
+}
+
+
 #if 0
 void set_collector_packet_data(GinlongMonitor__MCollector1 *ginlongmonitor__mcollector1)
 {
 	int ret = 0;
 	int buf_len  = 0;
 	void *buf = NULL;
-	uint8_t data[] = {0x50,0x9A,0x4C,0x24,0x65,0xD0};	
+	uint8_t data[] = {0x50,0x9A,0x4C,0x24,0x65,0xD0};
 	uint32_t inverter_address[1] = {88};
 	uint32_t weather_station_address[1] = {99};
 	uint32_t confluence_box_address[1] = {66};
@@ -85,7 +164,7 @@ void set_collector_packet_data(GinlongMonitor__MCollector1 *ginlongmonitor__mcol
 	int ret = 0;
 	int buf_len  = 0;
 	void *buf = NULL;
-	uint8_t data[] = {0x50,0x9A,0x4C,0x24,0x65,0xD0};	
+	uint8_t data[] = {0x50,0x9A,0x4C,0x24,0x65,0xD0};
 	uint32_t inverter_address[1] = {257};
 	uint32_t weather_station_address[1] = {99};
 	uint32_t confluence_box_address[1] = {66};
@@ -94,11 +173,13 @@ void set_collector_packet_data(GinlongMonitor__MCollector1 *ginlongmonitor__mcol
 	ginlongmonitor__mcollector1->collector_sn                  = str_to_hex("6012000000000002");
 	ginlongmonitor__mcollector1->total_working_time            = 1986960; //2h
 	ginlongmonitor__mcollector1->current_working_time          = 3777; //1h2m
-	ginlongmonitor__mcollector1->data_upload_cycle             = 60;  //5m10s
+	ginlongmonitor__mcollector1->data_upload_cycle             = para_table.data_upload_cycle;  //5m10s
 	ginlongmonitor__mcollector1->heartbeat_interval            = 120;
 	ginlongmonitor__mcollector1->maximum_number                = 1;
 	ginlongmonitor__mcollector1->actual_number                 = 1;
-	ginlongmonitor__mcollector1->collector_version             = 554107154;
+//    ginlongmonitor__mcollector1->collector_version             = para_table.software_ver;
+	ginlongmonitor__mcollector1->collector_version			   = 0x8693657;
+
 	ginlongmonitor__mcollector1->factory_time                  = 1557976525;//2020/11/18 16:25:3
 	ginlongmonitor__mcollector1->rssi_level                    = 5;
 	ginlongmonitor__mcollector1->rssi                          = 31;
@@ -121,7 +202,7 @@ void set_collector_packet_data(GinlongMonitor__MCollector1 *ginlongmonitor__mcol
 	//ginlongmonitor__mcollector1->datalogger_update             = 0;
 	//ginlongmonitor__mcollector1->inverter_update               = 0;
 	//ginlongmonitor__mcollector1->inverter_update_addr          =44;
-    
+
 
 }
 
@@ -131,7 +212,7 @@ void set_collector_packet_data(GinlongMonitor__MCollector1 *ginlongmonitor__mcol
 typedef struct
 {
 	uint16_t product_model;
-    uint16_t dsp_software_version;
+	uint16_t dsp_software_version;
 	uint16_t tft_software_version;
 	uint16_t ac_output_type;
 	uint16_t dc_input_type;
@@ -182,7 +263,7 @@ typedef struct
 	uint16_t national_standards;
 	uint16_t power_curve_version;//功率曲线号
 	uint32_t reactive_power;//无功功率
-	uint32_t apparent_power; 
+	uint32_t apparent_power;
 	uint16_t real_time_power_factor;
 	uint16_t inverter_sn_h;//逆变器序列高 4 位
 	uint16_t inverter_sn_m1;//逆变器序列中 4 位
@@ -196,7 +277,7 @@ typedef struct
 	uint16_t sys_hour;
 	uint16_t sys_minute;
 	uint16_t sys_second;
-}Inverter_Packet; 
+} Inverter_Packet;
 #pragma pack()
 
 Inverter_Packet inverter_data = {0};
@@ -205,7 +286,7 @@ Inverter_Packet inverter_data = {0};
 void set_inverter_packet_data(GinlongMonitor__MInverter1  *ginlongmonitor__minverter1)
 {
 #if 1
-	ginlongmonitor__minverter1->e_total 							=3000 ;//累计发电 :3MWh
+	ginlongmonitor__minverter1->e_total                             =3000 ;//累计发电 :3MWh
 	ginlongmonitor__minverter1->national_standards                  =1 ;
 	ginlongmonitor__minverter1->ac_output_type                      =3 ;
 	ginlongmonitor__minverter1->dc_input_type                       =19 ;
@@ -218,61 +299,61 @@ void set_inverter_packet_data(GinlongMonitor__MInverter1  *ginlongmonitor__minve
 	ginlongmonitor__minverter1->e_last_month                        =1000 ;
 	ginlongmonitor__minverter1->u_pv4                               =9 ;
 	ginlongmonitor__minverter1->inverter_sn2                        ="123456" ;
-	
+
 	ginlongmonitor__minverter1->inverter_software_version           =592669;
 	ginlongmonitor__minverter1->u_pv1                               =2692;
 	ginlongmonitor__minverter1->u_pv3                               =10 ;
 	ginlongmonitor__minverter1->product_model                       =15;//型号
 	ginlongmonitor__minverter1->u_pv2                               =7;
 
-	ginlongmonitor__minverter1->pac 								=9 ;
+	ginlongmonitor__minverter1->pac                                 =9 ;
 
 	ginlongmonitor__minverter1->e_year                              =18000;
-	ginlongmonitor__minverter1->e_today 							=50 ;
+	ginlongmonitor__minverter1->e_today                             =50 ;
 	ginlongmonitor__minverter1->e_month                             =150 ;
-	ginlongmonitor__minverter1->e_total                             =18000 ; 
+	ginlongmonitor__minverter1->e_total                             =18000 ;
 
 #endif
 
-#if 0	
-	ginlongmonitor__minverter1->e_total 							=(uint64_t)inverter_data.e_total ;//累计发电 :3MWh
+#if 0
+	ginlongmonitor__minverter1->e_total                             =(uint64_t)inverter_data.e_total ;//累计发电 :3MWh
 	ginlongmonitor__minverter1->national_standards                  =(uint32_t)inverter_data.national_standards ;
 	ginlongmonitor__minverter1->ac_output_type                      =(uint32_t)inverter_data.ac_output_type ;
 	ginlongmonitor__minverter1->dc_input_type                       =(uint32_t)inverter_data.dc_input_type ;
 	ginlongmonitor__minverter1->inverter_sn.len                     =0;
 	ginlongmonitor__minverter1->inverter_sn.data                    =NULL;
 	ginlongmonitor__minverter1->inverter_temperature                =(int32_t)inverter_data.inverter_temperature ;//IGBT内芯温度
-	
-	
+
+
 	ginlongmonitor__minverter1->inverter_sn2                        ="123456" ;
-	
+
 	ginlongmonitor__minverter1->inverter_software_version           =(((uint32_t)inverter_data.dsp_software_version)<<16)+((uint32_t)inverter_data.tft_software_version);
 
 	ginlongmonitor__minverter1->product_model                       =inverter_data.product_model;//型号
-	ginlongmonitor__minverter1->pac 								=(int32_t)inverter_data.pac ;
+	ginlongmonitor__minverter1->pac                                 =(int32_t)inverter_data.pac ;
 
 	ginlongmonitor__minverter1->u_pv1                               =inverter_data.u_pv1;
 	ginlongmonitor__minverter1->u_pv2                               =inverter_data.u_pv2;
 	ginlongmonitor__minverter1->u_pv3                               =inverter_data.u_pv3 ;
-	ginlongmonitor__minverter1->u_pv4								=inverter_data.u_pv4;
+	ginlongmonitor__minverter1->u_pv4                               =inverter_data.u_pv4;
 	ginlongmonitor__minverter1->i_pv1                               =inverter_data.i_pv1 ;
 	ginlongmonitor__minverter1->i_pv2                               =inverter_data.i_pv2;
 	ginlongmonitor__minverter1->i_pv3                               =inverter_data.i_pv3;
 	ginlongmonitor__minverter1->i_pv4                               =inverter_data.i_pv4;
-	
+
 
 	ginlongmonitor__minverter1->e_year                              =(((uint64_t)inverter_data.e_year_h)<<16)+((uint64_t)inverter_data.e_year_l);
-	ginlongmonitor__minverter1->e_today 							=(uint32_t)inverter_data.e_today ;
+	ginlongmonitor__minverter1->e_today                             =(uint32_t)inverter_data.e_today ;
 	ginlongmonitor__minverter1->e_month                             =(uint64_t)inverter_data.e_month;
-	ginlongmonitor__minverter1->e_total                             =(uint64_t)inverter_data.e_total ; 
+	ginlongmonitor__minverter1->e_total                             =(uint64_t)inverter_data.e_total ;
 
 
-	
-	ginlongmonitor__minverter1->u_ac1								=inverter_data.u_ac1 ;
+
+	ginlongmonitor__minverter1->u_ac1                               =inverter_data.u_ac1 ;
 	ginlongmonitor__minverter1->u_ac2                               =inverter_data.u_ac2 ;
 	ginlongmonitor__minverter1->u_ac3                               =inverter_data.u_ac3;
-	ginlongmonitor__minverter1->i_ac1								=inverter_data.i_ac1 ;	
-	ginlongmonitor__minverter1->i_ac2                               =inverter_data.i_ac2 ;	
+	ginlongmonitor__minverter1->i_ac1                               =inverter_data.i_ac1 ;
+	ginlongmonitor__minverter1->i_ac2                               =inverter_data.i_ac2 ;
 	ginlongmonitor__minverter1->i_ac3                               =inverter_data.i_ac3 ;
 	ginlongmonitor__minverter1->fac                                 =inverter_data.fac;//频率
 #endif
@@ -295,9 +376,9 @@ void set_inverter_packet_data(GinlongMonitor__MInverter1  *ginlongmonitor__minve
 	ginlongmonitor__minverter1->inverter_data_time                  = 33027;
 	ginlongmonitor__minverter1->rs485_com_addr                      = 257;
 	ginlongmonitor__minverter1->product_model                       =15;
-	
-//	ginlongmonitor__minverter1->inverter_sn.len                     =sizeof(inverter_sn)/sizeof(inverter_sn[0]);
-//	ginlongmonitor__minverter1->inverter_sn.data                    =inverter_sn;
+
+//  ginlongmonitor__minverter1->inverter_sn.len                     =sizeof(inverter_sn)/sizeof(inverter_sn[0]);
+//  ginlongmonitor__minverter1->inverter_sn.data                    =inverter_sn;
 
 	ginlongmonitor__minverter1->inverter_sn.len                     =0;
 	ginlongmonitor__minverter1->inverter_sn.data                    =NULL;
@@ -376,13 +457,13 @@ void set_inverter_packet_data(GinlongMonitor__MInverter1  *ginlongmonitor__minve
 	ginlongmonitor__minverter1->home_load_today_energy              =8 ;
 	ginlongmonitor__minverter1->home_load_yesterday_energy          =8 ;
 	ginlongmonitor__minverter1->standard_working_mode               =8 ;
-	ginlongmonitor__minverter1->pv5_n_value.len                         =sizeof(pv5_n_value)/sizeof(pv5_n_value[0]); 
+	ginlongmonitor__minverter1->pv5_n_value.len                         =sizeof(pv5_n_value)/sizeof(pv5_n_value[0]);
 	ginlongmonitor__minverter1->pv5_n_value.data                        =pv5_n_value;
-		
+
 	ginlongmonitor__minverter1->iv_status_time                      =8 ;
 	//ginlongmonitor__minverter1->iv_run_status                       =8 ;//锦浪说去掉
-	ginlongmonitor__minverter1->iv_array_value.len                      =sizeof(iv_array_value)/sizeof(iv_array_value[0]); 
-	ginlongmonitor__minverter1->iv_array_value.data						=iv_array_value ;
+	ginlongmonitor__minverter1->iv_array_value.len                      =sizeof(iv_array_value)/sizeof(iv_array_value[0]);
+	ginlongmonitor__minverter1->iv_array_value.data                     =iv_array_value ;
 	ginlongmonitor__minverter1->inverter_sn2                        ="123456" ;
 	ginlongmonitor__minverter1->u_init_gnd                          =8 ;
 	ginlongmonitor__minverter1->dc_bus                              =8 ;
@@ -416,56 +497,118 @@ void set_inverter_packet_data(GinlongMonitor__MInverter1  *ginlongmonitor__minve
 #endif
 
 void packet_init(void)
-{	
-	inverter = (GinlongMonitor__MInverter1**)fibo_malloc(sizeof(GinlongMonitor__MInverter1*));
-	inverter[0]=(GinlongMonitor__MInverter1*)fibo_malloc(sizeof(GinlongMonitor__MInverter1));
-	ginlong_monitor__packet__init(&packet);      
-	ginlong_monitor__m__notification__init(&notification); 
-	ginlong_monitor__m_collector1__init(&collector1);
-	ginlong_monitor__m__inverter1__init(inverter[0]);
+{
+
 }
 
+void load_config_para(void)
+{
+	Buffer_t databuf;
+	char software_ver[9]= {0};
+	memset(&databuf,0,sizeof(databuf));
+	parametr_get(5, &databuf);
+	strcpy(software_ver,databuf.payload);//软件版本
 
+	para_table.software_ver = collector_version_convert(software_ver);
+	APP_PRINT("software_ver = %d\r\n",para_table.software_ver);
+
+//	 memset(&databuf,0,sizeof(databuf));
+//	 parametr_get(92, &databuf);
+//	 strcpy(para_table.product_key,databuf.payload);//product_key
+//	 APP_PRINT("product_key = %s\r\n",para_table.product_key);
+//
+//	 memset(&databuf,0,sizeof(databuf));
+//	 parametr_get(93, &databuf);
+//	 strcpy(para_table.device_name,databuf.payload);//device_name
+//	 APP_PRINT("device_name = %s\r\n",para_table.device_name);
+//
+//	 memset(&databuf,0,sizeof(databuf));
+//	 parametr_get(94, &databuf);
+//	 strcpy(para_table.device_secret,databuf.payload);//
+//	 APP_PRINT("device_secret = %s\r\n",para_table.device_secret);
+//
+//	 memset(&databuf,0,sizeof(databuf));
+//	 parametr_get(95, &databuf);
+//	 strcpy(para_table.pub_topic,databuf.payload);//
+//	 APP_PRINT("pub_topic = %s\r\n",para_table.device_secret);
+//
+//	 memset(&databuf,0,sizeof(databuf));
+//	 parametr_get(96, &databuf);
+//	 strcpy(para_table.sub_topic,databuf.payload);//
+//	 APP_PRINT("sub_topic = %s\r\n",para_table.device_secret);
+//
+//	 memset(&databuf,0,sizeof(databuf));
+//	 parametr_get(97, &databuf);
+//	 strcpy(para_table.TotoalWorkTime,databuf.payload);//
+//	 APP_PRINT("TotoalWorkTime = %s\r\n",para_table.TotoalWorkTime);
+
+	memset(&databuf,0,sizeof(databuf));
+	parametr_get(82, &databuf);//设备数据上报周期
+//	 strcpy(para_table.data_upload_cycle,databuf.payload);//
+	para_table.data_upload_cycle = atoi(databuf.payload);
+	APP_PRINT("data_upload_cycle = %d\r\n",para_table.data_upload_cycle);
+
+
+	memset(&databuf,0,sizeof(databuf));
+	parametr_get(07, &databuf);//设备数据上报周期   
+	
+	//para_table.factory_time = get_tick(databuf.payload);
+	uint32_t d = get_tick("2011-12-31 11:43:07");
+	APP_PRINT("factory_time = %d\r\n",d);
+
+}
 int send_monitor_packet(void *aliyun_mqtt_thread_handle)
 {
 	int buf_len  = 0;
 	int ret = 0;
 	void *buf = NULL;
-	
+
+	inverter = (GinlongMonitor__MInverter1**)fibo_malloc(sizeof(GinlongMonitor__MInverter1*));
+	inverter[0]=(GinlongMonitor__MInverter1*)fibo_malloc(sizeof(GinlongMonitor__MInverter1));
+//
+	ginlong_monitor__packet__init(&packet);
+	ginlong_monitor__m__notification__init(&notification);
+	ginlong_monitor__m_collector1__init(&collector1);
+	ginlong_monitor__m__inverter1__init(inverter[0]);
+
+
 	set_collector_packet_data(&collector1);
 	set_inverter_packet_data(inverter[0]);
 	notification.collector11 = &collector1;
-	
+
 	notification.n_inverter1      = 1;
 	notification.inverter1 = inverter;
-	
+
 	packet.time  = 1605763149;
 	packet.no    = 64;
-    packet.sn    = str_to_hex("6012000000000002");
-	packet.notification = &notification;	
-	
+	packet.sn    = str_to_hex("6012000000000002");
+	packet.notification = &notification;
+
 	buf_len = ginlong_monitor__packet__get_packed_size(&packet);//得到包的大小
 
 	if ((buf = fibo_malloc(buf_len)) == NULL)
 		return -1;
-
+//
 	ret = ginlong_monitor__packet__pack(&packet, buf);//打包
-	APP_PRINT("buf_len:%d\tpacked_size:%lu\r\n", buf_len, ret);
-	APP_PRINT("publish packet data:\r\n");
-	//output((const char *)buf,buf_len);
-
+//	APP_PRINT("buf_len:%d\tpacked_size:%lu\r\n", buf_len, ret);
+//	APP_PRINT("publish packet data:\r\n");
+//	//output((const char *)buf,buf_len);
+//
 	unpacket = ginlong_monitor__packet__unpack(NULL,buf_len,buf);
-
-		 APP_PRINT("unpacket->notification->inverter1->inverter_sn2 = %s\r\n",unpacket->notification->inverter1[0]->inverter_sn2);
-		 APP_PRINT("unpacket->notification->inverter1->u_pv1 = %d\r\n",unpacket->notification->inverter1[0]->u_pv1);
-		 APP_PRINT("unpacket->notification->inverter1->i_pv1 = %d\r\n",unpacket->notification->inverter1[0]->i_pv1);
-		 APP_PRINT("unpacket->time = %d\r\n",unpacket->time);
-		 APP_PRINT("unpacket->no = %d\r\n",unpacket->no);
-		 APP_PRINT("unpacket->sn = %lld\r\n",unpacket->sn);
-	fibo_aliyunMQTT_cloudPub_FixedLen(aliyun_mqtt_thread_handle,pub_topic,1,buf,buf_len);
-
-	fibo_free(buf);
-
+//
+//	APP_PRINT("unpacket->notification->inverter1->inverter_sn2 = %s\r\n",unpacket->notification->inverter1[0]->inverter_sn2);
+//	APP_PRINT("unpacket->notification->collector->collector_version = %x\r\n",unpacket->notification->collector11->collector_version);
+//
+//
+//	APP_PRINT("unpacket->time = %d\r\n",unpacket->time);
+//	APP_PRINT("unpacket->no = %d\r\n",unpacket->no);
+//	APP_PRINT("unpacket->sn = %lld\r\n",unpacket->sn);
+//	fibo_aliyunMQTT_cloudPub_FixedLen(aliyun_mqtt_thread_handle,pub_topic,1,buf,buf_len);
+//
+	ginlong_monitor__packet__free_unpacked(unpacket,NULL);
+	fibo_free(buf);	
+	fibo_free(inverter[0]);
+	fibo_free(inverter);
 	return 0;
 }
 

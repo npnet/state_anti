@@ -172,6 +172,7 @@ void mqtt_conn_ali_task(void *param)
 
     APP_PRINT("aliyun mqttapi connect finish\r\n");
     packet_init();
+	load_config_para();
 //  ret = fibo_aliyunMQTT_cloudSub(aliyun_mqtt_thread_handle, sub_topic, 1, fibo_aliyunMQTT_sub_callback);
 //  if (ret == false)
 //  {
@@ -215,6 +216,7 @@ void mqtt_conn_ali_task(void *param)
 // }
 // APP_PRINT("aliyun mqttapi disconn success");
 
+//	parametr_default();
 
     while (1)
     {
@@ -228,22 +230,7 @@ void mqtt_conn_ali_task(void *param)
 //            default:
 //                break;
 //        }
-
-#if 0
-        Buffer_t setbuf = {0};
-     
-        char str[] = "800" ;
-		setbuf.lenght =strlen(str);
-		setbuf.size   =sizeof(str);
-		setbuf.payload = str;
-		parametr_set(24, &setbuf) ;
-//		parametr_default();
-
-		Buffer_t read_buf = {0};
-		parametr_get(24, &read_buf);
-		APP_PRINT("read_buf = %s \r\n",read_buf.payload);
-#endif		
-
+//        parametr_default();
         send_monitor_packet(aliyun_mqtt_thread_handle);
         fibo_taskSleep(5 * 1000);
 

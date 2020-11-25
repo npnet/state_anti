@@ -85,6 +85,7 @@ typedef unsigned char BOOLEAN;
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned long int uint32;
+
 #ifndef _X_64
 typedef unsigned __int64 uint64;
 typedef struct _X_UN_64_T

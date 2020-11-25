@@ -33,6 +33,7 @@
 #include "Protocol.h"
 
 s8_t g_UARTIO_AT_enable = 0;
+UINT32 s_devtimer = 0;
 #define DEV_UART_BUFFER_SIZE    1024
 UINT16  dev_uart_recv_len                   =   0;
 char  dev_uart_recv_data[DEV_UART_BUFFER_SIZE]      =  {0};
@@ -43,6 +44,7 @@ static Buffer_t rcveBuf;
 
 static void end(DeviceAck_e e);
 static void overtimeCallback(u32_t timerId, void *param);
+static void dev_timer_function(void *arg);
 
 #ifdef _PLATFORM_BC25_
 static ST_UARTDCB *IOCfg = null;
@@ -347,7 +349,7 @@ static void end(DeviceAck_e e) {
 
 #ifdef _PLATFORM_L610_
 static hal_uart_config_t *IOCfg = null;
-static ST_UARTDCB *StIOCfg = null;
+
 static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg);
 
 /*******************************************************************************
@@ -376,12 +378,17 @@ void DevIO_stcfg(ST_UARTDCB *hardcfg) {
   drvcfg.rx_buf_size = UART_RX_BUF_SIZE;
   drvcfg.tx_buf_size = UART_TX_BUF_SIZE;
   ret = fibo_hal_uart_init(DEVICE_IO_PORT, &drvcfg, UARTIOCallBack, NULL);
-  if (0 == ret) {
-    int value_put = APP_MSG_UART_READY;
-    fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
-    APP_PRINT("fibo_queue_put message\r\n");
-  }
+//   if (0 == ret) {
+//     Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_DEVUART_READY, 0, 0);
+//     APP_PRINT("fibo_queue_put message\r\n");
+//   }
 }
+   
+   
+   
+ 
+   
+   
 
 /*******************************************************************************
   * @brief  device
@@ -409,11 +416,11 @@ void DevIO_halcfg(hal_uart_config_t *hardcfg) {
   drvcfg.rx_buf_size = UART_RX_BUF_SIZE;
   drvcfg.tx_buf_size = UART_TX_BUF_SIZE;
   ret = fibo_hal_uart_init(DEVICE_IO_PORT, &drvcfg, UARTIOCallBack, NULL);
-  if (0 == ret) {
-    int value_put = APP_MSG_UART_READY;
-    fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
-    APP_PRINT("fibo_queue_put message\r\n");
-  }
+//   if (0 == ret) {
+//     int value_put = APP_MSG_UART_READY;
+//     fibo_queue_put(EYBDEVICE_TASK, &value_put, 0);
+//     APP_PRINT("fibo_queue_put message\r\n");
+//   }
 }
 
 /*******************************************************************************
@@ -422,6 +429,7 @@ void DevIO_halcfg(hal_uart_config_t *hardcfg) {
   * @param  None
   * @retval None
 *******************************************************************************/
+#if 0
 void DeviceIO_init(hal_uart_config_t *cfg) {
   s32_t ret = 0;
 
@@ -467,6 +475,7 @@ void DeviceIO_init(hal_uart_config_t *cfg) {
 
   }
 }
+#endif
 
 /*******************************************************************************
   * @brief  device opt end
@@ -474,13 +483,13 @@ void DeviceIO_init(hal_uart_config_t *cfg) {
   * @param  None
   * @retval None
 *******************************************************************************/
-void DeviceIO_STinit(ST_UARTDCB *cfg) {
+void DeviceIO_init(ST_UARTDCB *cfg) {
   s32_t ret = 0;
   if (cfg == null) {
     // Init device IO UART setting with default 9600 setting
     s_device = null;  // Clear old data
     s_lockDevice = null;
-    StIOCfg = null;
+   
     rcveBuf.payload = null;
 
     ProtocolAttr_t attr;
@@ -511,7 +520,7 @@ void DeviceIO_STinit(ST_UARTDCB *cfg) {
       }
     }
     DevIO_stcfg(&SetCfg);
-  } else if ((StIOCfg == null && cfg != NULL) || r_memcmp(IOCfg, cfg, sizeof(ST_UARTDCB)) != 0) {
+  } else if ((IOCfg == null && cfg != NULL) || r_memcmp(IOCfg, cfg, sizeof(ST_UARTDCB)) != 0) {
     IOCfg = cfg;
     //关闭串口
     fibo_hal_uart_deinit(DEVICE_IO_PORT);
@@ -528,7 +537,7 @@ void DeviceIO_STinit(ST_UARTDCB *cfg) {
   * @param  None
   * @retval None
 *******************************************************************************/
-#if 0
+#if 1
 hal_uart_config_t *DeviceIO_cfgGet(void) {
 
 }
@@ -566,19 +575,83 @@ static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, v
     rcveBuf.size = SERIAL_RX_BUFFER_LEN;
     rcveBuf.lenght = len;
 
-    APP_DEBUG("rcveBuf len:%d size:%d!!\r\n", rcveBuf.size, rcveBuf.lenght);
+   // APP_DEBUG("rcveBuf len:%d size:%d!!\r\n", rcveBuf.size, rcveBuf.lenght);
     if (rcveBuf.lenght != 0) {
-      APP_DEBUG("rcveBuf :%s size:%d!!\r\n", rcveBuf.payload, rcveBuf.lenght);
+     // APP_DEBUG("rcveBuf :%s size:%d!!\r\n", rcveBuf.payload, rcveBuf.lenght);
+        memcpy(rcveBuf.payload, data, len);
+        fibo_hal_uart_deinit(DEVICE_IO_PORT);// 关闭设备串口
     }
   }
 }
 
 DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
   DeviceAck_e result = DEVICE_ACK_FINISH;
+  s32_t ret = 0;
+
+  if (g_UARTIO_AT_enable == 1) {    // SET_TEST=ON时，屏蔽采集指令
+    APP_DEBUG("AT TEST from UARTIO: %d!!\r\n", g_UARTIO_AT_enable);
+    return DEVICE_ACK_FINISH;
+  }
+  if (hard == null || hard->buf->payload == null) {
+    result = DEVICE_ACK_PRAR_ERR;
+  } else if (s_device == null || hard == s_device) {
+    if (lenght == 0 || pData == null) {
+      result = DEVICE_ACK_PRAR_ERR;
+    } else { //
+      int i = 0;
+     
+      i = fibo_hal_uart_put(DEVICE_IO_PORT, (UINT8 *)pData, lenght);
+      if (i == lenght) {
+        APP_DEBUG("Uart send success: %d!!\r\n", i);
+        s_device = hard;
+        s_device->buf->lenght = 0;
+        s_devtimer = fibo_timer_new(1500, dev_timer_function, NULL);
+
+        if (s_devtimer = 0) {
+          log_save("Start DEVICE_OVERTIME_ID timer failed, g_test_timer = %d", s_devtimer);
+        }
+        result = DEVICE_ACK_FINISH;
+      } else {
+        // log_saveAbnormal("Uart send fail !!", i);     // mike 20200824
+        APP_DEBUG("Uart send fail: %d!!\r\n", i);
+        log_save("Uart send fail: %d!!", i);
+        result = DEVICE_ACK_HARD_FAULT;
+      }
+     
+    }
+  } else if (s_lockDevice != null) {
+    result = DEVICE_ACK_LOCK;
+  } else {
+    result = DEVICE_ACK_BUSY;
+  }
   return result;
 
 }
 
+/*******************************************************************************
+  * @brief  DeviceIO_reset
+  * @note   None
+  * @param  None
+  * @retval None
+*******************************************************************************/
+
+void DeviceIO_reset(void) {
+//   Ql_UART_Close(DEVICE_IO_PORT);
+//   s32_t ret = 0;
+//   ret = Ql_Timer_Stop(DEVICE_OVERTIME_ID);    // mike 20200910
+//   if (ret != QL_RET_OK) {
+//     APP_DEBUG("Stop OVERTIME error!! ret:%d\r\n", ret);
+//   } else {
+//     APP_DEBUG("Stop OVERTIME Success!!\r\n");
+//   }
+//   s_lockDevice = null;
+//   IOCfg = null;
+//   memory_release(rcveBuf.payload);
+// //  if (rcveBuf.payload != NULL) {    // mike 20200828
+// //    Ql_MEM_Free(rcveBuf.payload);
+// //    rcveBuf.payload = null;
+// //  }
+}
 /*******************************************************************************
   * @brief  device opt end
   * @note   None
@@ -676,5 +749,17 @@ static void wrtie(Buffer_t *buf) {
 
 void Dev_Print_output(u8_t *p, u16_t len) {
   fibo_hal_uart_put(DEVICE_IO_PORT, (UINT8 *)p, (u32_t)len);
+}
+
+/*******************************************************************************
+  * @brief  定时器回调函数
+  * @note   None
+  * @param  None
+  * @retval None
+*******************************************************************************/
+static void dev_timer_function(void *arg)
+{
+    APP_DEBUG("timer function execute ...\r\n");
+    fibo_timer_free(s_devtimer);
 }
 /*********************************FILE END*************************************/

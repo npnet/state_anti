@@ -80,7 +80,7 @@ static FIBO_CALLBACK_T user_callback = {
 void * appimg_enter(void *param) {
   OSI_LOGI(0, "application image enter");
   Debug_init(); // 上电配置串口
-  DeviceIO_STinit(NULL);//上电配置设备口
+
   APP_PRINT("Eybond 4G L610 Application!!\r\n");
   APP_PRINT("Version: %s\r\n", FWVERSION);
   APP_PRINT("Time: %s\r\n", MAKE_TIME);

@@ -746,7 +746,7 @@ struct _ParamDescripTable_t PDT[] = {
   {11,  "1",                       setDevicesOnline,           getDevicesOnline},        /* 在线设备数 */
   {12,  "1",                       setDevicesLimit,            getDevicesLimit},         /* 设备监控数量 */
   {13,  "2000",                    setPollingCycle,            getPollingCycle},         /* 设备轮询周期 */
-  {14,  "02FF,1,1,#9600-8-1-0#",   setAttribSet,               getAttribSet},            /* 设备属性集合 */
+  {14,  "0260,1,1,#9600-8-1-0#",   setAttribSet,               getAttribSet},            /* 设备属性集合 */
   {15,  "1",                       setLocalIPType,             getLocalIPType},          /* 本端IP分配方式 */
   {16,  "0",                       setLocalIPAddr,             getLocalIPAddr},          /* 本端IP地址 */
   {17,  "0",                       setLocalIPMask,             getLocalIPMask},          /* 本端子网掩码 */

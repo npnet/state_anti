@@ -55,8 +55,8 @@ ST_UARTDCB *DeviceIO_cfgGet(void);
 #include "oc_uart.h"
 //#define MYAPP_PRINT(FORMAT,...)
 
-void DeviceIO_init(hal_uart_config_t *cfg);
-void DeviceIO_STinit(ST_UARTDCB *cfg); 
+//void DeviceIO_init(hal_uart_config_t *cfg);
+void DeviceIO_init(ST_UARTDCB *cfg); 
 void DevIO_stcfg(ST_UARTDCB* hardcfg); 
 void DevIO_halcfg(hal_uart_config_t* hardcfg);
 hal_uart_config_t *DeviceIO_cfgGet(void);
@@ -81,6 +81,7 @@ void Dev_Print_output(u8_t *p, u16_t len);
 #endif
 
 void DeviceIO_reset(void);
+hal_uart_config_t *DeviceIO_cfgGet(void);
 DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght);
 void    DeviceIO_lock(DeviceInfo_t *hard);
 void    DeviceIO_unlock(void);

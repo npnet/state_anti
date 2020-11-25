@@ -419,7 +419,7 @@ void Protocol_init(void) {
     }
   } */  // mike 20201028
 
-  r_memset(&attr, 0, sizeof(ProtocolAttr_t));
+ // r_memset(&attr, 0, sizeof(ProtocolAttr_t));
   if (protocolAttrGet(DEVICE_PROTOCOL, &attr) != 0) {
     goto END;
   }
@@ -452,12 +452,15 @@ void Protocol_init(void) {
       if (attr.cfg.baudrate == 0) {
         APP_DEBUG("ModbusDevice UART setting config is null\r\n");
         ModbusDevice.cfg->baudrate = UART_9600_N1.baudrate;
+        APP_DEBUG("ModbusDevice UART baudrate = %d\r\n",UART_9600_N1.baudrate);
         ModbusDevice.cfg->dataBits = UART_9600_N1.dataBits;
         ModbusDevice.cfg->stopBits = UART_9600_N1.stopBits;
         ModbusDevice.cfg->parity = UART_9600_N1.parity;
         ModbusDevice.cfg->flowCtrl = UART_9600_N1.flowCtrl;
       } else {
+        APP_DEBUG("ModbusDevice UART setting config is not null\r\n");
         ModbusDevice.cfg->baudrate = attr.cfg.baudrate;
+        APP_DEBUG("ModbusDevice UART baudrate = %d\r\n",attr.cfg.baudrate);
         ModbusDevice.cfg->dataBits = attr.cfg.dataBits;
         ModbusDevice.cfg->stopBits = attr.cfg.stopBits;
         ModbusDevice.cfg->parity = attr.cfg.parity;

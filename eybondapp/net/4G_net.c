@@ -75,8 +75,8 @@ void proc_net_task(s32_t taskId) {
       case APP_MSG_UART_READY:
         APP_DEBUG("Net task APP_MSG_UART_READY\r\n");
         break;
-      case NET_CMD_RESTART_ID:
-//        restart_net();
+      case NET_MSG_GSM_READY:
+        APP_PRINT("\r\ndns success!!!next ready to creat socket\r\n");
         break;
       case APP_MSG_TIMER_ID:  // 从APP task传递过来的定时器(1000 ms)消息
 //        APP_DEBUG("Net task get APP_USER_TIMER_ID:%ld\r\n", NetOvertime);
@@ -85,7 +85,7 @@ void proc_net_task(s32_t taskId) {
         break;
     }
   }
-  fibo_thread_delete();
+  //fibo_thread_delete();
 }
 
 /*******************************************************************************

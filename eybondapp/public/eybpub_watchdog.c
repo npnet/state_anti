@@ -20,7 +20,7 @@
 #include "eybpub_Clock.h"
 #include "eybapp_appTask.h"
 
-static u8_t FeedFlag;
+u8_t FeedFlag;
 
 #ifdef _PLATFORM_BC25_
 #ifndef WATCHDOG_PIN	//mike 20200805

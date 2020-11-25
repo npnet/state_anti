@@ -20,6 +20,7 @@
 #include "DeviceIO.h"
 #include "eybond.h"
 #include "L610_conn_ali_net.h"
+#include "restart_net.h"
 
 UINT32 EYBAPP_TASK = 0;
 UINT32 EYBNET_TASK = 0;
@@ -106,6 +107,7 @@ void * appimg_enter(void *param) {
   UINT32 app_thread_id = 0;
   UINT32 dev_thread_id = 0;
   UINT32 eyb_thread_id = 0;
+  UINT32 relink_thread_id = 0;
   UINT32 ali_thread_id = 0;
 
   EYBAPP_TASK = fibo_queue_create(5, sizeof(ST_MSG));
@@ -113,6 +115,8 @@ void * appimg_enter(void *param) {
   EYBDEVICE_TASK = fibo_queue_create(5, sizeof(ST_MSG));
   EYBOND_TASK = fibo_queue_create(5, sizeof(ST_MSG));
   ALIYUN_TASK = fibo_queue_create(5, sizeof(ST_MSG));
+
+  fibo_thread_create_ex(proc_relink_task, "Eybond RELINK TASK", 1024*8*2, NULL, OSI_PRIORITY_NORMAL, &relink_thread_id);
   fibo_thread_create_ex(proc_net_task,    "Eybond NET TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &net_thread_id);
   fibo_thread_create_ex(proc_app_task,    "Eybond APP TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &app_thread_id);
   fibo_thread_create_ex(proc_device_task, "Eybond DEVICE TASK", 1024*8*2, NULL, OSI_PRIORITY_NORMAL, &dev_thread_id);

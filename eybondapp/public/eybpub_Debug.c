@@ -288,6 +288,11 @@ void Debug_trace(u8_t *p, u16_t len) {
 void Print_output(u8_t *p, u16_t len) {
   fibo_hal_uart_put(DEBUG_PORT, (UINT8 *)p, len);
 }
+
+void Debug_output(u8_t *p, u16_t len) {
+  fibo_hal_uart_put(DEBUG_PORT, (UINT8 *)p, len);
+}
+
 #endif
 #endif
 /*********************************FILE END*************************************/

@@ -77,11 +77,11 @@ void proc_net_task(s32_t taskId) {
         L610Net_init();
         break;
       case NET_MSG_SIM_READY:
-        APP_DEBUG("Net task NET_MSG_SIM_READY\r\n");
-        break;
+        APP_PRINT("\r\nsim card ready!!!\r\n");
+        break; 
       case NET_MSG_SIM_FAIL:
-        APP_DEBUG("Net task NET_MSG_SIM_FAIL\r\n");
-        break;
+        APP_PRINT("\r\nsim card no insert!!!\r\n");
+        break; 
       case NET_MSG_GSM_READY:
         APP_DEBUG("Net task NET_MSG_GSM_READY\r\n");
         GSMLED_On();
@@ -104,7 +104,7 @@ void proc_net_task(s32_t taskId) {
         break;
     }
   }
-  fibo_thread_delete();
+  //fibo_thread_delete();
 }
 
 /*******************************************************************************

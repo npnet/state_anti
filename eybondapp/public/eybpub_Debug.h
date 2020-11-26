@@ -89,6 +89,8 @@ extern void Print_output(u8_t *p, u16_t len);
 }
 
 #else
+
+///
 extern void Debug_output(u8_t *p, u16_t len);
 #define APP_DEBUG(FORMAT,...)
 // #define APP_PRINT(FORMAT,...)

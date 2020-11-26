@@ -131,7 +131,7 @@ void * appimg_enter(void *param) {
   EYBOND_TASK = fibo_queue_create(5, sizeof(ST_MSG));
   ALIYUN_TASK = fibo_queue_create(5, sizeof(ST_MSG));
 
-//  fibo_thread_create_ex(proc_relink_task, "Eybond RELINK TASK", 1024*8*2, NULL, OSI_PRIORITY_NORMAL, &relink_thread_id);
+  fibo_thread_create_ex(proc_relink_task, "Eybond RELINK TASK", 1024*8*2, NULL, OSI_PRIORITY_NORMAL, &relink_thread_id);
   fibo_thread_create_ex(proc_net_task,    "Eybond NET TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &net_thread_id);
   fibo_taskSleep(1000);
   fibo_thread_create_ex(proc_app_task,    "Eybond APP TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &app_thread_id);

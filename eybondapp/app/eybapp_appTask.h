@@ -36,12 +36,14 @@
 #define  APP_CMD_BEEP_ID    0x00FA01
 #define  APP_CMD_GSM_READY  0x00FA03
 
-#define  APP_MSG_UART_READY        MSG_ID_USER_APP_START+0xFA4  //调试串口OK
+#define  APP_MSG_UART_READY        MSG_ID_USER_APP_START+0xFA4  // 调试串口OK
 #define  APP_MSG_TIMER_ID          MSG_ID_USER_APP_START+0xFA5
 #define  APP_MSG_DEVTIMER_ID       MSG_ID_USER_APP_START+0xFA6
 #define  APP_MSG_WDG_ID            MSG_ID_USER_APP_START+0xFA7
-#define  APP_DEBUG_MSG_ID          MSG_ID_USER_APP_START+0xFA8
-#define  APP_MSG_DEVUART_READY     MSG_ID_USER_APP_START+0xFA9  //设备串口OK
+#define  APP_DEBUG_MSG_ID          MSG_ID_USER_APP_START+0xFA8  // DEBUG串口指令输入
+#define  APP_MSG_DEVUART_READY     MSG_ID_USER_APP_START+0xFA9  // 设备串口OK
+#define  APP_DEVICE_IO_ID          MSG_ID_USER_APP_START+0xFAA  // 设备串口指令输入
+
 #endif
 
 void proc_app_task(s32_t taskId);

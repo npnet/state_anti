@@ -202,9 +202,10 @@ void UARTDEBUG_CallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void
       UARTDEBUG_buf.lenght = len;
 
 #if DEBUG_INPUT_EHCO > 0
-      char *pCh = NULL;
       // Echo
       fibo_hal_uart_put(uart_port, UARTDEBUG_buf.payload, UARTDEBUG_buf.lenght);
+#endif
+      char *pCh = NULL;
       pCh = r_strstr((char *)UARTDEBUG_buf.payload, "\r\n");
       if (pCh != NULL) {
         *(pCh + 0) = '\0';
@@ -213,7 +214,6 @@ void UARTDEBUG_CallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void
       } else {
         APP_DEBUG("DEBUG UART no Enter & New Line\r\n");
       }
-#endif
       Eybpub_UT_SendMessage(EYBAPP_TASK, APP_DEBUG_MSG_ID, (u32_t)(&UARTDEBUG_buf), (u32_t)((void*)Debug_buffer));
       break;
     default:

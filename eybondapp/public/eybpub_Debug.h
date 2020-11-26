@@ -7,7 +7,7 @@
 #ifndef __EYBPUB_DEBUG_H_
 #define __EYBPUB_DEBUG_H_
 
-//#define EYBOND_DEBUG_ENABLE    // 打开DEBUG log
+#define EYBOND_DEBUG_ENABLE    // 打开DEBUG log
 // #define EYBOND_TRACE_ENABLE    // 将DEBUG log输出改为TRACE模式,不能直接用TRACE_ENABLE做开关,会影响SDK里面的接口
 #define DBG_BUF_LEN     1024
 
@@ -70,7 +70,7 @@ extern void Debug_trace(u8_t *p, u16_t len);
 static char DebugBuffer[DBG_BUF_LEN];
 #define DEBUG_PORT_BITRATE 115200
 
-#define DEBUG_INPUT_EHCO   1
+#define DEBUG_INPUT_EHCO   0
 
 #ifdef EYBOND_DEBUG_ENABLE
 void  Debug_buffer(Buffer_t *buf);
@@ -89,8 +89,6 @@ extern void Print_output(u8_t *p, u16_t len);
 }
 
 #else
-
-///
 extern void Debug_output(u8_t *p, u16_t len);
 #define APP_DEBUG(FORMAT,...)
 // #define APP_PRINT(FORMAT,...)

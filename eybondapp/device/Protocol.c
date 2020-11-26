@@ -452,7 +452,7 @@ void Protocol_init(void) {
       if (attr.cfg.baudrate == 0) {
         APP_DEBUG("ModbusDevice UART setting config is null\r\n");
         ModbusDevice.cfg->baudrate = UART_9600_N1.baudrate;
-        APP_DEBUG("ModbusDevice UART baudrate = %d\r\n",UART_9600_N1.baudrate);
+        APP_DEBUG("ModbusDevice UART baudrate = %ld\r\n",UART_9600_N1.baudrate);
         ModbusDevice.cfg->dataBits = UART_9600_N1.dataBits;
         ModbusDevice.cfg->stopBits = UART_9600_N1.stopBits;
         ModbusDevice.cfg->parity = UART_9600_N1.parity;
@@ -460,7 +460,7 @@ void Protocol_init(void) {
       } else {
         APP_DEBUG("ModbusDevice UART setting config is not null\r\n");
         ModbusDevice.cfg->baudrate = attr.cfg.baudrate;
-        APP_DEBUG("ModbusDevice UART baudrate = %d\r\n",attr.cfg.baudrate);
+        APP_DEBUG("ModbusDevice UART baudrate = %ld\r\n",attr.cfg.baudrate);
         ModbusDevice.cfg->dataBits = attr.cfg.dataBits;
         ModbusDevice.cfg->stopBits = attr.cfg.stopBits;
         ModbusDevice.cfg->parity = attr.cfg.parity;

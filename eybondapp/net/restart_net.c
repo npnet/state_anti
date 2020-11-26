@@ -436,7 +436,7 @@ void proc_relink_task (s32_t relink)
         } 
         break;
     case RELINK_TIMER_ID:  // 从APP task传递过来的定时器(1000 ms)消息
-        APP_DEBUG("Net task get APP_USER_TIMER_ID:%ld\r\n", NetOvertime);
+        APP_DEBUG("Net task get RELINK_TIMER_ID\r\n");
         realtime_check_net();
         break;
       default:

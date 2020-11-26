@@ -375,7 +375,6 @@ static s32 APP_ATResponse_Handler(char *line, u32 len, void *userData) {
 
 #ifdef _PLATFORM_L610_
 void proc_app_task(s32_t taskId) {
-//  int msg = 0;
   ST_MSG msg;
   Buffer_t *buf;
 
@@ -388,6 +387,39 @@ void proc_app_task(s32_t taskId) {
   APP_PRINT("App task run...\r\n");
   r_memset(&msg, 0, sizeof(ST_MSG));
 
+#ifdef __TEST_FOR_UFS__
+  APP_DEBUG("FILE System TEST!\r\n");
+  s8_t space = 0;      // 注意不要做%和/运算
+  // check freespace
+  space  = fibo_file_getFreeSize();
+  APP_DEBUG("fibo_file_getFreeSize=%d \r\n", space);
+  // check total space
+  s32_t file_a_size = fibo_file_getSize(g_recName_parameter_aa);
+  APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
+  if (file_a_size > 0) {
+    APP_DEBUG("para_file_a is exist, size:%ld\r\n", file_a_size);
+  // fibo_file_delete(g_recName_parameter_aa);   // for testing
+  }
+  APP_DEBUG("Check para_file_b \r\n");
+  s32_t file_b_size = fibo_file_getSize(g_recName_parameter_ab);
+  APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
+  if (file_b_size > 0) {
+    APP_DEBUG("para_file_b is exist, size:%ld\r\n", file_b_size);
+    //    fibo_file_delete(g_recName_parameter_ab);   // for testing
+  }
+  s32_t file_log_size = fibo_file_getSize(run_log_aa);
+  APP_DEBUG("file_log_size is %ld\r\n", file_log_size);
+  if (file_log_size > 0) {
+    APP_DEBUG("run_log_a is exist, size:%ld\r\n", file_log_size);
+    if (file_log_size >  152756) {
+      APP_DEBUG("file_log_size is too big, delete it!\r\n");
+      fibo_file_delete(run_log_aa);
+    }
+  }
+#endif
+  log_init();
+  Clock_init();
+
   WDG_timer = fibo_timer_period_new(WDG_time_Interval, UserTimerWDGcallback, NULL);  // 注册外部看门狗Timer
   if (WDG_timer == 0) {
     log_save("Register WGD timer(%d) failed!!\r\n");
@@ -398,43 +430,36 @@ void proc_app_task(s32_t taskId) {
     switch (msg.message) {
       case APP_MSG_UART_READY:
         APP_DEBUG("App task APP_MSG_UART_READY\r\n");
-#ifdef __TEST_FOR_UFS__
-        APP_DEBUG("FILE System TEST!\r\n");
-        s8_t space = 0;      // 注意不要做%和/运算
-        // check freespace
-        space  = fibo_file_getFreeSize();
-        APP_DEBUG("fibo_file_getFreeSize=%d \r\n", space);
-        // check total space
-        s32_t file_a_size = fibo_file_getSize(g_recName_parameter_aa);
-        APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
-        if (file_a_size > 0) {
-          APP_DEBUG("para_file_a is exist, size:%ld\r\n", file_a_size);
-          //    fibo_file_delete(g_recName_parameter_aa);   // for testing
-        }
-        APP_DEBUG("Check para_file_b \r\n");
-        s32_t file_b_size = fibo_file_getSize(g_recName_parameter_ab);
-        APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
-        if (file_b_size > 0) {
-          APP_DEBUG("para_file_b is exist, size:%ld\r\n", file_b_size);
-          //    fibo_file_delete(g_recName_parameter_ab);   // for testing
-        }
-        s32_t file_log_size = fibo_file_getSize(run_log_aa);
-        APP_DEBUG("file_log_size is %ld\r\n", file_log_size);
-        if (file_log_size > 0) {
-          APP_DEBUG("run_log_a is exist, size:%ld\r\n", file_log_size);
-          if (file_log_size >  152756) {
-            APP_DEBUG("file_log_size is too big, delete it!\r\n");
-            fibo_file_delete(run_log_aa);
-          }
-        }
-#endif
-        log_init();
-        Clock_init();
         SysPara_init();  // mike 重点死机问题函数, RIL库完成加载后初始化所有现场参数
+        break;
+      case NET_MSG_SIM_READY:   // SIM卡插入了
+        APP_DEBUG("Get NET_MSG_SIM_READY MSG\r\n");
+        break;
+      case NET_MSG_SIM_FAIL:
+        APP_DEBUG("Get NET_MSG_SIM_FAIL MSG\r\n");
+        break;
+      case NET_MSG_GSM_READY:  // 注网成功消息
+        APP_DEBUG("Get NET_MSG_GSM_READY MSG\r\n");
         APP_timer = fibo_timer_period_new(APP_time_Interval, UserTimerAPPscallback, &m_timeCnt);    // 注册APPTimer
         if (APP_timer == 0) {
           log_save("Register app timer(%d) fail", APP_timer);
         }
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_READY, 0, 0);
+        break;
+      case NET_MSG_GSM_FAIL:
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_FAIL, 0, 0);
+        break;
+      case NET_MSG_NET_READY:    // 连接服务器成功消息
+        APP_DEBUG("Get NET_MSG_NET_READY MSG\r\n");
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_NET_READY, 0, 0);
+        break;
+      case NET_MSG_NET_FAIL:    // 连接服务器成功消息
+        APP_DEBUG("Get NET_MSG_NET_FAIL MSG\r\n");
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_NET_FAIL, 0, 0);
+        break;
+      case APP_CMD_BEEP_ID:  // mike 20200817 APP蜂鸣指令
+        APP_DEBUG("App task APP_CMD_BEEP_ID\r\n");
+        Beep_Run();
         break;
       case APP_MSG_WDG_ID:
 //        APP_DEBUG("App task APP_MSG_WDG_ID %ld\r\n", m_wdgCnt);
@@ -459,6 +484,17 @@ void proc_app_task(s32_t taskId) {
       case APP_DEBUG_MSG_ID:
         buf = (Buffer_t *)msg.param1;
         APP_DEBUG("App task APP_DEBUG_MSG_ID:%s %d\r\n", (char *) buf->payload, buf->lenght);
+        if (buf->lenght > 2 && 0 == r_strncmp((char *)buf->payload, "AT", 2)) {
+          r_memcpy(&buf->payload[buf->lenght], "\r\n", 3);
+          buf->lenght += 3;
+          fibo_at_send(buf->payload, buf->lenght);
+        } else {
+          strCmp(buf, (void_fun_bufp)((void *)msg.param2));
+        }
+        break;
+      case APP_DEVICE_IO_ID:
+        buf = (Buffer_t *)msg.param1;
+        APP_DEBUG("App task APP_DEVICE_IO_ID:%s %d\r\n", (char *) buf->payload, buf->lenght);
         if (buf->lenght > 2 && 0 == r_strncmp((char *)buf->payload, "AT", 2)) {
           r_memcpy(&buf->payload[buf->lenght], "\r\n", 3);
           buf->lenght += 3;

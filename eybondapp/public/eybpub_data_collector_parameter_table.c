@@ -717,15 +717,14 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
     {56,  "",                       },         /* 通信卡CCID */
     {57,  "",                       },
     {58,  "",                       },
-    {82,  "300",                    },          /* 主动上报间隔时间 */
-
+    {82,  "300",                    },         /* 主动上报间隔时间 */
+    // 阿里MQTT
 	{92,  ""                        },         /*product_key*/
   	{93,  ""                        },		   /*device_name*/
   	{94,  ""                        },         /*device_secret*/
 	{95,  ""                        },         /*pub_topic*/
 	{96,  ""                        },         /*sub_topic*/
 	{97,  "0"                       },         /*total_working_time 累计工作时间*/
-
 };
 
 /* 数采器参数读写接口 */
@@ -779,15 +778,13 @@ struct _ParamDescripTable_t PDT[] = {
   {57,  "apn:user,pwd",            setAPN,                     getAPN},
   {58,  "0",                       setCPUID,                   getCPUID},
   {82,  "300",                     setReportTime,              getReportTime},
-
+  // 阿里MQTT
   {92,  "0",                       setProdectKey,              getProdectKey },         /*product_key*/
   {93,  "0",                       setDevName,                 getDevName    },		    /*device_name*/
   {94,  "0",                       setDevSecret,               getDevSecret  },         /*device_secret*/
   {95,  "0",                       setPubTopic,                getPubTopic   },         /*pub_topic*/
-  {96,  "0",                       setSubTopic,                getSubTopic   },          /*sub_topic*/
+  {96,  "0",                       setSubTopic,                getSubTopic   },         /*sub_topic*/
   {97,  "0",                       setTotoalWorkTime,          getTotoalWorkTime },     /*total_working_time 累计工作时间*/
-                                                                         
-  
 };
 /*----------------------------------------------------------------------------*
 **                             Global Vars                                    *

@@ -313,7 +313,7 @@ static void deviceCmdSend(void) {
 //  static DeviceInfo_t deviceInfo;
   static Device_t *currentDevice;     //
 
-//  APP_DEBUG("Device Step %d waitTime is %04X!!\r\n", currentStep, watiTime);
+  APP_DEBUG("Device Step %d waitTime is %04X!!\r\n", currentStep, watiTime);
   switch (currentStep) {
     case 0:
       currentDevice = null;
@@ -340,12 +340,7 @@ static void deviceCmdSend(void) {
         currentCmd = null;
         if (currentDevice->cfg != null) {
           APP_DEBUG("currentDevice->cfg is %ld!!\r\n", currentDevice->cfg->baudrate);
-#ifdef _PLATFORM_BC25_          
           DeviceIO_init(currentDevice->cfg);
-#endif
-#ifdef _PLATFORM_L610_
-          DeviceIO_init(currentDevice->cfg);
-#endif
           watiTime = 1;
         } else if (DeviceIO_cfgGet() == null) {
           APP_DEBUG("Uart No Init!!\r\n");
@@ -395,7 +390,7 @@ static void deviceCmdSend(void) {
 //        APP_DEBUG("Device waittime:%d\r\n", deviceInfo.waitTime);
 //        APP_DEBUG("Device buf length:%d\r\n", deviceInfo.buf->lenght);
 //        APP_DEBUG("Device buf:%s\r\n", deviceInfo.buf->payload);
-        DeviceIO_init(null);//测试 下发指令前重新配置串口，接收完数据后关闭串口
+//        DeviceIO_init(null);//测试 下发指令前重新配置串口，接收完数据后关闭串口
         e = DeviceIO_write(&deviceInfo, currentCmd->cmd.payload, currentCmd->cmd.lenght);   // 把指令写到串口
         watiTime = 10;
         if (DEVICE_ACK_FINISH != e) {
@@ -480,8 +475,8 @@ void proc_device_task (s32_t taskId) {
   ST_MSG msg;
   int deviceResetCnt = 0;
   APP_PRINT("Devce task run...\r\n");
- // DeviceIO_STinit(NULL);//设备口初始化
-  DevAPP_PRINT("DevAPP_PRINT running");
+// DeviceIO_STinit(NULL);//设备口初始化
+//  DevAPP_PRINT("DevAPP_PRINT running");
   r_memset(&msg, 0, sizeof(ST_MSG));
   deviceResetCnt = 0;
   currentStep = 0;
@@ -490,22 +485,19 @@ void proc_device_task (s32_t taskId) {
   m_timeCheck_DEV = 0;
     
   while (1) {
-    
     fibo_queue_get(EYBDEVICE_TASK, (void *)&msg, 0);  
-    APP_PRINT("msg.message = %x\r\n",msg.message);
+//    APP_PRINT("msg.message = %x\r\n",msg.message);
     switch (msg.message) {
       case APP_MSG_UART_READY:  // 串口OK
         APP_DEBUG("Get APP_MSG_UART_READY MSG\r\n");
         list_init(&DeviceList);
         DeviceIO_init(null);
-        Protocol_init();
         break;
       case NET_MSG_RIL_READY:
-      case NET_MSG_RIL_FAIL:
         APP_DEBUG("Get NET_MSG_RIL_READY MSG\r\n");
-        // DeviceIO_init(null);
-        // Protocol_init();
         break;
+      case NET_MSG_RIL_FAIL:
+        APP_DEBUG("Get NET_MSG_RIL_FAIL MSG\r\n");
         break;
       case NET_MSG_SIM_READY:
         APP_DEBUG("Get NET_MSG_SIM_READY MSG\r\n");
@@ -514,6 +506,7 @@ void proc_device_task (s32_t taskId) {
         break;
       case NET_MSG_GSM_READY:    // 注网OK
         APP_DEBUG("Get NET_MSG_GSM_READY MSG\r\n");
+        Protocol_init();
         break;
       case NET_MSG_GSM_FAIL:    // 注网FAIL
         break;
@@ -548,16 +541,14 @@ void proc_device_task (s32_t taskId) {
           APP_DEBUG("Device IO UART AT mode is enable, don't reset device!!\r\n");
           break;
         }
-/*        if (msg.param1 == DEVICE_MONITOR_NUM || msg.param1 == DEVICE_PROTOCOL
+        if (msg.param1 == DEVICE_MONITOR_NUM || msg.param1 == DEVICE_PROTOCOL
           || msg.param1 == DEVICE_UART_SETTING || msg.param1 == DEVICE_SYSTEM) {
           DeviceIO_reset();
           Protocol_clean();
           Device_clear();
-//          memory_trans(Debug_output);   //mike 20200805
-//          CommonServer_DeviceInit();    //mike 20200805
           Protocol_init();
           deviceLEDOff();
-        } */
+        }
         watiTime = 10;
         break;
       case APP_MSG_DEVTIMER_ID:     //mike 20200915

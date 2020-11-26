@@ -46,22 +46,15 @@ void DeviceIO_init(ST_UARTDCB *cfg);
 ST_UARTDCB *DeviceIO_cfgGet(void);
 #endif
 
-
-
-
 #ifdef _PLATFORM_L610_
-
 #include "L610_UARTConfig.h"
 #include "oc_uart.h"
 //#define MYAPP_PRINT(FORMAT,...)
 
-//void DeviceIO_init(hal_uart_config_t *cfg);
-void DeviceIO_init(ST_UARTDCB *cfg); 
+void DeviceIO_init(ST_UARTDCB *cfg);
+
 void DevIO_stcfg(ST_UARTDCB* hardcfg); 
 void DevIO_halcfg(hal_uart_config_t* hardcfg);
-hal_uart_config_t *DeviceIO_cfgGet(void);
-
-
 /*******************************************************************************
   * @brief  设备口打印函数
   * @note   None
@@ -76,18 +69,15 @@ void Dev_Print_output(u8_t *p, u16_t len);
     snprintf(DevBuffer, 1024, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
     Dev_Print_output((u8_t*)DevBuffer, strlen(DevBuffer));\
 }
-
-
 #endif
 
 void DeviceIO_reset(void);
-hal_uart_config_t *DeviceIO_cfgGet(void);
 DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght);
 void    DeviceIO_lock(DeviceInfo_t *hard);
 void    DeviceIO_unlock(void);
 DeviceInfo_t *DeviceIO_lockState(void);
 void  Uart_write(u8_t *data, u16_t len);
-
+ST_UARTDCB *DeviceIO_cfgGet(void);
 extern s8_t g_UARTIO_AT_enable;
 
 #endif //__DEVICE_IO_

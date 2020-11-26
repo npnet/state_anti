@@ -1190,7 +1190,7 @@ void proc_eybond_task(s32_t taskId) {
   m_timeCheck_EYB = 0;
   int timeReport = 60;
   APP_PRINT("Eybond task run...\r\n");
-//  r_memset(&msg, 0, sizeof(ST_MSG));
+  r_memset(&msg, 0, sizeof(ST_MSG));
   list_init(&rcveList);  
 
   while (1) {

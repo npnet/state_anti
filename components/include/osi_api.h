@@ -149,14 +149,14 @@ typedef struct osiEvent
  */
 typedef enum osiThreadPriority
 {
-    OSI_PRIORITY_IDLE               = 1, // reserved
-    OSI_PRIORITY_LOW                = 8,
-    OSI_PRIORITY_BELOW_NORMAL       = 16,
-    OSI_PRIORITY_NORMAL             = 24,
-    OSI_PRIORITY_ABOVE_NORMAL       = 32,
-    OSI_PRIORITY_HIGH               = 40,
-    OSI_PRIORITY_REALTIME           = 48,
-    OSI_PRIORITY_HISR               = 56, // reserved
+    OSI_PRIORITY_IDLE = 1, // reserved
+    OSI_PRIORITY_LOW = 8,
+    OSI_PRIORITY_BELOW_NORMAL = 16,
+    OSI_PRIORITY_NORMAL = 24,
+    OSI_PRIORITY_ABOVE_NORMAL = 32,
+    OSI_PRIORITY_HIGH = 40,
+    OSI_PRIORITY_REALTIME = 48,
+    OSI_PRIORITY_HISR = 56, // reserved
 } osiThreadPriority_t;
 
 /**

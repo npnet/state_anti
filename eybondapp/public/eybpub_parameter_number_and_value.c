@@ -802,7 +802,7 @@ void parameter_init(void) { // 依据参数文件A初始化PDT表
   }
 
   for (j = 0; j < number_of_array_elements; j++) {
-    APP_DEBUG("%03d:%s len:%d\r\n", PDT[j].num, PDT[j].a, strlen(PDT[j].a));
+//    APP_DEBUG("%03d:%s len:%d\r\n", PDT[j].num, PDT[j].a, strlen(PDT[j].a));
   }
 
   APP_DEBUG("Parameter init OK!!\r\n");
@@ -818,9 +818,9 @@ void a_compare_b(void) {
   APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
 
   parameter_a_md5 = fibo_malloc(sizeof(u8_t) * 32);
-  r_memset(parameter_a_md5, 0, sizeof(u8_t) * 32);
+  r_memset(parameter_a_md5, '\0', sizeof(u8_t) * 32);
   parameter_a_md5_s = fibo_malloc(sizeof(u8_t) * 32);
-  r_memset(parameter_a_md5_s, 0, sizeof(u8_t) * 32);
+  r_memset(parameter_a_md5_s, '\0', sizeof(u8_t) * 32);
 
   parameter_a_MD5Verify_Func(parameter_a_md5, file_a_size - 32, 512);   // 得到文件A的MD5值
   hextostr(parameter_a_md5, parameter_a_md5_s, 16);
@@ -834,9 +834,9 @@ void a_compare_b(void) {
   APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
 
   parameter_b_md5 = fibo_malloc(sizeof(u8_t) * 32);
-  r_memset(parameter_b_md5, 0, sizeof(u8_t) * 32);
+  r_memset(parameter_b_md5, '\0', sizeof(u8_t) * 32);
   parameter_b_md5_s = fibo_malloc(sizeof(u8_t) * 32);
-  r_memset(parameter_b_md5_s, 0, sizeof(u8_t) * 32);
+  r_memset(parameter_b_md5_s, '\0', sizeof(u8_t) * 32);
 
   parameter_b_MD5Verify_Func(parameter_b_md5, file_b_size - 32, 512);   // 得到文件B的MD5值
   hextostr(parameter_b_md5, parameter_b_md5_s, 16);
@@ -847,7 +847,7 @@ void a_compare_b(void) {
   }
 
   int compute_compare_result = 0;           // 对比两个文件的MD5数据
-  compute_compare_result = r_strcmp((char *)parameter_a_md5_s, (char *)parameter_b_md5_s);
+  compute_compare_result = r_strncmp((char *)parameter_a_md5_s, (char *)parameter_b_md5_s, 32);
   u8_t *para_a_md5 = NULL;
   u8_t *para_b_md5 = NULL;
 
@@ -868,8 +868,8 @@ void a_compare_b(void) {
     ret = fibo_file_close(g_iFd_parameter_a);
 
     int compute_compare_result_a = 0;
-    compute_compare_result_a = r_strcmp((char *)parameter_a_md5_s,
-                                         (char *)para_a_md5);  // 对比文件A的MD5值，判断是否被非法更改过
+    compute_compare_result_a = r_strncmp((char *)parameter_a_md5_s,
+                                         (char *)para_a_md5, 32);  // 对比文件A的MD5值，判断是否被非法更改过
 
     para_b_md5 = fibo_malloc(sizeof(u8_t) * 32);
     r_memset(para_b_md5, 0, sizeof(u8_t) * 32);
@@ -883,8 +883,8 @@ void a_compare_b(void) {
     ret = fibo_file_close(g_iFd_parameter_b);
 
     int compute_compare_result_b = 0;
-    compute_compare_result_b = r_strcmp((char *)parameter_b_md5_s,
-                                         (char *)para_b_md5);         // 对比文件B的MD5值，判断是否被非法更改过
+    compute_compare_result_b = r_strncmp((char *)parameter_b_md5_s,
+                                         (char *)para_b_md5, 32);         // 对比文件B的MD5值，判断是否被非法更改过
 
     if (0 == compute_compare_result_a) {
       APP_DEBUG("compute value para_a_md5 = Existing value para_a_md5\r\n");

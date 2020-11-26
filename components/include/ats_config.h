@@ -20,7 +20,7 @@
 
 #define GMI_ID "FIBOCOM"
 #define GMM_ID "L610_CN_00_90_ALIOS-debug"
-#define GMR_ID "DEVEL-gL610_CN_02_92_V01_202010201015-12-ga63dc739-dirty"
+#define GMR_ID "DEVEL-gL610_CN_00_90_ALIOS_V06_202010201559-1-g05a30df9"
 
 /**
  * Whether to support coap AT commands

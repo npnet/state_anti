@@ -63,7 +63,7 @@ void proc_net_task(s32_t taskId) {
   NetOvertime = 0;
   m_timeCheck = 0;
 
-//  r_memset(&msg, 0, sizeof(ST_MSG));
+  r_memset(&msg, 0, sizeof(ST_MSG));
   //开机重连网络
   Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_RESTART_ID, 0, 0);
 
@@ -74,18 +74,37 @@ void proc_net_task(s32_t taskId) {
     switch (msg.message) {
       case APP_MSG_UART_READY:
         APP_DEBUG("Net task APP_MSG_UART_READY\r\n");
+        L610Net_init();
+        break;
+      case NET_MSG_SIM_READY:
+        APP_DEBUG("Net task NET_MSG_SIM_READY\r\n");
+        break;
+      case NET_MSG_SIM_FAIL:
+        APP_DEBUG("Net task NET_MSG_SIM_FAIL\r\n");
         break;
       case NET_MSG_GSM_READY:
-        APP_PRINT("\r\ndns success!!!next ready to creat socket\r\n");
+        APP_DEBUG("Net task NET_MSG_GSM_READY\r\n");
+        GSMLED_On();
+        L610Net_ready();
+        Eybpub_UT_SendMessage(EYBAPP_TASK, NET_MSG_GSM_READY, 0, 0);
         break;
+      case NET_MSG_GSM_FAIL:
+        APP_DEBUG("Net task NET_MSG_GSM_FAIL\r\n");
+        GSMLED_Off();
+        Eybpub_UT_SendMessage(EYBAPP_TASK, NET_MSG_GSM_FAIL, 0, 0);
+        break;
+//    case NET_MSG_GSM_READY:
+//        APP_PRINT("\r\ndns success!!!next ready to creat socket\r\n");
+//        break;
       case APP_MSG_TIMER_ID:  // 从APP task传递过来的定时器(1000 ms)消息
 //        APP_DEBUG("Net task get APP_USER_TIMER_ID:%ld\r\n", NetOvertime);
+        L610Net_manage();
         break;
       default:
         break;
     }
   }
-  //fibo_thread_delete();
+  fibo_thread_delete();
 }
 
 /*******************************************************************************
@@ -134,8 +153,6 @@ void Net_send(u8_t port, u8_t *pData, u16_t len) {
     sendData->buf.lenght = len;
     sendData->buf.payload = (u8_t *)(sendData + 1);
     list_bottomInsert(&netSendPakege, sendData);
-//    Ql_memcpy(sendData->buf.payload, pData, len);
-//    Ql_OS_SendMessage(EYBNET_TASK, NET_CMD_SENDDATA_ID, 0, 0);
   } else {
     APP_DEBUG("memory apply full!!!");
   }

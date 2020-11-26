@@ -815,8 +815,8 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
         ret = 0x03;
         return ret;
       }
-      r_memset(str, 0, sizeof(str));
-      strncpy(str, (char *)data->payload, r_strlen((char *)data->payload));
+      r_memset(str, '\0', sizeof(char) * 64);
+      r_strncpy(str, (char *)data->payload, r_strlen((char *)data->payload));
       APP_DEBUG("para[%d] number is %ld str %s\r\n", j, number, str);
       switch (number) {  // 01/02/03/07/08/12/14/29/34/57 生产是必须写的参数
         case 0:
@@ -902,8 +902,8 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
           char str_temp_2[64] = {0};
           u16_t len = 0;
           char *P1 = NULL;
-          r_memset(str, 0, sizeof(str));
-          strncpy(str, (char *)data->payload, r_strlen((char *)data->payload));
+          r_memset(str, '\0', sizeof(char) * 64);
+          r_strncpy(str, (char *)data->payload, r_strlen((char *)data->payload));
           r_memset(str_temp_1, 0, sizeof(str_temp_1));
           r_memset(str_temp_2, 0, sizeof(str_temp_2));
           snprintf(str_temp_2, sizeof(str_temp_2), "#%ld-%d-%d-%d#", uart.baudrate, uart.dataBits, uart.stopBits, uart.parity);

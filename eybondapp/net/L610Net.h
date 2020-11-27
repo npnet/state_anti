@@ -26,6 +26,20 @@ typedef enum {
   STATE_TOTAL_NUM
 } OC_State_e;
 
+/*
+typedef enum
+{
+	M26_SUCCESS,
+	M26_WAIT,
+	M26_DNS_FAIL,
+	M26_IP_OK,
+	M26_SOCKET_FAIL,
+	M26_CONNECT_FAIL,
+    M26_CONNECTING,
+	M26_CLOSE,
+}M26NetState_e;
+*/
+
 typedef struct {
   u8_t    flag;     // link user flag
   u8_t    mode;     // link connect mode

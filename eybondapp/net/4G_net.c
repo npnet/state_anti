@@ -9,6 +9,7 @@
 #include "eyblib_list.h"
 #include "eyblib_typedef.h"
 #include "eyblib_swap.h"
+#include "eyblib_r_stdlib.h"
 
 #include "eybpub_Debug.h"
 #include "eybpub_Status.h"
@@ -18,7 +19,7 @@
 // #include "eybpub_run_log.h"
 
 #include "4G_net.h"
-// #include "L610Net.h"
+#include "L610Net.h"
 
 #include "eybapp_appTask.h"
 
@@ -77,11 +78,13 @@ void proc_net_task(s32_t taskId) {
         L610Net_init();
         break;
       case NET_MSG_SIM_READY:
-        APP_PRINT("\r\nsim card ready!!!\r\n");
-        break; 
+        APP_DEBUG("Net task NET_MSG_SIM_READY\r\n");
+        Eybpub_UT_SendMessage(EYBAPP_TASK, NET_MSG_SIM_READY, 0, 0);
+        break;
       case NET_MSG_SIM_FAIL:
-        APP_PRINT("\r\nsim card no insert!!!\r\n");
-        break; 
+        APP_DEBUG("Net task NET_MSG_SIM_FAIL\r\n");
+        Eybpub_UT_SendMessage(EYBAPP_TASK, NET_MSG_SIM_FAIL, 0, 0);
+        break;
       case NET_MSG_GSM_READY:
         APP_DEBUG("Net task NET_MSG_GSM_READY\r\n");
         GSMLED_On();
@@ -93,9 +96,6 @@ void proc_net_task(s32_t taskId) {
         GSMLED_Off();
         Eybpub_UT_SendMessage(EYBAPP_TASK, NET_MSG_GSM_FAIL, 0, 0);
         break;
-//    case NET_MSG_GSM_READY:
-//        APP_PRINT("\r\ndns success!!!next ready to creat socket\r\n");
-//        break;
       case APP_MSG_TIMER_ID:  // 从APP task传递过来的定时器(1000 ms)消息
 //        APP_DEBUG("Net task get APP_USER_TIMER_ID:%ld\r\n", NetOvertime);
         L610Net_manage();
@@ -104,7 +104,7 @@ void proc_net_task(s32_t taskId) {
         break;
     }
   }
-  //fibo_thread_delete();
+  fibo_thread_delete();
 }
 
 /*******************************************************************************

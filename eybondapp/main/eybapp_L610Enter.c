@@ -132,6 +132,7 @@ void * appimg_enter(void *param) {
   ALIYUN_TASK = fibo_queue_create(5, sizeof(ST_MSG));
 
   fibo_thread_create_ex(proc_relink_task, "Eybond RELINK TASK", 1024*8*2, NULL, OSI_PRIORITY_NORMAL, &relink_thread_id);
+  fibo_taskSleep(1000);
   fibo_thread_create_ex(proc_net_task,    "Eybond NET TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &net_thread_id);
   fibo_taskSleep(1000);
   fibo_thread_create_ex(proc_app_task,    "Eybond APP TASK",    1024*8*2, NULL, OSI_PRIORITY_NORMAL, &app_thread_id);
@@ -144,10 +145,6 @@ void * appimg_enter(void *param) {
   fibo_taskSleep(1000);
   APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X\r\n",net_thread_id, app_thread_id, dev_thread_id, eyb_thread_id, ali_thread_id);
   Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_UART_READY, 0, 0);
-  Eybpub_UT_SendMessage(EYBNET_TASK, APP_MSG_UART_READY, 0, 0);
-  Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_UART_READY, 0, 0);
-  Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_UART_READY, 0, 0);
-  Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_UART_READY, 0, 0);
 
   return (void *)&user_callback;
 }

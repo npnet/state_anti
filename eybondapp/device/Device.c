@@ -492,6 +492,7 @@ void proc_device_task (s32_t taskId) {
         APP_DEBUG("Get APP_MSG_UART_READY MSG\r\n");
         list_init(&DeviceList);
         DeviceIO_init(null);
+        Protocol_init();
         break;
       case NET_MSG_RIL_READY:
         APP_DEBUG("Get NET_MSG_RIL_READY MSG\r\n");
@@ -506,7 +507,6 @@ void proc_device_task (s32_t taskId) {
         break;
       case NET_MSG_GSM_READY:    // 注网OK
         APP_DEBUG("Get NET_MSG_GSM_READY MSG\r\n");
-        Protocol_init();
         break;
       case NET_MSG_GSM_FAIL:    // 注网FAIL
         break;

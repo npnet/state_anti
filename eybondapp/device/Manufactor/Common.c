@@ -58,9 +58,27 @@ const ModbusDeviceHead_t _0205Device = {
     null,
 };
 
-static const ModbusGetCmd_t _0206[] = {
+/* static const ModbusGetCmd_t _0206[] = {
     {04,   2999, 3077},
 };
+static const ModbusGetCmdTab_t _0206Protocol = PROTOCOL_TABER(_0206, 0, 0x0206);
+const ModbusDeviceHead_t _0206Device = {
+    &UART_9600_N1,
+    &_0206[0],
+    &_0206Protocol,
+    null,
+    null,
+}; */
+
+static const ModbusGetCmd_t _0206[] = {
+    {04,   2999, 3012},
+    {04,   3013, 3025},
+    {04,   3026, 3038},
+    {04,   3039, 3051},
+    {04,   3052, 3064},
+    {04,   3065, 3077},
+};
+
 static const ModbusGetCmdTab_t _0206Protocol = PROTOCOL_TABER(_0206, 0, 0x0206);
 const ModbusDeviceHead_t _0206Device = {
     &UART_9600_N1,

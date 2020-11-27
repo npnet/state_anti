@@ -46,7 +46,7 @@ static Buffer_t rcveBuf;
 static void wrtie(Buffer_t *buf);
 static void end(DeviceAck_e e);
 static void overtimeCallback(u32_t timerId, void *param);
-static void dev_timer_function(void *arg);
+static void dev_overtimeCallback(void *arg);
 
 #ifdef _PLATFORM_BC25_
 static ST_UARTDCB *IOCfg = null;
@@ -484,17 +484,19 @@ static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, v
     rcveBuf.size = SERIAL_RX_BUFFER_LEN;
     rcveBuf.lenght = len;
 
-//    APP_DEBUG("rcveBuf size:%d len:%d!!\r\n", rcveBuf.size, rcveBuf.lenght);
+    APP_DEBUG("rcveBuf size:%d len:%d!!\r\n", rcveBuf.size, rcveBuf.lenght);
     if (rcveBuf.lenght != 0) {
 //    APP_DEBUG("rcveBuf :%s size:%d!!\r\n", rcveBuf.payload, rcveBuf.lenght);
-      memcpy(rcveBuf.payload, data, len);
+      r_memcpy(rcveBuf.payload, data, len);
+      s_device->buf->lenght = rcveBuf.lenght;
+      r_memcpy(s_device->buf->payload, rcveBuf.payload, s_device->buf->lenght);
+      APP_DEBUG("s_device buf len:%d size:%d!!\r\n", s_device->buf->lenght, s_device->buf->size);
 //      fibo_hal_uart_deinit(DEVICE_IO_PORT);  // 关闭设备串口
-      char *strTemp = memory_apply(1024);
+/*      char *strTemp = memory_apply(1024);
       r_memset(strTemp,'\0', 1024);
       hextostr(rcveBuf.payload, strTemp, rcveBuf.lenght);
       APP_DEBUG("rcveBuf :%s len:%d!!\r\n", strTemp, rcveBuf.lenght);
-      memory_release(strTemp);
-
+      memory_release(strTemp);*/
       end(DEVICE_ACK_FINISH);
     }
   }
@@ -521,9 +523,9 @@ DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
         APP_DEBUG("Uart send success: %d!!\r\n", i);
         s_device = hard;
         s_device->buf->lenght = 0;
-        s_devtimer = fibo_timer_new(hard->waitTime, overtimeCallback, NULL);
+        s_devtimer = fibo_timer_new((u32_t)hard->waitTime, dev_overtimeCallback, NULL);
 
-        if (s_devtimer = 0) {
+        if (s_devtimer == 0) {
           log_save("Start DEVICE_OVERTIME_ID timer failed, g_test_timer = %d", s_devtimer);
         }
         result = DEVICE_ACK_FINISH;
@@ -674,8 +676,8 @@ void Dev_Print_output(u8_t *p, u16_t len) {
   * @param  None
   * @retval None
 *******************************************************************************/
-static void dev_timer_function(void *arg) {
-    APP_DEBUG("timer function execute ...\r\n");
-    fibo_timer_free(s_devtimer);
+static void dev_overtimeCallback(void *arg) {
+  APP_DEBUG("dev_overtimeCallback ...\r\n");
+  end(DEVICE_ACK_OVERTIME);
 }
 /*********************************FILE END*************************************/

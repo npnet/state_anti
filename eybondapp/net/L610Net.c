@@ -138,19 +138,6 @@ static u32_t open_time = 0;
 void L610Net_manage(void) {
   s32_t ret = 0;
   APP_DEBUG("L610 Net Manage\r\n");
-/*  s32_t simret = 0;
-  u8_t simstatus = 0;
-  simret = fibo_get_sim_status(&simstatus);
-  if ((simstatus == 1) && (simret == 0)) {
-    // SIM卡已插入
-    APP_DEBUG("sim is insert !\r\n");
-    Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_READY, 0, 0);
-  } else {
-    APP_DEBUG("sim no checked, please insert sim & retry\r\n");
-    Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_FAIL, 0, 0);
-    Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0);
-    m_OCActState = STATE_TOTAL_NUM;
-  } */
 
   reg_info_t sim_reg_info;
   fibo_getRegInfo(&sim_reg_info, 0);
@@ -163,7 +150,7 @@ void L610Net_manage(void) {
       APP_DEBUG("STATE_NW_QUERY_STATE\r\n");
       u8_t ip[50];
 	  u8_t cid_status;
-	  s8_t cid =1;	
+	  s8_t cid =1;
       r_memset(&ip, 0, sizeof(ip));
       if (0 == fibo_PDPStatus(cid, ip,&cid_status, 0)) {
         APP_DEBUG("ip = %s,cid_status=%d\r\n", ip,cid_status);
@@ -172,6 +159,19 @@ void L610Net_manage(void) {
       break;
     }
     case STATE_TOTAL_NUM: {
+      s32_t simret = 0;
+      u8_t simstatus = 0;
+      simret = fibo_get_sim_status(&simstatus);
+      if ((simstatus == 1) && (simret == 0)) {
+        // SIM卡已插入
+        APP_DEBUG("sim is insert !\r\n");
+        Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_READY, 0, 0);
+        m_OCActState = STATE_NW_QUERY_STATE;
+      } else {
+        APP_DEBUG("sim no checked, please insert sim & retry\r\n");
+        Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0);
+      }
       break;
     }
     default:

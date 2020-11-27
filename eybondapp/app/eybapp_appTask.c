@@ -419,6 +419,7 @@ void proc_app_task(s32_t taskId) {
 #endif
   log_init();
   Clock_init();
+  SysPara_init();  // mike 重点死机问题函数, RIL库完成加载后初始化所有现场参数
 
   WDG_timer = fibo_timer_period_new(WDG_time_Interval, UserTimerWDGcallback, NULL);  // 注册外部看门狗Timer
   if (WDG_timer == 0) {
@@ -430,32 +431,44 @@ void proc_app_task(s32_t taskId) {
     switch (msg.message) {
       case APP_MSG_UART_READY:
         APP_DEBUG("App task APP_MSG_UART_READY\r\n");
-        SysPara_init();  // mike 重点死机问题函数, RIL库完成加载后初始化所有现场参数
-        break;
-      case NET_MSG_SIM_READY:   // SIM卡插入了
-        APP_DEBUG("Get NET_MSG_SIM_READY MSG\r\n");
-        break;
-      case NET_MSG_SIM_FAIL:
-        APP_DEBUG("Get NET_MSG_SIM_FAIL MSG\r\n");
-        break;
-      case NET_MSG_GSM_READY:  // 注网成功消息
-        APP_DEBUG("Get NET_MSG_GSM_READY MSG\r\n");
+        Eybpub_UT_SendMessage(EYBNET_TASK, APP_MSG_UART_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_UART_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_UART_READY, 0, 0);
+        Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_UART_READY, 0, 0);
+        fibo_taskSleep(5000);
         APP_timer = fibo_timer_period_new(APP_time_Interval, UserTimerAPPscallback, &m_timeCnt);    // 注册APPTimer
         if (APP_timer == 0) {
           log_save("Register app timer(%d) fail", APP_timer);
         }
+        break;
+      case NET_MSG_SIM_READY:   // SIM卡插入了
+        APP_DEBUG("Get NET_MSG_SIM_READY MSG\r\n");
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_SIM_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_SIM_READY, 0, 0);
+        break;
+      case NET_MSG_SIM_FAIL:
+        APP_DEBUG("Get NET_MSG_SIM_FAIL MSG\r\n");
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_SIM_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_SIM_FAIL, 0, 0);
+        break;
+      case NET_MSG_GSM_READY:  // 注网成功消息
+        APP_DEBUG("Get NET_MSG_GSM_READY MSG\r\n");
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_GSM_READY, 0, 0);
         break;
       case NET_MSG_GSM_FAIL:
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_GSM_READY, 0, 0);
         break;
       case NET_MSG_NET_READY:    // 连接服务器成功消息
         APP_DEBUG("Get NET_MSG_NET_READY MSG\r\n");
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_NET_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_NET_READY, 0, 0);
         break;
       case NET_MSG_NET_FAIL:    // 连接服务器成功消息
         APP_DEBUG("Get NET_MSG_NET_FAIL MSG\r\n");
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_NET_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_NET_FAIL, 0, 0);
         break;
       case APP_CMD_BEEP_ID:  // mike 20200817 APP蜂鸣指令
         APP_DEBUG("App task APP_CMD_BEEP_ID\r\n");

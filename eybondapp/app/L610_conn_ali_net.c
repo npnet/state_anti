@@ -4,22 +4,17 @@
 #include "eybpub_Debug.h"
 
 #include "eybpub_SysPara_File.h"
+#include "ali_data_packet.h"
+#include "eybpub_utility.h"
+#include "eybapp_appTask.h"
+#include "Device.h"
+#include "restart_net.h"
 
-//char product_key[64] = "a1zFSNAQ8G0" ;
-//char device_name[64] = "device1";
-//char device_secret[64]  = "ff378340b0453de58c2f06cb5f52b4a8";
-//char pub_topic[] = "/a1zFSNAQ8G0/device1/user/push";
-
-
-
-char product_key[64] = "a1IkBbp6n23" ;
-char device_name[64] = "6012000000000002";
-char device_secret[64]  = "6310534bac5cdf4cfbb40a60a6452de6";
-char pub_topic[] = "/a1IkBbp6n23/6012000000000002/user/update";
-
-char sub_topic[] = "/a1zFSNAQ8G0/device1/user/get" ;
-
+int rev_data_complete = 0;
 UINT32 g_lock = 0;
+static u32_t send_timer = 0;
+static u32_t work_tick_timer = 0;
+
 
 static void fibo_aliyunMQTT_connect_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
@@ -121,11 +116,37 @@ static void fibo_aliyunMQTT_sub_callback(void *pcontext, void *pclient, iotx_mqt
             break;
     }
 }
+static void send_data_callback(void *arg)
+{
+    if(rev_data_complete)
+    {
+        send_monitor_packet(arg);
+    }
+}
 
+static void tick1s_callback(void *arg)
+{
+    uint64_t tick = (*(uint64_t*)arg)++;
+    if(0 == (tick+1) % 3600)  //每隔一小时保存总共运行时间
+    {
+        Buffer_t data;
+        memset(&data,0,sizeof(data));
+        uint64_t total_time = *(get_total_tick());
+		total_time = total_time + *(get_current_working_tick());
+        char temp_total_time[21] = {0};
+        snprintf(temp_total_time, sizeof(temp_total_time)-1, "%ld", total_time);
+        data.payload = temp_total_time;
+        data.lenght = strlen(temp_total_time);
+        data.size   = strlen(temp_total_time);
+        parametr_set(97, &data);
+    }
+
+}
 
 void mqtt_conn_ali_task(void *param)
 {
-    APP_PRINT("mqtt connect ali start ...\r\n");
+    fibo_sem_wait(g_SemFlag);
+	APP_PRINT("mqtt connect ali start ...\r\n");
     int ret = 0;
     void* aliyun_mqtt_thread_handle = NULL;
 
@@ -138,13 +159,14 @@ void mqtt_conn_ali_task(void *param)
     UINT8 cid_status;
     INT8 cid = 1;
     CFW_SIM_ID sim_id = CFW_SIM_0;
-
-//  memcpy(product_key, "a1zFSNAQ8G0", strlen("a1zFSNAQ8G0"));
-//  memcpy(device_name, "device1", strlen("device1"));
-//  memcpy(device_secret, "ff378340b0453de58c2f06cb5f52b4a8", strlen("ff378340b0453de58c2f06cb5f52b4a8"));
+	
+    load_config_para();
     memcpy(host, "iot-auth.aliyun.com", strlen("iot-auth.aliyun.com"));
-
-    ret = fibo_aliyunMQTT_cloudauth(product_key, device_name, device_secret, host, NULL);
+	
+    if(para.product_key[0] == 0 || para.device_name[0] == 0 || para.device_secret[0] == 0 )
+	return;
+	
+    ret = fibo_aliyunMQTT_cloudauth(para.product_key, para.device_name, para.device_secret, host, NULL);
     if (ret == false)
     {
         fibo_thread_delete();
@@ -171,72 +193,104 @@ void mqtt_conn_ali_task(void *param)
     }
 
     APP_PRINT("aliyun mqttapi connect finish\r\n");
-    packet_init();
-	load_config_para();
-//  ret = fibo_aliyunMQTT_cloudSub(aliyun_mqtt_thread_handle, sub_topic, 1, fibo_aliyunMQTT_sub_callback);
-//  if (ret == false)
-//  {
-//      APP_PRINT("aliyun mqttapi sub failed\r\n");
-//      fibo_thread_delete();
-//      return;
-//  }
-//
-//  ret_lock = fibo_sem_try_wait(g_lock, 60000);
-//  if (ret_lock == false)
-//  {
-//      APP_PRINT("[%s]%d wait sub failed\r\n");
-//      fibo_thread_delete();
-//      return;
-//  }
-//
-//  APP_PRINT("aliyun mqttapi sub success\r\n");
+    
 
-
-
-
-// ret = fibo_aliyunMQTT_cloudUnsub(aliyun_mqtt_thread_handle,"/a1klgAXldch/867567040119318/user/get");
-// if (ret == false)
-// {
-// APP_PRINT("aliyun mqttapi unsub failed");
-// }
-// APP_PRINT("aliyun mqttapi unsub success");
-
-// ret_lock = fibo_sem_try_wait(g_lock, 60000);
-// if (ret_lock == false)
-// {
-// APP_PRINT("[%s]%d wait unsub failed", __FUNCTION__, __LINE__);
-// fibo_thread_delete();
-// return;
-// }
-
-// ret = fibo_aliyunMQTT_cloudDisconn(&aliyun_mqtt_thread_handle);
-// if (ret == false)
-// {
-// APP_PRINT("aliyun mqttapi disconn failed");
-// }
-// APP_PRINT("aliyun mqttapi disconn success");
-
-//	parametr_default();
-
-    while (1)
+    send_timer = fibo_timer_period_new(get_data_upload_cycle()*1000*60, send_data_callback, aliyun_mqtt_thread_handle);//数据上传周期 单位分钟
+    if (send_timer == 0)
     {
-//        fibo_queue_get(ALIYUN_TASK, (void *)&msg, 0);
-//        switch (msg)
-//        {
-//			case MODBUS_DATA_GET:
-//				
-//				break;
-//		
-//            default:
-//                break;
-//        }
-//        parametr_default();
-        send_monitor_packet(aliyun_mqtt_thread_handle);
-        fibo_taskSleep(5 * 1000);
+        APP_PRINT("Register send timer(%d) fail", send_timer);
+    }
 
+    work_tick_timer = fibo_timer_period_new(1*1000, tick1s_callback, get_current_working_tick());//本次上电工作时间 1S加一次
+    if (work_tick_timer == 0)
+    {
+        APP_PRINT("Register work tick timer(%d) fail", work_tick_timer);
     }
 
 
+    while (1)
+    {
+        ST_MSG msg;
+        static Device_t *currentDevice = NULL;
+        static DeviceCmd_t *currentCmd = NULL;
+        r_memset(&msg, 0, sizeof(ST_MSG));
+
+        fibo_queue_get(ALIYUN_TASK, (void *)&msg, 0);
+        switch (msg.message)
+        {
+            case MODBUS_DATA_GET:
+
+                currentDevice = list_nextData(&DeviceList, currentDevice);    // 定时获取列表中需要执行指令的设备节点
+                if(NULL != currentDevice)
+                {
+                    currentCmd = list_nextData(&currentDevice->cmdList, currentCmd);  // 找到当前执行设备需要执行的指令
+                    if(NULL != currentCmd)
+                    {
+                        APP_PRINT("data cmd success\r\n");
+                        out_put_buffer(currentCmd->cmd.payload,currentCmd->cmd.lenght);
+
+                        if(currentCmd->cmd.payload[2] == 0x0B)
+                        {
+
+                            if(currentCmd->cmd.payload[3] == 0xB7)//address 2999 28个字节
+                            {
+                                inverter_data1 = (Inverter_Packet1 *)((u8_t *)currentCmd->ack.payload+3);
+
+                            }
+                            else if(currentCmd->cmd.payload[3] == 0xC5)
+                            {
+                                inverter_data2 = (Inverter_Packet2 *)((u8_t *)currentCmd->ack.payload+3);
+                            }
+                            else if(currentCmd->cmd.payload[3] == 0xD2)
+                            {
+                                inverter_data3= (Inverter_Packet3 *)((u8_t *)currentCmd->ack.payload+3);
+                            }
+                            else if(currentCmd->cmd.payload[3] == 0xDF)
+                            {
+                                inverter_data4= (Inverter_Packet4 *)((u8_t *)currentCmd->ack.payload+3);
+                            }
+                            else if(currentCmd->cmd.payload[3] == 0xEC)
+                            {
+                                inverter_data5= (Inverter_Packet5 *)((u8_t *)currentCmd->ack.payload+3);
+                            }
+                            else if(currentCmd->cmd.payload[3] == 0xF9)
+                            {
+                                inverter_data6= (Inverter_Packet6 *)((u8_t *)currentCmd->ack.payload+3);
+                                APP_PRINT("inverter_data1.product_model = %X\r\n",(inverter_data1->product_model&0xff00)>>8 | (inverter_data1->product_model&0x00ff)<<8);
+                                APP_PRINT("inverter_data4.inverter_temperature = %X\r\n",(((inverter_data4->inverter_temperature&0xff00)>>8) | ((inverter_data4->inverter_temperature&0x00ff)<<8)));
+                                rev_data_complete = 1;
+                            }
+                        }
+
+
+                        APP_PRINT("data ack success\r\n");
+                        out_put_buffer(currentCmd->ack.payload,currentCmd->ack.lenght);
+                        APP_PRINT("\r\n");
+
+
+
+                    }
+                    else
+                    {
+                        APP_PRINT("can not find command\r\n");
+                    }
+                }
+                else
+                {
+                    APP_PRINT("can not find device\r\n");
+                }
+
+
+
+
+                APP_PRINT("rev moudbus data\r\n");
+                break;
+
+            default:
+                break;
+        }
+
+    }
 
 
     fibo_thread_delete();

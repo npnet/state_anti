@@ -11,6 +11,8 @@
 #endif
 #ifdef _PLATFORM_L610_
 #include "fibo_opencpu.h"
+
+
 #endif
 
 #include "eyblib_list.h"
@@ -42,7 +44,8 @@
 // #include "UpdateTask.h"
 #include "Sineng.h"
 //#include "CommonServer.h"     //mike 20200804
-
+#include "eybpub_Debug.h"
+#include "ali_data_packet.h"
 #define DEVICE_LOCK     (0x5A)
 #define DEVICE_UNLOCK   (0x00)
 
@@ -392,6 +395,10 @@ static void deviceCmdSend(void) {
 //        APP_DEBUG("Device buf:%s\r\n", deviceInfo.buf->payload);
 //        DeviceIO_init(null);//测试 下发指令前重新配置串口，接收完数据后关闭串口
         e = DeviceIO_write(&deviceInfo, currentCmd->cmd.payload, currentCmd->cmd.lenght);   // 把指令写到串口
+//        APP_PRINT("currentCmd->cmd:");
+       
+//	    out_put_buffer(currentCmd->cmd.payload,currentCmd->cmd.lenght);	
+//		APP_PRINT("currentCmd->cmd len: %d\r\n",currentCmd->cmd.lenght);
         watiTime = 10;
         if (DEVICE_ACK_FINISH != e) {
           APP_DEBUG("Device command send fail %02X\r\n", e);

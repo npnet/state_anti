@@ -497,6 +497,7 @@ static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, v
       hextostr(rcveBuf.payload, strTemp, rcveBuf.lenght);
       APP_DEBUG("rcveBuf :%s len:%d!!\r\n", strTemp, rcveBuf.lenght);
       memory_release(strTemp);*/
+      Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
       end(DEVICE_ACK_FINISH);
     }
   }

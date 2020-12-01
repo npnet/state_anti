@@ -43,7 +43,7 @@
 #define  APP_DEBUG_MSG_ID          MSG_ID_USER_APP_START+0xFA8  // DEBUG串口指令输入
 #define  APP_MSG_DEVUART_READY     MSG_ID_USER_APP_START+0xFA9  // 设备串口OK
 #define  APP_DEVICE_IO_ID          MSG_ID_USER_APP_START+0xFAA  // 设备串口指令输入
-
+#define  MODBUS_DATA_GET           MSG_ID_USER_APP_START+0xFAB  // 收到逆变器数据
 #endif
 
 void proc_app_task(s32_t taskId);

@@ -20,6 +20,7 @@
 
 extern u32_t g_EventFlag;
 extern u32_t EYBRELINK_TASK;
+extern u32_t g_SemFlag;
 
 s32_t restart_net(void);
 s32_t get_simstatus(void);

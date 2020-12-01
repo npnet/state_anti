@@ -37,6 +37,7 @@ extern u8_t FeedFlag;
 u32_t g_EventFlag = 0;
 u8_t g_RemoteIp[DEF_IP_MAX_SIZE]       = {0};    //IP
 u8_t g_RemotePort[DEF_PORT_MAX_SIZE]   = {"502"};    //端口号 0-65535
+u32_t g_SemFlag = 0;
 
 u32_t EYBRELINK_TASK=0;
 static u8_t relink_flag=0;          //=1重连网络
@@ -134,6 +135,7 @@ static s32_t relink_per1s(void)
             //确定已连接成功
             APP_PRINT("\r\nactiving pdp\r\n");
             //下一步：TCP连接
+            fibo_sem_signal(g_SemFlag);
             relink_index=TCP_CONNECTION;
             tcp_connect_times=0;  
         break;
@@ -562,7 +564,12 @@ void proc_relink_task (s32_t relink)
     if (relink_timer == 0) {
     APP_PRINT("Register relink timer failed!!\r\n");
     }
-
+    g_SemFlag = fibo_sem_new(0);
+	if(g_SemFlag < 0){
+	APP_PRINT("sem create failure\r\n");
+	}else{
+	APP_PRINT("sem create success\r\n");
+	}
     EYBRELINK_TASK = fibo_queue_create(5, sizeof(int));
 
     //开机重连网络

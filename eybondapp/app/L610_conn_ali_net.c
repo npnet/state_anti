@@ -10,11 +10,12 @@
 #include "Device.h"
 #include "restart_net.h"
 
-int rev_data_complete = 0;
+
 UINT32 g_lock = 0;
 static u32_t send_timer = 0;
 static u32_t work_tick_timer = 0;
-
+bool is_ali_conn_success = false;
+static bool is_rev_data_complete = false;
 
 static void fibo_aliyunMQTT_connect_callback(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
 {
@@ -118,7 +119,7 @@ static void fibo_aliyunMQTT_sub_callback(void *pcontext, void *pclient, iotx_mqt
 }
 static void send_data_callback(void *arg)
 {
-    if(rev_data_complete)
+    if(is_rev_data_complete&&is_ali_conn_success)
     {
         send_monitor_packet(arg);
     }
@@ -134,7 +135,7 @@ static void tick1s_callback(void *arg)
         uint64_t total_time = *(get_total_tick());
 		total_time = total_time + *(get_current_working_tick());
         char temp_total_time[21] = {0};
-        snprintf(temp_total_time, sizeof(temp_total_time)-1, "%ld", total_time);
+        snprintf(temp_total_time, sizeof(temp_total_time)-1, "%llu", total_time);
         data.payload = temp_total_time;
         data.lenght = strlen(temp_total_time);
         data.size   = strlen(temp_total_time);
@@ -159,18 +160,14 @@ void mqtt_conn_ali_task(void *param)
     UINT8 cid_status;
     INT8 cid = 1;
     CFW_SIM_ID sim_id = CFW_SIM_0;
-	
+		
     load_config_para();
     memcpy(host, "iot-auth.aliyun.com", strlen("iot-auth.aliyun.com"));
-	
-    if(para.product_key[0] == 0 || para.device_name[0] == 0 || para.device_secret[0] == 0 )
-	return;
-	
+  	
     ret = fibo_aliyunMQTT_cloudauth(para.product_key, para.device_name, para.device_secret, host, NULL);
     if (ret == false)
     {
-        fibo_thread_delete();
-        return;
+        APP_PRINT("mqtt cloudauth failed\r\n");
     }
 
     /* wait PDP active */
@@ -184,16 +181,16 @@ void mqtt_conn_ali_task(void *param)
         fibo_taskSleep(2000);
     }
     g_lock = fibo_sem_new(1);
+	
     aliyun_mqtt_thread_handle = fibo_aliyunMQTT_cloudConn(80,0,4,(iotx_mqtt_event_handle_func_fpt)fibo_aliyunMQTT_connect_callback);
     if (aliyun_mqtt_thread_handle == NULL)
     {
         APP_PRINT("aliyun mqtt connect failed\r\n");
-        fibo_thread_delete();
-        return;
-    }
-
-    APP_PRINT("aliyun mqttapi connect finish\r\n");
-    
+    }else
+	{
+		APP_PRINT("aliyun mqtt connect finish\r\n");
+		is_ali_conn_success = true;
+   	}    
 
     send_timer = fibo_timer_period_new(get_data_upload_cycle()*1000*60, send_data_callback, aliyun_mqtt_thread_handle);//数据上传周期 单位分钟
     if (send_timer == 0)
@@ -235,7 +232,6 @@ void mqtt_conn_ali_task(void *param)
                             if(currentCmd->cmd.payload[3] == 0xB7)//address 2999 28个字节
                             {
                                 inverter_data1 = (Inverter_Packet1 *)((u8_t *)currentCmd->ack.payload+3);
-
                             }
                             else if(currentCmd->cmd.payload[3] == 0xC5)
                             {
@@ -255,10 +251,8 @@ void mqtt_conn_ali_task(void *param)
                             }
                             else if(currentCmd->cmd.payload[3] == 0xF9)
                             {
-                                inverter_data6= (Inverter_Packet6 *)((u8_t *)currentCmd->ack.payload+3);
-                                APP_PRINT("inverter_data1.product_model = %X\r\n",(inverter_data1->product_model&0xff00)>>8 | (inverter_data1->product_model&0x00ff)<<8);
-                                APP_PRINT("inverter_data4.inverter_temperature = %X\r\n",(((inverter_data4->inverter_temperature&0xff00)>>8) | ((inverter_data4->inverter_temperature&0x00ff)<<8)));
-                                rev_data_complete = 1;
+                                inverter_data6= (Inverter_Packet6 *)((u8_t *)currentCmd->ack.payload+3);                                
+                                is_rev_data_complete = true;
                             }
                         }
 
@@ -279,9 +273,6 @@ void mqtt_conn_ali_task(void *param)
                 {
                     APP_PRINT("can not find device\r\n");
                 }
-
-
-
 
                 APP_PRINT("rev moudbus data\r\n");
                 break;

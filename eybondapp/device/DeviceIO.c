@@ -18,6 +18,7 @@
 #ifdef _PLATFORM_L610_
 #include "fibo_opencpu.h"
 #include "L610Net.h"
+#include "L610_conn_ali_net.h"
 #endif
 #include "eyblib_memory.h"
 #include "eyblib_r_stdlib.h"
@@ -497,7 +498,10 @@ static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, v
       hextostr(rcveBuf.payload, strTemp, rcveBuf.lenght);
       APP_DEBUG("rcveBuf :%s len:%d!!\r\n", strTemp, rcveBuf.lenght);
       memory_release(strTemp);*/
-      Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
+      if(is_ali_conn_success)
+	  {
+     	 Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
+      }
       end(DEVICE_ACK_FINISH);
     }
   }

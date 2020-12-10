@@ -16,23 +16,27 @@
 #define NET_MSG_GSM_READY    MSG_ID_USER_NET_START + 0xF93    // 基站网络连接OK
 #define NET_MSG_GSM_FAIL     MSG_ID_USER_NET_START + 0xF94
 
-#define NET_MSG_NET_READY    MSG_ID_USER_NET_START + 0xF95    // LWM2M服务器连接OK
+#define NET_MSG_NET_READY    MSG_ID_USER_NET_START + 0xF95    // 后台服务器连接OK(益邦云、阿里云等)
 #define NET_MSG_NET_FAIL     MSG_ID_USER_NET_START + 0xF96
 
 #define NET_MSG_SIM_READY    MSG_ID_USER_NET_START + 0xF97    // SIM卡检测OK
 #define NET_MSG_SIM_FAIL     MSG_ID_USER_NET_START + 0xF98
 
-#define NET_MSG_RIL_READY    MSG_ID_USER_NET_START + 0xF99    // RIL SDK驱动OK
-#define NET_MSG_RIL_FAIL     MSG_ID_USER_NET_START + 0xF9A
+#define NET_MSG_SIM_INSERTED         MSG_ID_USER_NET_START + 0xF99    // SIM卡已插好
+#define NET_MSG_SIM_NOT_INSERTED     MSG_ID_USER_NET_START + 0xF9A    // SIM卡未插好
+    
+#define NET_MSG_DNS_READY    MSG_ID_USER_NET_START + 0xF9B    // GMS DNS OK
+#define NET_MSG_DNS_FAIL     MSG_ID_USER_NET_START + 0xF9C
 #endif
 
-typedef void (*NetDataCallback)(Buffer_t *buf);
+// typedef void (*NetDataCallback)(Buffer_t *buf);
+typedef void (*NetDataCallback)(u8_t nIndex, Buffer_t *buf);
 
 void proc_net_task(s32_t taskId);
 u8_t Net_connect(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback);
-void Net_close();
-void Net_send(u8_t port, u8_t * pData, u16_t len);
-u8_t Net_status();
+void Net_close(u8_t nIndex);
+void Net_send(u8_t nIndex, u8_t * pData, u16_t len);
+u8_t Net_status(u8_t nIndex);
 #endif  // __4G_NET_H
 /******************************************************************************/
 

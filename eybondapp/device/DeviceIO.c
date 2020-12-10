@@ -17,7 +17,7 @@
 
 #ifdef _PLATFORM_L610_
 #include "fibo_opencpu.h"
-#include "L610Net.h"
+#include "L610Net_TCP_EYB.h"
 #include "L610_conn_ali_net.h"
 #endif
 #include "eyblib_memory.h"
@@ -473,37 +473,107 @@ static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, v
 #endif
 
   if (uart_port == DEVICE_IO_PORT) {
+    if (len > SERIAL_RX_BUFFER_LEN || len == 0) {
+        APP_DEBUG("UART get %d data, length is big than %d\r\n", len, SERIAL_RX_BUFFER_LEN);
+        return;
+    }
     if (rcveBuf.payload != null) {
       // 设备串口接收的数据统一在这里释放内存
       memory_release(rcveBuf.payload);
-      rcveBuf.payload = NULL;
       rcveBuf.lenght = 0;
       rcveBuf.size = 0;
     }
 
     rcveBuf.payload = memory_apply(SERIAL_RX_BUFFER_LEN);
+    if(rcveBuf.payload == NULL) {
+      APP_DEBUG("malloc recvBuf fail!!\r\n");
+      return;
+    }
     rcveBuf.size = SERIAL_RX_BUFFER_LEN;
     rcveBuf.lenght = len;
-
-    APP_DEBUG("rcveBuf size:%d len:%d!!\r\n", rcveBuf.size, rcveBuf.lenght);
-    if (rcveBuf.lenght != 0) {
-//    APP_DEBUG("rcveBuf :%s size:%d!!\r\n", rcveBuf.payload, rcveBuf.lenght);
-      r_memcpy(rcveBuf.payload, data, len);
-      s_device->buf->lenght = rcveBuf.lenght;
-      r_memcpy(s_device->buf->payload, rcveBuf.payload, s_device->buf->lenght);
-      APP_DEBUG("s_device buf len:%d size:%d!!\r\n", s_device->buf->lenght, s_device->buf->size);
-//      fibo_hal_uart_deinit(DEVICE_IO_PORT);  // 关闭设备串口
-/*      char *strTemp = memory_apply(1024);
-      r_memset(strTemp,'\0', 1024);
-      hextostr(rcveBuf.payload, strTemp, rcveBuf.lenght);
-      APP_DEBUG("rcveBuf :%s len:%d!!\r\n", strTemp, rcveBuf.lenght);
-      memory_release(strTemp);*/
-      if(is_ali_conn_success)
-	  {
-     	 Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
+    r_memset(rcveBuf.payload, '\0', SERIAL_RX_BUFFER_LEN);
+    r_memcpy(rcveBuf.payload, data, len);
+    if (r_strncmp(CUSTOMER, "0A5", 3) == 0) {
+      if (r_strncmp((char *)rcveBuf.payload, "AT+", 3) == 0 && g_UARTIO_AT_enable == 0) { // 获取到硕日私有AT查询指令
+        char strTemp[32] = {0};
+        r_memset(strTemp, '\0', 32);
+        Buffer_t srne_buf;
+        srne_buf.lenght = 0;
+        srne_buf.size = 0;
+        srne_buf.payload = NULL;
+        if (r_strncmp((char *)rcveBuf.payload, "AT+PN", 5) == 0) {
+          parametr_get(DEVICE_PNID, &srne_buf);
+          r_strcpy(strTemp, "PN:");
+        } else if (r_strncmp((char *)rcveBuf.payload, "AT+IMEI", 7) == 0) {
+          parametr_get(DEVICE_UID_IMEI, &srne_buf);
+          r_strcpy(strTemp, "IMEI:");
+        } else if (r_strncmp((char *)rcveBuf.payload, "AT+CCID", 7) == 0) {
+          parametr_get(GPRS_CCID_ADDR, &srne_buf);
+          r_strcpy(strTemp, "CCID:");
+        } else if (r_strncmp((char *)rcveBuf.payload, "AT+CSQ", 6) == 0) {
+          parametr_get(GPRS_CSQ_VALUE, &srne_buf);
+          r_strcpy(strTemp, "CSQ:");
+        } else if (r_strncmp((char *)rcveBuf.payload, "AT+LINK", 7) == 0) {
+//          if (L610Net_status() == L610_SUCCESS) {  // mike 20201203
+              Uart_write((u8_t *)"LINK:1\r\n", 8);
+//          } else {
+//            Uart_write((u8_t *)"LINK:0\r\n", 8);
+//          }
+          return;
+        }
+        if (srne_buf.payload != NULL) {
+          if (srne_buf.lenght >= 25) {
+            r_strncat(strTemp, (char *)srne_buf.payload, 25);
+            r_strcat(strTemp, "\r\n");
+          } else {
+            r_strcat(strTemp, (char *)srne_buf.payload);
+            r_strcat(strTemp, "\r\n");
+          }
+          Uart_write((u8_t *)strTemp, r_strlen(strTemp));
+          memory_release(srne_buf.payload);
+          srne_buf.payload = NULL;
+          return;
+        }
+        return;
       }
-      end(DEVICE_ACK_FINISH);
     }
+//    APP_DEBUG("no AT rcveBuf len:%d size:%d!!\r\n", rcveBuf.lenght, rcveBuf.size);
+    if (g_UARTIO_AT_enable == 0) {  // 过滤主串口的主动输入
+      if (r_strncmp((char *)rcveBuf.payload, "SET_TEST=ON", 11) == 0) { // 使能主串口的主动输入
+        APP_DEBUG("Enable MSG from UART port:%d!!\r\n", uart_port);
+        g_UARTIO_AT_enable = 1;
+        Uart_write((u8_t *)"TEST=ON,OK\r\n", 12);
+        return;
+      }
+      if (s_device == null || s_device->buf->payload == null) {
+        APP_DEBUG("Cancel MSG %s from UART port:%d!!\r\n", rcveBuf.payload, uart_port);  // 默认忽略处理没有负载时采集口上报的数据
+        return;
+      } else {  // 有负载时将接收到的数据传递给负载设备处理
+        s_device->buf->lenght = rcveBuf.lenght;
+        r_memcpy(s_device->buf->payload, rcveBuf.payload, s_device->buf->lenght);
+        APP_DEBUG("s_device buf len:%d size:%d!!\r\n", s_device->buf->lenght, s_device->buf->size);
+        if (is_ali_conn_success) {
+          Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
+        }
+      }
+    } else {  // 生产测试AT指令打开后
+      if (r_strncmp((char *)rcveBuf.payload, "SET_TEST=OFF", 12) == 0) {
+        APP_DEBUG("Disable MSG from UART port:%d!!\r\n", uart_port);
+        g_UARTIO_AT_enable = 0;
+        Uart_write((u8_t *)"TEST=OFF,OK\r\n", 13);
+        return;
+      }
+      if (r_strncmp((char *)rcveBuf.payload, "SET_TEST=ON", 11) == 0) {
+        APP_DEBUG("MSG from UART port is Enabled:%d!!\r\n", uart_port);
+        Uart_write((u8_t *)"TEST=ON,OK\r\n", 12);
+        return;
+      }
+      if (r_strncmp((char *)rcveBuf.payload, "#Get", 4) == 0) {
+        APP_DEBUG("Cancel MSG %s from UART port:%d!!\r\n", rcveBuf.payload, uart_port);
+        return;
+      }
+    }
+    end(DEVICE_ACK_FINISH);
   }
 }
 
@@ -522,10 +592,9 @@ DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
       result = DEVICE_ACK_PRAR_ERR;
     } else { //
       int i = 0;
-     
       i = fibo_hal_uart_put(DEVICE_IO_PORT, (UINT8 *)pData, lenght);
       if (i == lenght) {
-        APP_DEBUG("Uart send success: %d!!\r\n", i);
+//        APP_DEBUG("DeviceIO Uart send success: %d!!\r\n", i);
         s_device = hard;
         s_device->buf->lenght = 0;
         s_devtimer = fibo_timer_new((u32_t)hard->waitTime, dev_overtimeCallback, NULL);
@@ -540,7 +609,6 @@ DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
         log_save("Uart send fail: %d!!", i);
         result = DEVICE_ACK_HARD_FAULT;
       }
-     
     }
   } else if (s_lockDevice != null) {
     result = DEVICE_ACK_LOCK;
@@ -548,7 +616,6 @@ DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
     result = DEVICE_ACK_BUSY;
   }
   return result;
-
 }
 
 /*******************************************************************************
@@ -557,7 +624,6 @@ DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
   * @param  None
   * @retval None
 *******************************************************************************/
-
 void DeviceIO_reset(void) {
   fibo_hal_uart_deinit(DEVICE_IO_PORT);
   s32_t ret = 0;
@@ -598,7 +664,7 @@ static void end(DeviceAck_e e) {
   }
  
   if (null != s_device && s_device->callback != null) {
-    APP_DEBUG("device callback!!\r\n");
+//    APP_DEBUG("end call device callback!!\r\n");
     s_device->callback(e);  // 执行设备列表中的callback函数
   } else if (e != DEVICE_ACK_OVERTIME) {
     Eybpub_UT_SendMessage(EYBAPP_TASK, APP_DEVICE_IO_ID, (u32_t)&rcveBuf, (u32_t)((void *)wrtie));
@@ -606,6 +672,7 @@ static void end(DeviceAck_e e) {
   s_device = s_lockDevice;
 }
 #endif
+
 /*******************************************************************************
   * @brief
   * @note   None

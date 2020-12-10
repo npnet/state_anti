@@ -197,6 +197,22 @@ void Clock_timeZone(Clock_t * time)
     buf.lenght = 0;
     buf.size = 0;
 }
+/*******************************************************************************
+ Brief    : void
+ Parameter: 
+ return   : 
+*******************************************************************************/
+void Clock_Set(Clock_t *clk)
+{
+    if (clk->year < CLOCK_MIN_YEAR || clk->year > CLOCK_MAX_YEAR
+        || clk->month > 12 || clk->day > 31 || clk->hour > 24)
+    {
+        return;
+    }
+    //FlashEquilibria_write(&clockHead, &clock);    // mike 20200805
+    r_memcpy(&local_clock, clk, sizeof(Clock_t));
+    week();
+}
 #endif
 
 #ifdef _PLATFORM_L610_
@@ -269,7 +285,7 @@ void Clock_timeZone(Clock_t * time) {
   buf.lenght = 0;
   buf.size = 0;
 }
-#endif
+
 /*******************************************************************************
  Brief    : void
  Parameter: 
@@ -284,8 +300,30 @@ void Clock_Set(Clock_t *clk)
     }
     //FlashEquilibria_write(&clockHead, &clock);    // mike 20200805
     r_memcpy(&local_clock, clk, sizeof(Clock_t));
+
+    hal_rtc_time_t current = {
+		.year 		= clk->year,
+		.month 		= clk->month,
+		.day 		= clk->day,
+		.hour		= clk->hour,
+		.min	    = clk->min,
+		.sec		= clk->secs,
+	};
+    s32_t current_flag = fibo_setRTC(&current);             //设置本地时间 参数：time 时间结构体
+    APP_DEBUG("current_flag is %ld\r\n",current_flag);
+    hal_rtc_time_t local_time;
+    s32_t local_time_flag = fibo_getRTC(&local_time);       //获取本地时间
+    APP_DEBUG("local_time_flag is %ld\r\n",local_time_flag);
+    char current_char[30]={0};
+    snprintf(current_char, 30, "%04d-%02d-%02d %02d:%02d:%02d",current.year,current.month,current.day,current.hour,current.min,current.sec);
+    Buffer_t buf;
+    buf.size = 64;
+    buf.lenght = r_strlen(current_char);
+    buf.payload = (u8_t *)current_char;
+    parametr_set(LOCAL_TIME, &buf);
     week();
 }
+#endif
 
 /*******************************************************************************
  Brief    : void

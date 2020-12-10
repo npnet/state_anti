@@ -8,8 +8,8 @@
 #include "eybpub_utility.h"
 #include "eybapp_appTask.h"
 #include "Device.h"
-#include "restart_net.h"
-
+#include "L610Net_TCP_EYB.h"
+// #include "restart_net.h"
 
 UINT32 g_lock = 0;
 static u32_t send_timer = 0;
@@ -37,7 +37,7 @@ static void fibo_aliyunMQTT_connect_callback(void *pcontext, void *pclient, iotx
             memset(ptopic, 0x0, sizeof(char) * (topic_info->topic_len + 1));
             memcpy(ptopic, topic_info->ptopic, topic_info->topic_len);
             APP_PRINT("ali to device connect_callback topic: topic_len:%d, topic:%s\r\n", topic_info->topic_len, ptopic);
-            APP_PRINT("Payload: payload_len:%d, payload:%s\r\n", topic_info->payload_len, topic_info->payload);
+            APP_PRINT("Payload: payload_len:%ld, payload:%s\r\n", topic_info->payload_len, topic_info->payload);
 
             free(ptopic);
             ptopic = NULL;
@@ -105,7 +105,7 @@ static void fibo_aliyunMQTT_sub_callback(void *pcontext, void *pclient, iotx_mqt
             memcpy(ptopic, topic_info->ptopic, topic_info->topic_len);
             APP_PRINT("ali to device sub_callback topic: topic_len:%d, topic:%s\r\n", topic_info->topic_len, ptopic);
             //APP_PRINT("Payload: payload_len:%d, payload:%s", topic_info->payload_len, topic_info->payload);
-            APP_PRINT("Payload: payload_len:%d\r\n", topic_info->payload_len);
+            APP_PRINT("Payload: payload_len:%ld\r\n", topic_info->payload_len);
             //output(topic_info->payload,topic_info->payload_len);
             //APP_PRINT("Payload: payload_len:%d", topic_info->payload_len);
             //这里protobuf 解包数据放入 rcveList
@@ -136,7 +136,7 @@ static void tick1s_callback(void *arg)
 		total_time = total_time + *(get_current_working_tick());
         char temp_total_time[21] = {0};
         snprintf(temp_total_time, sizeof(temp_total_time)-1, "%llu", total_time);
-        data.payload = temp_total_time;
+        data.payload = (u8_t *)temp_total_time;
         data.lenght = strlen(temp_total_time);
         data.size   = strlen(temp_total_time);
         parametr_set(97, &data);
@@ -144,8 +144,102 @@ static void tick1s_callback(void *arg)
 
 }
 
-void mqtt_conn_ali_task(void *param)
+void mqtt_conn_ali_task(void *param) {
+  APP_PRINT("aliyun task run...\r\n");  
+  int ret = 0;
+  void* aliyun_mqtt_thread_handle = NULL;  
+  bool ret_lock = false;
+
+  char host[64] = {0};
+  UINT8 ip[50];
+  UINT8 cid_status;
+  INT8 cid = 1;
+  CFW_SIM_ID sim_id = CFW_SIM_0;		
+  g_lock = fibo_sem_new(1);
+   
+  while (1) {
+    ST_MSG msg;
+    static Device_t *currentDevice = NULL;
+    static DeviceCmd_t *currentCmd = NULL;
+    r_memset(&msg, 0, sizeof(ST_MSG));
+
+    fibo_queue_get(ALIYUN_TASK, (void *)&msg, 0);
+    switch (msg.message) {
+      case APP_MSG_UART_READY:
+        load_config_para();
+        memcpy(host, "iot-auth.aliyun.com", strlen("iot-auth.aliyun.com"));
+        ret = fibo_aliyunMQTT_cloudauth(para.product_key, para.device_name, para.device_secret, host, NULL);
+        if (ret == false) {
+          APP_DEBUG("mqtt cloudauth failed\r\n");
+        }
+        break;
+      case NET_MSG_DNS_READY: // get PDP active message
+        APP_DEBUG("aliyun mqttapi get network\r\n");
+        APP_DEBUG("mqtt connect ali start ...\r\n");
+        aliyun_mqtt_thread_handle = fibo_aliyunMQTT_cloudConn(80,0,4,(iotx_mqtt_event_handle_func_fpt)fibo_aliyunMQTT_connect_callback);
+        if (aliyun_mqtt_thread_handle == NULL) {
+          APP_DEBUG("aliyun mqtt connect failed\r\n");
+        } else {
+          APP_DEBUG("aliyun mqtt connect finish\r\n");
+          is_ali_conn_success = true;
+        }
+        send_timer = fibo_timer_period_new(get_data_upload_cycle()*1000*60, send_data_callback, aliyun_mqtt_thread_handle);//数据上传周期 单位分钟
+        if (send_timer == 0) {
+          APP_DEBUG("Register send timer(%ld) fail", send_timer);
+        }
+        work_tick_timer = fibo_timer_period_new(1*1000, tick1s_callback, get_current_working_tick());//本次上电工作时间 1S加一次
+        if (work_tick_timer == 0) {
+          APP_DEBUG("Register work tick timer(%ld) fail", work_tick_timer);
+        }
+        break;
+      case NET_MSG_DNS_FAIL:
+        APP_DEBUG("aliyun mqttapi get network fail\r\n");
+        break;
+      case MODBUS_DATA_GET: {
+        currentDevice = list_nextData(&DeviceList, currentDevice);    // 定时获取列表中需要执行指令的设备节点
+        if(NULL != currentDevice) {
+          currentCmd = list_nextData(&currentDevice->cmdList, currentCmd);  // 找到当前执行设备需要执行的指令
+          if(NULL != currentCmd) {
+            APP_DEBUG("data cmd success\r\n");
+            out_put_buffer((char *)currentCmd->cmd.payload,currentCmd->cmd.lenght);
+            if(currentCmd->cmd.payload[2] == 0x0B) {
+              if(currentCmd->cmd.payload[3] == 0xB7) { // address 2999 28个字节 
+                inverter_data1 = (Inverter_Packet1 *)((u8_t *)currentCmd->ack.payload+3);
+              } else if(currentCmd->cmd.payload[3] == 0xC5) {
+                inverter_data2 = (Inverter_Packet2 *)((u8_t *)currentCmd->ack.payload+3);
+              } else if(currentCmd->cmd.payload[3] == 0xD2) {
+                inverter_data3= (Inverter_Packet3 *)((u8_t *)currentCmd->ack.payload+3);
+              } else if(currentCmd->cmd.payload[3] == 0xDF) {
+                inverter_data4= (Inverter_Packet4 *)((u8_t *)currentCmd->ack.payload+3);
+              } else if(currentCmd->cmd.payload[3] == 0xEC) {
+                inverter_data5= (Inverter_Packet5 *)((u8_t *)currentCmd->ack.payload+3);
+              } else if(currentCmd->cmd.payload[3] == 0xF9) {
+                inverter_data6= (Inverter_Packet6 *)((u8_t *)currentCmd->ack.payload+3);                                
+                is_rev_data_complete = true;
+              }
+            }
+            APP_DEBUG("data ack success\r\n");
+            out_put_buffer((char *)currentCmd->ack.payload,currentCmd->ack.lenght);
+            APP_DEBUG("\r\n");
+          } else {
+            APP_DEBUG("can not find command\r\n");
+          }
+        } else {
+          APP_DEBUG("can not find device\r\n");
+        } 
+        APP_DEBUG("rev moudbus data\r\n");
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  fibo_thread_delete();
+} 
+
+/* void mqtt_conn_ali_task(void *param)
 {
+    APP_PRINT("aliyun task run...\r\n");
     fibo_sem_wait(g_SemFlag);
 	APP_PRINT("mqtt connect ali start ...\r\n");
     int ret = 0;
@@ -170,7 +264,7 @@ void mqtt_conn_ali_task(void *param)
         APP_PRINT("mqtt cloudauth failed\r\n");
     }
 
-    /* wait PDP active */
+    // wait PDP active
     while (1)
     {
         fibo_PDPStatus(cid,ip,&cid_status,sim_id);
@@ -195,13 +289,13 @@ void mqtt_conn_ali_task(void *param)
     send_timer = fibo_timer_period_new(get_data_upload_cycle()*1000*60, send_data_callback, aliyun_mqtt_thread_handle);//数据上传周期 单位分钟
     if (send_timer == 0)
     {
-        APP_PRINT("Register send timer(%d) fail", send_timer);
+        APP_PRINT("Register send timer(%ld) fail", send_timer);
     }
 
     work_tick_timer = fibo_timer_period_new(1*1000, tick1s_callback, get_current_working_tick());//本次上电工作时间 1S加一次
     if (work_tick_timer == 0)
     {
-        APP_PRINT("Register work tick timer(%d) fail", work_tick_timer);
+        APP_PRINT("Register work tick timer(%ld) fail", work_tick_timer);
     }
 
 
@@ -224,7 +318,7 @@ void mqtt_conn_ali_task(void *param)
                     if(NULL != currentCmd)
                     {
                         APP_PRINT("data cmd success\r\n");
-                        out_put_buffer(currentCmd->cmd.payload,currentCmd->cmd.lenght);
+                        out_put_buffer((char *)currentCmd->cmd.payload,currentCmd->cmd.lenght);
 
                         if(currentCmd->cmd.payload[2] == 0x0B)
                         {
@@ -258,7 +352,7 @@ void mqtt_conn_ali_task(void *param)
 
 
                         APP_PRINT("data ack success\r\n");
-                        out_put_buffer(currentCmd->ack.payload,currentCmd->ack.lenght);
+                        out_put_buffer((char *)currentCmd->ack.payload,currentCmd->ack.lenght);
                         APP_PRINT("\r\n");
 
 
@@ -285,4 +379,4 @@ void mqtt_conn_ali_task(void *param)
 
 
     fibo_thread_delete();
-}
+} */

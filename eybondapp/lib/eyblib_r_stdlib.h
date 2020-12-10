@@ -28,6 +28,9 @@ u32_t r_strcmpformat(const char *trg, const char *format);  //**:**:**
 int r_strfind(const char *trg, const char *src);
 char *r_strstr(const char *trg, const char *src);   // 字符串查找
 void r_strSub(char *trg, const char *src, char c);
+
+u16_t r_htons(u16_t n);
+u32_t r_htonl(u32_t n);
 #endif //__EYBLIB_R_STDLIB_H_
 /*******************************Copyright Eybond*********************************/
 

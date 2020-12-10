@@ -65,6 +65,7 @@ extern void Debug_trace(u8_t *p, u16_t len);
 #include "stdlib.h"
 #include "string.h"
 #include "eyblib_typedef.h"
+#include "eyblib_r_stdlib.h"
 
 #define DEBUG_PORT      2 //调试串口
 static char DebugBuffer[DBG_BUF_LEN];
@@ -77,15 +78,15 @@ void  Debug_buffer(Buffer_t *buf);
 extern void Debug_output(u8_t *p, u16_t len);
 
 #define APP_DEBUG(FORMAT,...)  {\
-  memset(DebugBuffer, 0, DBG_BUF_LEN);\
+  r_memset(DebugBuffer, 0, DBG_BUF_LEN);\
   snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__);\
-  Debug_output((u8_t*)DebugBuffer, strlen(DebugBuffer));\
+  Debug_output((u8_t*)DebugBuffer, r_strlen(DebugBuffer));\
 }
 extern void Print_output(u8_t *p, u16_t len);
 #define APP_PRINT(FORMAT,...) {\
-  memset(DebugBuffer, 0, DBG_BUF_LEN);\
+  r_memset(DebugBuffer, 0, DBG_BUF_LEN);\
   snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
-  Print_output((u8_t*)DebugBuffer, strlen(DebugBuffer));\
+  Print_output((u8_t*)DebugBuffer, r_strlen(DebugBuffer));\
 }
 
 #else
@@ -96,9 +97,9 @@ extern void Debug_output(u8_t *p, u16_t len);
 // #define APP_PRINT(FORMAT,...)
 extern void Print_output(u8_t *p, u16_t len);
 #define APP_PRINT(FORMAT,...) {\
-  memset(DebugBuffer, 0, DBG_BUF_LEN);\
+  r_memset(DebugBuffer, 0, DBG_BUF_LEN);\
   snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
-  Print_output((u8_t*)DebugBuffer, strlen(DebugBuffer));\
+  Print_output((u8_t*)DebugBuffer, r_strlen(DebugBuffer));\
 }
 #define APP_TRACE(FORMAT,...)
 #endif

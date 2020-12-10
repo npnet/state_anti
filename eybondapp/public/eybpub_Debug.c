@@ -172,6 +172,8 @@ void Debug_trace(u8_t *p, u16_t len) {
 #include "eyblib_r_stdlib.h"
 #include "eyblib_memory.h"
 #include "eyblib_typedef.h"
+#include "eyblib_swap.h"
+
 #include "eybapp_appTask.h"
 
 #ifdef  EYBOND_DEBUG_ENABLE
@@ -179,9 +181,59 @@ static Buffer_t UARTDEBUG_buf;
 #endif
 
 void UARTDEBUG_CallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg) {
-  OSI_PRINTFI("uartapi recv uart_port=%d len=%d, data=%s", uart_port, len, (char *)data);
-  APP_DEBUG("uartapi recv uart_port=%d len=%d, data=%s\r\n", uart_port, len, (char *)data);
-#ifdef  EYBOND_DEBUG_ENABLE
+  APP_DEBUG("uartapi recv uart_port=%d len=%d, data len=%ld\r\n", uart_port, len, r_strlen((char *)data));
+  switch (uart_port) {
+    case DEBUG_PORT: {
+      if (len > SERIAL_RX_BUFFER_LEN || len == 0) {
+        APP_DEBUG("UART get data len is big than %d\r\n", SERIAL_RX_BUFFER_LEN);
+        return;
+      }
+      u8_t nTemp_i = 0;
+      for (nTemp_i=0; nTemp_i < len; nTemp_i ++) {
+        if (data[nTemp_i] < 10 || data[nTemp_i] > 126) {  // DEBUG串口只接收可见字符
+          APP_DEBUG("DEBUG UART get a data less than 0x0A or large than 0x7E\r\n");
+          return;
+        }
+      }
+      memory_release(UARTDEBUG_buf.payload);  // clean debug buffer DEBUG串口接收的数据统一在这里释放内存
+      UARTDEBUG_buf.payload = memory_apply(SERIAL_RX_BUFFER_LEN);
+      if (UARTDEBUG_buf.payload == NULL) {
+        APP_DEBUG("memory alloc Fail\r\n");
+        return;
+      }
+      UARTDEBUG_buf.size = SERIAL_RX_BUFFER_LEN;
+      UARTDEBUG_buf.lenght = 0;
+      r_memset(UARTDEBUG_buf.payload, '\0', UARTDEBUG_buf.size);
+      r_memcpy(UARTDEBUG_buf.payload, data, len);
+      UARTDEBUG_buf.lenght = len;
+
+      Eybpub_UT_SendMessage(EYBAPP_TASK, APP_DEBUG_MSG_ID, (u32_t)(&UARTDEBUG_buf), (u32_t)((void*)Debug_buffer));
+      break;
+    }
+    default:
+      break;
+  }
+/*  u8_t *str = memory_apply(len * 2 + 8);  
+  u8_t strTemp[3];
+  if (str != null) {
+    r_memset(str, '\0', len * 2 + 8);
+    for (nTemp_i=0; nTemp_i < len; nTemp_i ++) {
+      r_memset(strTemp, '\0', 3);
+      snprintf(strTemp, 3, "%02X", data[nTemp_i]);
+      if (nTemp_i == 0) {
+        r_strcpy(str, strTemp);
+      } else {
+        r_strcat(str, strTemp);
+      }
+    }
+
+    r_strcat(str, "\r\n");
+    int l = r_strlen((char *)str);
+    Debug_output(str, l);
+    memory_release(str);
+  } */
+// #ifdef  EYBOND_DEBUG_ENABLE
+#if  0
   switch (uart_port) {
     case DEBUG_PORT:
       APP_DEBUG("Read data in DEBUG_PORT buffer!\r\n");
@@ -271,7 +323,8 @@ void  Debug_buffer(Buffer_t *buf) {
 *******************************************************************************/
 void Debug_output(u8_t *p, u16_t len) {
 #ifdef EYBOND_TRACE_ENABLE
-
+//  fibo_textTrace("%s", (UINT8 *)p);
+  OSI_PRINTFI("%s", (UINT8 *)p);
 #else
   fibo_hal_uart_put(DEBUG_PORT, (UINT8 *)p, len);
 #endif

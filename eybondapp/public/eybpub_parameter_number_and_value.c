@@ -19,7 +19,7 @@
 #include "eyblib_swap.h"
 #include "eyblib_HashMD5.h"
 #include "eyblib_r_stdlib.h"
-// #include "eyblib_memory.h"
+#include "eyblib_memory.h"
 
 #include "eybpub_parameter_number_and_value.h"
 #include "eybpub_data_collector_parameter_table.h"
@@ -552,10 +552,10 @@ void parameter_a_module(void) {       // 依据PDT参数表重建参数文件A
   int j = 0;
 
   s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a);     // 删除a
-  APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
+//  APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
   if (file_a_size >= 0) {
     int delete = fibo_file_delete(g_recName_parameter_a);
-    APP_DEBUG("delete is %d\r\n", delete);
+    APP_DEBUG("delete a is %d\r\n", delete);
   }
 
   g_iFd_parameter_a = fibo_file_open(g_recName_parameter_a, FS_O_RDWR | FS_O_CREAT | FS_O_TRUNC);
@@ -574,17 +574,17 @@ void parameter_a_module(void) {       // 依据PDT参数表重建参数文件A
     APP_DEBUG("Open parameter_configuration_file_a failed\r\n");
   }
   ret = fibo_file_seek(g_iFd_parameter_a, 0, FS_SEEK_END);
-  APP_DEBUG("Seek to file end ret: %ld\r\n", ret);
+//  APP_DEBUG("Seek to file end ret: %ld\r\n", ret);
 
   for (j = 0; j < number_of_array_elements; j++) {
     snprintf(a_number_char, sizeof(a_number_char), "%03d", PDT[j].num);
 
-    parameter_a_value_buf =  fibo_malloc(sizeof(char) * 64);
+    parameter_a_value_buf =  memory_apply(sizeof(char) * 64);
     r_memset(parameter_a_value_buf, 0, sizeof(char) * 64);
 
     PDT[j].rFunc(&PDT[j], parameter_a_value_buf, &parameter_a_len);
 //    APP_DEBUG("PDT[%d]parameter:%s len: %d\r\n", j, parameter_a_value_buf, parameter_a_len);
-    parameter_a_value =  fibo_malloc(sizeof(char) * parameter_a_len);
+    parameter_a_value =  memory_apply(sizeof(char) * parameter_a_len);
     r_memset(parameter_a_value, 0, parameter_a_len);
     r_memcpy(parameter_a_value, parameter_a_value_buf, parameter_a_len);
 
@@ -601,57 +601,43 @@ void parameter_a_module(void) {       // 依据PDT参数表重建参数文件A
 
     a_md5_verify_len = a_md5_verify_len + 4 + 3 + 1 + parameter_a_len + 3;
 
-    if (parameter_a_value != NULL) {
-       fibo_free(parameter_a_value);
-      parameter_a_value = NULL;
-    }
-
-    if (parameter_a_value_buf != NULL) {
-      fibo_free(parameter_a_value_buf);
-      parameter_a_value_buf = NULL;
-    }
+    memory_release(parameter_a_value);
+    memory_release(parameter_a_value_buf);
   }
 
   ret = fibo_file_fsync(g_iFd_parameter_a);
   ret = fibo_file_close(g_iFd_parameter_a);
 
   file_a_size = fibo_file_getSize(g_recName_parameter_a);
-  APP_DEBUG("file_a_size is %ld after write\r\n", file_a_size);
+//  APP_DEBUG("file_a_size is %ld after write\r\n", file_a_size);
 
-  parameter_a_md5 = fibo_malloc(sizeof(u8_t) * 32);  // MD5值
+  parameter_a_md5 = memory_apply(sizeof(u8_t) * 32);  // MD5值
   r_memset(parameter_a_md5, 0, sizeof(u8_t) * 32);
-  parameter_a_md5_s = fibo_malloc(sizeof(u8_t) * 32);  // MD5值
+  parameter_a_md5_s = memory_apply(sizeof(u8_t) * 32);  // MD5值
   r_memset(parameter_a_md5_s, '\0', sizeof(u8_t) * 32);
   parameter_a_MD5Verify_Func(parameter_a_md5, a_md5_verify_len, 512);
 
 //  Swap_hexChar((char*)parameter_a_md5_s, parameter_a_md5, 16, 0);
   hextostr(parameter_a_md5, parameter_a_md5_s, 16);
-  APP_DEBUG("parameter_a_md5_s %s \r\n", parameter_a_md5_s);
+//  APP_DEBUG("parameter_a_md5_s %s \r\n", parameter_a_md5_s);
 
   g_iFd_parameter_a = fibo_file_open(g_recName_parameter_a, FS_O_RDWR);
   if (g_iFd_parameter_a < 0) {
     APP_DEBUG("open parameter_configuration_file_a failed\r\n");
   }
   ret = fibo_file_seek(g_iFd_parameter_a, 0, FS_SEEK_END);
-  APP_DEBUG("Seek to file end ret: %ld\r\n", ret);
+//  APP_DEBUG("Seek to file end ret: %ld\r\n", ret);
 
   writenLen = fibo_file_write(g_iFd_parameter_a, parameter_a_md5_s, 32);  // 写内容到文件
-  APP_DEBUG("Write md5 len: %ld\r\n", writenLen);
+//  APP_DEBUG("Write md5 len: %ld\r\n", writenLen);
   ret = fibo_file_fsync(g_iFd_parameter_a);
   ret = fibo_file_close(g_iFd_parameter_a);
 
   file_a_size = fibo_file_getSize(g_recName_parameter_a);
-  APP_DEBUG("file_a_size is %ld after write md5\r\n", file_a_size);
+//  APP_DEBUG("file_a_size is %ld after write md5\r\n", file_a_size);
 
-  if (parameter_a_md5 != NULL) {
-    fibo_free(parameter_a_md5);
-    parameter_a_md5 = NULL;
-  }
-
-  if (parameter_a_md5_s != NULL) {
-    fibo_free(parameter_a_md5_s);
-    parameter_a_md5_s = NULL;
-  }
+  memory_release(parameter_a_md5);
+  memory_release(parameter_a_md5_s);
   APP_DEBUG("parameter_a_module ok\r\n");
 }
 
@@ -664,7 +650,7 @@ static u32_t parameter_a_MD5Verify_Func(u8_t bHash[], u32_t Verify_Len, u32_t Da
   s32_t ret = 0;
   u32_t readenLen = 0;
 
-  APP_DEBUG("Verify_Len is %ld\r\n", Verify_Len);
+//  APP_DEBUG("Verify_Len is %ld\r\n", Verify_Len);
   while (dwOff < Verify_Len) {
     r_memset(s_pTempMd5, 0, sizeof(s_pTempMd5));
     g_iFd_parameter_a = fibo_file_open(g_recName_parameter_a, FS_O_RDONLY);
@@ -677,7 +663,7 @@ static u32_t parameter_a_MD5Verify_Func(u8_t bHash[], u32_t Verify_Len, u32_t Da
       APP_DEBUG("Seek paraconfig_file_a failed\r\n");
     }
     readenLen = fibo_file_read(g_iFd_parameter_a, s_pTempMd5, DataBlock_Len);
-    APP_DEBUG("offset:%ld, read len:%ld\r\n", dwOff, readenLen); // mike 20200827
+//    APP_DEBUG("offset:%ld, read len:%ld\r\n", dwOff, readenLen); // mike 20200827
     if ((Verify_Len - dwOff) < DataBlock_Len) {
       DataBlock_Len = Verify_Len - dwOff;
     }
@@ -698,7 +684,7 @@ static u32_t parameter_b_MD5Verify_Func(u8_t bHash[], u32_t Verify_Len, u32_t Da
   s32_t ret = 0;
   u32_t readenLen = 0;
 
-  APP_DEBUG("Verify_Len is %ld\r\n", Verify_Len);
+//  APP_DEBUG("Verify_Len is %ld\r\n", Verify_Len);
   while (dwOff < Verify_Len) {
     r_memset(s_pTempMd5, 0, sizeof(s_pTempMd5));
     g_iFd_parameter_b = fibo_file_open(g_recName_parameter_b, FS_O_RDONLY);
@@ -711,7 +697,7 @@ static u32_t parameter_b_MD5Verify_Func(u8_t bHash[], u32_t Verify_Len, u32_t Da
       APP_DEBUG("Seek paraconfig_file_b failed\r\n");
     }
     readenLen = fibo_file_read(g_iFd_parameter_b, s_pTempMd5, DataBlock_Len);
-    APP_DEBUG("offset:%ld, read ret:%ld len:%ld\r\n", dwOff, ret, readenLen); // mike 20200827
+//    APP_DEBUG("offset:%ld, read ret:%ld len:%ld\r\n", dwOff, ret, readenLen); // mike 20200827
     if ((Verify_Len - dwOff) < DataBlock_Len) {
       DataBlock_Len = Verify_Len - dwOff;
     }
@@ -815,36 +801,30 @@ void a_compare_b(void) {
   s32_t file_a_size = 0, file_b_size = 0;
 
   file_a_size = fibo_file_getSize(g_recName_parameter_a);
-  APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
+//  APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
 
-  parameter_a_md5 = fibo_malloc(sizeof(u8_t) * 32);
-  r_memset(parameter_a_md5, '\0', sizeof(u8_t) * 32);
-  parameter_a_md5_s = fibo_malloc(sizeof(u8_t) * 32);
-  r_memset(parameter_a_md5_s, '\0', sizeof(u8_t) * 32);
+  parameter_a_md5 = memory_apply(sizeof(u8_t) * (32 + 1));
+  r_memset(parameter_a_md5, '\0', sizeof(u8_t) * (32 + 1));
+  parameter_a_md5_s = memory_apply(sizeof(u8_t) * (32 + 1));
+  r_memset(parameter_a_md5_s, '\0', sizeof(u8_t) * (32 + 1));
 
   parameter_a_MD5Verify_Func(parameter_a_md5, file_a_size - 32, 512);   // 得到文件A的MD5值
   hextostr(parameter_a_md5, parameter_a_md5_s, 16);
-  APP_DEBUG("parameter_a_md5_s %s\r\n", parameter_a_md5_s);
-  if (parameter_a_md5 != NULL) {
-    fibo_free(parameter_a_md5);   // mike 释放parameter_a_md5
-    parameter_a_md5 = NULL;
-  }
+//  APP_DEBUG("parameter_a_md5_s %s\r\n", parameter_a_md5_s);
+  memory_release(parameter_a_md5);   // mike 释放parameter_a_md5
 
   file_b_size = fibo_file_getSize(g_recName_parameter_b);
-  APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
+//  APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
 
-  parameter_b_md5 = fibo_malloc(sizeof(u8_t) * 32);
-  r_memset(parameter_b_md5, '\0', sizeof(u8_t) * 32);
-  parameter_b_md5_s = fibo_malloc(sizeof(u8_t) * 32);
-  r_memset(parameter_b_md5_s, '\0', sizeof(u8_t) * 32);
+  parameter_b_md5 = memory_apply(sizeof(u8_t) * (32 + 1));
+  r_memset(parameter_b_md5, '\0', sizeof(u8_t) * (32 + 1));
+  parameter_b_md5_s = memory_apply(sizeof(u8_t) * (32 + 1));
+  r_memset(parameter_b_md5_s, '\0', sizeof(u8_t) * (32 + 1));
 
   parameter_b_MD5Verify_Func(parameter_b_md5, file_b_size - 32, 512);   // 得到文件B的MD5值
   hextostr(parameter_b_md5, parameter_b_md5_s, 16);
-  APP_DEBUG("parameter_b_md5_s %s\r\n", parameter_b_md5_s);
-  if (parameter_b_md5 != NULL) {
-    fibo_free(parameter_b_md5);
-    parameter_b_md5 = NULL;
-  }
+//  APP_DEBUG("parameter_b_md5_s %s\r\n", parameter_b_md5_s);
+  memory_release(parameter_b_md5);
 
   int compute_compare_result = 0;           // 对比两个文件的MD5数据
   compute_compare_result = r_strncmp((char *)parameter_a_md5_s, (char *)parameter_b_md5_s, 32);
@@ -852,34 +832,34 @@ void a_compare_b(void) {
   u8_t *para_b_md5 = NULL;
 
   if (0 == compute_compare_result) {
-    APP_DEBUG("compute value para_a_md5 = compute value para_b_md5\r\n");
+//    APP_DEBUG("compute value para_a_md5 = compute value para_b_md5\r\n");
   } else {  // 当两个文件的MD5值不同时
     APP_DEBUG("compute value para_a_md5 != compute value para_b_md5\r\n");
 
-    para_a_md5 = fibo_malloc(sizeof(u8_t) * 32);
+    para_a_md5 = memory_apply(sizeof(u8_t) * 32);
     r_memset(para_a_md5, 0, sizeof(u8_t) * 32);
 
     file_a_size = fibo_file_getSize(g_recName_parameter_a);
     g_iFd_parameter_a = fibo_file_open(g_recName_parameter_a, FS_O_RDONLY);  // 读取记录在文件A中的原始MD5值
     ret = fibo_file_seek(g_iFd_parameter_a, file_a_size - 32, FS_SEEK_SET);
-    APP_DEBUG("Seek to file %ld site ret: %ld\r\n", file_a_size - 32, ret);
+//    APP_DEBUG("Seek to file %ld site ret: %ld\r\n", file_a_size - 32, ret);
     readenLen = fibo_file_read(g_iFd_parameter_a, para_a_md5, 32);
-    APP_DEBUG("Read para_a_md5 from a len: %ld\r\n", readenLen);
+//    APP_DEBUG("Read para_a_md5 from a len: %ld\r\n", readenLen);
     ret = fibo_file_close(g_iFd_parameter_a);
 
     int compute_compare_result_a = 0;
     compute_compare_result_a = r_strncmp((char *)parameter_a_md5_s,
                                          (char *)para_a_md5, 32);  // 对比文件A的MD5值，判断是否被非法更改过
 
-    para_b_md5 = fibo_malloc(sizeof(u8_t) * 32);
+    para_b_md5 = memory_apply(sizeof(u8_t) * 32);
     r_memset(para_b_md5, 0, sizeof(u8_t) * 32);
 
     file_b_size = fibo_file_getSize(g_recName_parameter_b);
     g_iFd_parameter_b = fibo_file_open(g_recName_parameter_b, FS_O_RDONLY);     // 读取记录在文件B中的原始MD5值
     ret = fibo_file_seek(g_iFd_parameter_b, file_b_size - 32, FS_SEEK_SET);
-    APP_DEBUG("Seek to file %ld site ret: %ld\r\n", file_b_size - 32, ret);
+//    APP_DEBUG("Seek to file %ld site ret: %ld\r\n", file_b_size - 32, ret);
     readenLen = fibo_file_read(g_iFd_parameter_b, para_b_md5, 32);
-    APP_DEBUG("Read para_b_md5 from b len: %ld\r\n", readenLen);
+//    APP_DEBUG("Read para_b_md5 from b len: %ld\r\n", readenLen);
     ret = fibo_file_close(g_iFd_parameter_b);
 
     int compute_compare_result_b = 0;
@@ -887,7 +867,7 @@ void a_compare_b(void) {
                                          (char *)para_b_md5, 32);         // 对比文件B的MD5值，判断是否被非法更改过
 
     if (0 == compute_compare_result_a) {
-      APP_DEBUG("compute value para_a_md5 = Existing value para_a_md5\r\n");
+//      APP_DEBUG("compute value para_a_md5 = Existing value para_a_md5\r\n");
     } else {
       APP_DEBUG("compute value para_a_md5 != Existing value para_a_md5\r\n");
       //文件拷贝 b->a
@@ -895,31 +875,18 @@ void a_compare_b(void) {
     }
 
     if (0 == compute_compare_result_b) {
-      APP_DEBUG("compute value para_b_md5 = Existing value para_b_md5\r\n");
+//      APP_DEBUG("compute value para_b_md5 = Existing value para_b_md5\r\n");
     } else {
       APP_DEBUG("compute value para_b_md5 != Existing value para_b_md5\r\n");
       // 文件拷贝 a->b
       a_copy_to_b();
     }
-    if (para_a_md5 != NULL) {
-      fibo_free(para_a_md5);
-      para_a_md5 = NULL;
-    }
-    if (para_b_md5 != NULL) {
-      fibo_free(para_b_md5);
-      para_b_md5 = NULL;
-    }
+    memory_release(para_a_md5);
+    memory_release(para_b_md5);
     // 最后一种可能
   }
-
-  if (parameter_a_md5_s != NULL) {
-    fibo_free(parameter_a_md5_s);
-    parameter_a_md5_s = NULL;
-  }
-  if (parameter_b_md5_s != NULL) {
-    fibo_free(parameter_b_md5_s);
-    parameter_b_md5_s = NULL;
-  }
+  memory_release(parameter_a_md5_s);
+  memory_release(parameter_b_md5_s);
 }
 
 // 把文件A拷贝到文件B
@@ -928,7 +895,7 @@ void a_copy_to_b(void) {
   u32_t readenLen = 0, writenLen = 0;
 
   s32_t file_b_size = fibo_file_getSize(g_recName_parameter_b); // 删除B
-  APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
+//  APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
   if (file_b_size >= 0) {
     int delete = fibo_file_delete(g_recName_parameter_b);
     APP_DEBUG("delete is %d\r\n", delete);
@@ -947,26 +914,23 @@ void a_copy_to_b(void) {
   }
 
   g_iFd_parameter_a = fibo_file_open(g_recName_parameter_a, FS_O_RDONLY);
-  parameter_a_value_buf = fibo_malloc(sizeof(char) * file_a_size);
+  parameter_a_value_buf = memory_apply(sizeof(char) * file_a_size);
   r_memset(parameter_a_value_buf, 0, sizeof(char)*file_a_size);
   readenLen = fibo_file_read(g_iFd_parameter_a, (u8_t *)parameter_a_value_buf, file_a_size);
-  APP_DEBUG("Read data from a len: %ld\r\n",readenLen);
+//  APP_DEBUG("Read data from a len: %ld\r\n",readenLen);
   ret = fibo_file_close(g_iFd_parameter_a);
 
   ret = fibo_file_seek(g_iFd_parameter_b, 0, FS_SEEK_END);
-  APP_DEBUG("Seek to file b end ret: %ld\r\n", ret);
+//  APP_DEBUG("Seek to file b end ret: %ld\r\n", ret);
   writenLen = fibo_file_write(g_iFd_parameter_b, (u8_t *)parameter_a_value_buf, file_a_size);
-  APP_DEBUG("Write data to b len: %ld\r\n", writenLen);
+//  APP_DEBUG("Write data to b len: %ld\r\n", writenLen);
   ret = fibo_file_fsync(g_iFd_parameter_b);
   ret = fibo_file_close(g_iFd_parameter_b);
 
   file_b_size =  fibo_file_getSize(g_recName_parameter_b);
-  APP_DEBUG("a_copy_to_b ok file_b_size is %ld\r\n", file_b_size);
+//  APP_DEBUG("a_copy_to_b ok file_b_size is %ld\r\n", file_b_size);
 
-  if (parameter_a_value_buf != NULL) {
-    fibo_free(parameter_a_value_buf);
-    parameter_a_value_buf = NULL;
-  }
+  memory_release(parameter_a_value_buf);
 }
 
 // 把文件B拷贝到文件A
@@ -975,7 +939,7 @@ void b_copy_to_a(void) {
   u32_t readenLen = 0, writenLen = 0;
 
   s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a); // 删除A
-  APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
+//  APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
   if (file_a_size >= 0) {
     int delete = fibo_file_delete(g_recName_parameter_a);
     APP_DEBUG("delete is %d\r\n", delete);
@@ -997,26 +961,23 @@ void b_copy_to_a(void) {
   if (g_iFd_parameter_b < 0) {
     APP_DEBUG("Open parameter_configuration_file_a failed\r\n");
   }
-  parameter_b_value_buf = fibo_malloc(sizeof(char) * file_b_size);
+  parameter_b_value_buf = memory_apply(sizeof(char) * file_b_size);
   r_memset(parameter_b_value_buf, 0, sizeof(char)*file_b_size);
   readenLen = fibo_file_read(g_iFd_parameter_b, (u8_t *)parameter_b_value_buf, file_b_size);
-  APP_DEBUG("Read data from b len: %ld\r\n", readenLen);
+//  APP_DEBUG("Read data from b len: %ld\r\n", readenLen);
   ret = fibo_file_close(g_iFd_parameter_b);
 
   ret = fibo_file_seek(g_iFd_parameter_a, 0, FS_SEEK_END);
-  APP_DEBUG("Seek to file a end ret: %ld\r\n", ret);
+//  APP_DEBUG("Seek to file a end ret: %ld\r\n", ret);
   writenLen = fibo_file_write(g_iFd_parameter_a, (u8_t *)parameter_b_value_buf, file_b_size);
-  APP_DEBUG("Write data to a len: %ld\r\n", writenLen);
+//  APP_DEBUG("Write data to a len: %ld\r\n", writenLen);
   ret = fibo_file_fsync(g_iFd_parameter_a);
   ret = fibo_file_close(g_iFd_parameter_a);
 
   file_a_size =  fibo_file_getSize(g_recName_parameter_a);
-  APP_DEBUG("b_copy_to_a ok file_a_size is %ld\r\n", file_a_size);
+//  APP_DEBUG("b_copy_to_a ok file_a_size is %ld\r\n", file_a_size);
 
-  if (parameter_b_value_buf != NULL) {
-    fibo_free(parameter_b_value_buf);
-    parameter_b_value_buf = NULL;
-  }
+  memory_release(parameter_b_value_buf);
 }
 
 #endif

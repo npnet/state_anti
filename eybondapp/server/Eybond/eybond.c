@@ -12,6 +12,7 @@
 #ifdef _PLATFORM_L610_
 #include "fibo_opencpu.h"
 #include "4G_net.h"
+// #include "ESP_Update.h"
 #endif
 
 #include "eyblib_list.h"
@@ -26,19 +27,13 @@
 #include "eybpub_utility.h"
 #include "eybpub_run_log.h"
 #include "eybpub_Clock.h"
+#include "eybpub_watchdog.h"
 
 #include "eybond.h"
-// #include "ESP_Update.h"
 
 #include "eybapp_appTask.h"
 #include "Device.h"
 
-// #include "typedef.h"
-// #include "memory.h"
-// #include "SysPara.h"
-// #include "r_stdlib.h"
-
-// #include "modbus.h"
 #include "ModbusDevice.h"
 #include "Modbus.h"
 #include "Sineng.h"
@@ -47,20 +42,26 @@
 // #include "FlashEquilibria.h"
 // #include "FlashHard.h"
 
-// #define MAX_CMD_LEN       (0xA00)    // mike LWM2M 消息的payload字段最大只有512字节
-#define MAX_CMD_LEN       (488)         // 除去#PN#包头20字节，上传的modbus信息最多只有492，取488字节做安全限制
+#ifdef _PLATFORM_BC25_
+#define MAX_CMD_LEN       (488)  // mike LWM2M 消息的payload字段最大只有512字节
+                                 // 除去#PN#包头20字节，上传的modbus信息最多只有492，取488字节做安全限制
+#endif
+
+#ifdef _PLATFORM_L610_
+#define MAX_CMD_LEN       (0xA00)
+static char EybondServer[] = "www.shinemonitor.com:502";
+#endif
+
+static ListHandler_t rcveList;
+static u8_t sPort;  // index of scocket
+static u16_t overtime_ESP;  // mike 20200918
+static u16_t relinkCnt;
+static u32_t m_timeCheck_EYB = 0;
 
 // #define HISTORY_SPACE_ADDR   (FLASH_EYBOND_HISTORY_ADDR)
 // #define HISTORY_SPACE_SIZE   (4096)
 // #define HISTORY_AREA_ADDR    (HISTORY_SPACE_ADDR + HISTORY_SPACE_SIZE)
 // #define HISTORY_AREA_SIZE    (FLASH_EYBOND_HISTORY_SIZE - HISTORY_SPACE_SIZE)
-
-// static char EybondServer[] = "www.shinemonitor.com:502";
-static ListHandler_t rcveList;
-static u8_t sPort;
-static u16_t overtime_ESP;  // mike 20200918
-static u16_t relinkCnt;
-static u32_t m_timeCheck_EYB = 0;
 
 // static u16_t histprySaveSpace;
 // static int historySaveCnt;
@@ -73,48 +74,47 @@ static void onlineReport(void);
 
 static void ESP_process(void);
 static u8_t espCmp(void *src, void *dest);
-// static u8_t heartbeat(ESP_t *esp);
 static u8_t paraGet(ESP_t *esp);
 static u8_t paraSet(ESP_t *esp);
 static u8_t devtrans(ESP_t *esp);
 static u8_t devtransAck(Device_t *dev);
 static u8_t deviceDataGet(ESP_t *esp);
 static u8_t specialData_receive(ESP_t *esp);
-// static u8_t commnuicationData(ESP_t *esp);
 // static u8_t historyData(ESP_t *esp);
 // static void historySave(void);
-
-/* const funcationTab_t funTab[] = {
+#ifdef _PLATFORM_L610_
+static u8_t heartbeat(ESP_t *esp);
+static u8_t commnuicationData(ESP_t *esp);
+const funcationTab_t funTab[] = {
     {EYBOND_HEARTBEAT,  heartbeat},
     {EYBOND_GET_PARA,   paraGet},
     {EYBOND_SET_PATA,   paraSet},
-    {EYBOND_TRANS,      trans},
-    {EYBOND_GET_DEVICE_PARA, deviceDataGet},
-    {EYBOND_GET_DEVICE_HISTORY, historyData},
-    {EYBOND_REPORT_SPECIAL,         specialData_receive},
-    {EYBOND_GET_COMMUNICATION, commnuicationData},
-    {EYBOND_FILE_UPDATE,    Update_file},
-    {EYBOND_SOFT_UPDATE,    Update_soft},
-    {EYBOND_DEVICE_UPDATE,  Update_device},
-    {EYBOND_DEVICE_UPDATE_STATE, Update_deviceState},
-    {EYBOND_DEVICE_UPDATE_CANCEL, Update_deviceCancel},
-    {EYBOND_UPDATE_INFO, Update_info},
-    {EYBOND_UPDATE_DATA_SEND, Update_dataRcve},
-    {EYBOND_UPDATE_DATA_STATE, Update_rcveState},
-    {EYBOND_UPDATE_DATA_CHECK, Update_dataCheck},
-    {EYBOND_UPDATE_EXIT, Update_exit},
-}; */
+    {EYBOND_TRANS,      devtrans},
+    {EYBOND_GET_DEVICE_PARA,    deviceDataGet},
+//  {EYBOND_GET_DEVICE_HISTORY, historyData},
+    {EYBOND_REPORT_SPECIAL,     specialData_receive},
+    {EYBOND_GET_COMMUNICATION,  commnuicationData},
+//  {EYBOND_FILE_UPDATE,        Update_file},
+//  {EYBOND_SOFT_UPDATE,        Update_soft},
+//  {EYBOND_DEVICE_UPDATE,      Update_device},
+//  {EYBOND_DEVICE_UPDATE_STATE,  Update_deviceState},
+//  {EYBOND_DEVICE_UPDATE_CANCEL, Update_deviceCancel},
+//  {EYBOND_UPDATE_INFO, Update_info},
+//  {EYBOND_UPDATE_DATA_SEND,   Update_dataRcve},
+//  {EYBOND_UPDATE_DATA_STATE,  Update_rcveState},
+//  {EYBOND_UPDATE_DATA_CHECK,  Update_dataCheck},
+//  {EYBOND_UPDATE_EXIT,        Update_exit},
+};
+#endif
+
+#ifdef _PLATFORM_BC25_
 const funcationTab_t funTab[] = {
-//  {EYBOND_HEARTBEAT,  heartbeat},
   {EYBOND_GET_PARA,   paraGet},
   {EYBOND_SET_PATA,   paraSet},
   {EYBOND_TRANS,      devtrans},
   {EYBOND_GET_DEVICE_PARA, deviceDataGet},
   {EYBOND_REPORT_SPECIAL,  specialData_receive},
-//  {EYBOND_GET_COMMUNICATION, commnuicationData},
 };
-
-#ifdef _PLATFORM_BC25_
 /*******************************************************************************
   * @brief
   * @note   None
@@ -122,8 +122,6 @@ const funcationTab_t funTab[] = {
   * @retval None
 *******************************************************************************/
 void proc_eybond_task(s32_t taskId) {
-//  u8_t ret = 0;
-//  u8 count = 0;
   ST_MSG msg;
   u32_t uStackSize = 0;
   relinkCnt = 0;
@@ -163,12 +161,10 @@ void proc_eybond_task(s32_t taskId) {
         if (m_timeCheck_EYB == 10) {
           APP_DEBUG("Time for device report:%ld %ld!!\r\n", timeReport, m_timeCheck_EYB);
         }
-        if (buf.payload != NULL) {
-          Ql_MEM_Free(buf.payload);
-          buf.payload = NULL;
-          buf.lenght = 0;
-          buf.size = 0;
-        }
+        memory_release(buf.payload);
+        buf.lenght = 0;
+        buf.size = 0;
+
         m_timeCheck_EYB++;
         if (m_timeCheck_EYB >= timeReport * 1) {
           uStackSize = Ql_OS_GetCurrenTaskLeftStackSize();
@@ -198,9 +194,9 @@ void proc_eybond_task(s32_t taskId) {
   * @note   None
   * @param  None
 *******************************************************************************/
-void ESP_callback(u8_t port, Buffer_t *buf) { // 网络数据解析
+void ESP_callback(u8_t nIndex, Buffer_t *buf) { // 网络数据解析
 //  overtime_ESP = 0;
-  sPort = port;
+  sPort = nIndex;
   ESP_cmd(buf, NetMsgAck_Eybond);
   memory_release(buf->payload);  // 释放申请的输入指令内存
 }
@@ -208,6 +204,10 @@ void ESP_callback(u8_t port, Buffer_t *buf) { // 网络数据解析
 static void NetMsgAck_Eybond(Buffer_t *buf) { // 网络数据解析返回结果函数
   if (buf != null && buf->payload != null && buf->lenght > 0) {
     APP_DEBUG("NetMsgAck_Eybond\r\n");
+    if (buf->lenght >= MAX_NET_BUFFER_LEN) {
+      APP_DEBUG("Buffer length is bigger than %d \r\n", MAX_NET_BUFFER_LEN);
+      return;
+    }
     output(buf);
     Net_send(sPort, buf->payload, buf->lenght);
   }
@@ -221,8 +221,9 @@ static void NetMsgAck_Eybond(Buffer_t *buf) { // 网络数据解析返回结果�
 static void output(Buffer_t *buf) {
   u32_t displayNum = 0;
   APP_DEBUG("Eybond len: %d value: \r\n", buf->lenght);
-  if (buf->lenght < 512) {
+  if (buf->lenght < MAX_NET_BUFFER_LEN) {
     u8_t *str = memory_apply(buf->lenght * 3 + 8);
+    r_memset(str, 0, buf->lenght * 3 + 8);
     if (str != null) {
 //      int l = Swap_hexChar((char *)str, buf->payload, buf->lenght, ' ');  // mike 重点检测函数
       hextostr(buf->payload, str, buf->lenght);   // 和Swap_hexChar是反的
@@ -279,8 +280,7 @@ u8_t ESP_cmd(Buffer_t *buf, AckCh ch) {
     } else {
       esp->PDULen = buf->lenght;
       esp->waitCnt = 0;
-      esp->ack = ch;        // set NetMsgAck_Eybond，设置指令节点的返回函数
-      // r_memcpy(&esp->head, buf->payload, buf->lenght);
+      esp->ack = ch;        // set NetMsgAck_Eybond，设置指令节点的返回函
       r_memcpy(&esp->head, buf->payload, buf->lenght); // 把指令放入列表节点的内存
       e = 0;
       list_topInsert(&rcveList, esp);   // 把指令插入列表节点
@@ -288,7 +288,7 @@ u8_t ESP_cmd(Buffer_t *buf, AckCh ch) {
       Ql_OS_SendMessage(EYBOND_TASK, EYBOND_DATA_PROCESS, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-    Eybpub_UT_SendMessage(EYBOND_TASK, EYBOND_DATA_PROCESS, 0, 0);
+      Eybpub_UT_SendMessage(EYBOND_TASK, EYBOND_DATA_PROCESS, 0, 0);
 #endif
     }
   }
@@ -360,71 +360,6 @@ static void ESP_process(void) {
   }
   list_nodeDelete(&rcveList, esp);  // 删除未执行的指令节点
 }
-
-/*******************************************************************************
-  * @brief
-  * @note   None
-  * @param  None
-*******************************************************************************/
-/* static u8_t heartbeat(ESP_t *esp) {
-#pragma pack(1)
-  typedef struct {
-    u8_t year;
-    u8_t month;
-    u8_t day;
-    u8_t hour;
-    u8_t min;
-    u8_t secs;
-  } rcve_t;
-#pragma pack()
-
-  rcve_t *para = (rcve_t *)(esp->PDU);
-  EybondHeader_t *ack;
-  Buffer_t buf;
-  Clock_t time;
-
-  time.year = para->year + 2000;
-  time.month = para->month;
-  time.day = para->day;
-  time.hour = para->hour;
-  time.min = para->min;
-  time.secs = para->secs;
-
-  Clock_Set(&time);
-
-  // SysPara_Get(2, &buf);
-  parametr_get(2, &buf);
-  // ack = memory_apply(sizeof(EybondHeader_t) + 18);
-  ack = Ql_MEM_Alloc(sizeof(EybondHeader_t) + 18);
-  if (ack != null) {
-  // r_memcpy(ack, &esp->head, sizeof(EybondHeader_t));
-    Ql_memcpy(ack, &esp->head, sizeof(EybondHeader_t));
-    if (buf.payload == null || (buf.lenght != 14 &&  buf.lenght != 18)) {
-      APP_DEBUG("PN ERR: %d, %s\r\n", buf.lenght, buf.payload);
-      buf.lenght = 14;
-      Ql_memcpy(ack + 1, "EYBONDERR00000", 14);
-  // SysPara_auth();
-    } else {
-  // r_memcpy(ack + 1, buf.payload,  buf.lenght);
-      Ql_memcpy(ack + 1, buf.payload,  buf.lenght);
-    }
-  // memory_release(buf.payload);
-    if (buf.payload != NULL) {
-      Ql_MEM_Free(buf.payload);
-      buf.payload = NULL;
-    }
-    ack->msgLen = ENDIAN_BIG_LITTLE_16(buf.lenght + 2);
-    buf.lenght = sizeof(EybondHeader_t) + buf.lenght;
-    buf.payload = (u8_t *)ack;
-    esp->ack(&buf);
-  }
-  // memory_release(buf.payload);
-  if (buf.payload != NULL) {
-    Ql_MEM_Free(buf.payload);
-    buf.payload = NULL;
-  }
-  return 0;
-} */
 
 /*******************************************************************************
   * @brief
@@ -771,7 +706,6 @@ static u8_t deviceDataGet(ESP_t *esp) {
 #endif
     overTime = 0;
   }
-
   return 0;
 }
 /*******************************************************************************
@@ -1085,7 +1019,6 @@ static void onlineReport(void) {
 //          buf.lenght += 2;
 //          APP_DEBUG("%s\r\n", buf.payload);
         }
-//      Ql_memset(buf.payload, 0, cmdLen - cmd->buf.lenght);
       }
     } while (tail != onlineDeviceList.node && onlineDeviceList.node != null);
   }
@@ -1134,12 +1067,137 @@ static u8_t specialData_receive(ESP_t *esp) {
   return 0;
 }
 
+#ifdef _PLATFORM_L610_
+void proc_eybond_task(s32_t taskId) {
+  ST_MSG msg;
+  u8_t ret = 0;
+  relinkCnt = 0;
+  sPort = 0xff;
+  m_timeCheck_EYB = 0;
+  int timeReport = 60;
+  APP_PRINT("Eybond task run...\r\n");
+  r_memset(&msg, 0, sizeof(ST_MSG));
+  list_init(&rcveList);  
+
+  while (1) {
+    fibo_queue_get(EYBOND_TASK, (void *)&msg, 0);
+    switch (msg.message) {
+      case APP_MSG_UART_READY:
+        APP_DEBUG("Get APP_CMD_UART_READY MSG\r\n");
+        break;
+      case SYS_PARA_CHANGE:
+        Net_close(sPort);
+	    sPort = 0xff;
+      case APP_MSG_DEVTIMER_ID: {
+        ret = Net_status(sPort);
+        APP_DEBUG("socket[%d] status %d overtime_ESP %d\r\n", sPort, ret, overtime_ESP);
+        if (ret == 0xFF) {
+          APP_DEBUG("Eybond start relink socket: %d times\r\n", relinkCnt);
+          ServerAddr_t *eybondServer = ServerAdrrGet(EYBOND_SERVER_ADDR);
+          if (eybondServer != null) {            
+            sPort = Net_connect(1, eybondServer->addr, eybondServer->port, ESP_callback);
+            APP_DEBUG("Index %d Connect Eybond sever:%s port:%d type:%d\r\n", sPort, eybondServer->addr, eybondServer->port, eybondServer->type);
+            if (sPort == 0xFF) {
+            }
+            memory_release(eybondServer);
+          } else {
+            Buffer_t buf;
+            buf.lenght = sizeof(EybondServer);
+            buf.payload = (u8_t *)EybondServer;
+            parametr_set(EYBOND_SERVER_ADDR, &buf);
+          }
+        }
+        if (overtime_ESP++ > (75 * 2)) {
+          relinkCnt++;
+          overtime_ESP = 0;
+          Net_close(sPort);
+          APP_DEBUG("Eybond Close socket %d, relinkCnt = %d\r\n", sPort, relinkCnt);
+          sPort = 0xFF;
+        }
+        if (relinkCnt > 10) {
+          APP_DEBUG(" relinkCont over and reboot!!!!!!!!!!!!!!!!\r\n");
+          Watchdog_stop();
+          relinkCnt = 0;
+        }
+//      if ((runTimeCheck(4, 19) == 0 ) &&(0 >= (historySaveCnt--))) {
+//        historySave();
+//      }
+      } 
+      case EYBOND_DATA_PROCESS:
+        APP_DEBUG("Get EYBOND_DATA_PROCESS!!\r\n");
+        ESP_process();
+        break;
+      case EYBOND_CMD_REPORT:
+//      onlineReport();
+        break;
+      default:
+        break;
+    }
+  }
+  fibo_thread_delete();
+}
 /*******************************************************************************
   * @brief
   * @note   None
   * @param  None
 *******************************************************************************/
-/* static u8_t commnuicationData(ESP_t *esp) {
+static u8_t heartbeat(ESP_t *esp) {
+#pragma pack(1)
+  typedef struct {
+    u8_t year;
+    u8_t month;
+    u8_t day;
+    u8_t hour;
+    u8_t min;
+    u8_t secs;
+  } rcve_t;
+#pragma pack()
+
+  rcve_t *para = (rcve_t *)(esp->PDU);
+  EybondHeader_t *ack;
+  Buffer_t buf;
+  Clock_t time;
+
+  time.year = para->year + 2000;
+  time.month = para->month;
+  time.day = para->day;
+  time.hour = para->hour + 8;
+  time.min = para->min;
+  time.secs = para->secs;
+  APP_DEBUG("ESP time: %d-%d-%d %d:%d:%d\r\n", time.year, time.month, time.day, time.hour, time.min, time.secs);
+
+  Clock_Set(&time);
+
+  parametr_get(DEVICE_PNID, &buf);
+  ack = memory_apply(sizeof(EybondHeader_t) + 18);
+  r_memset(ack, 0, sizeof(EybondHeader_t) + 18);
+  if (ack != null) {
+    r_memcpy(ack, &esp->head, sizeof(EybondHeader_t));
+    if (buf.payload == null || (buf.lenght != 14 &&  buf.lenght != 18)) {
+      APP_DEBUG("PN ERR: %d, %s\r\n", buf.lenght, buf.payload);
+      buf.lenght = 14;
+      r_memcpy(ack + 1, "EYBONDERR00000", 14);
+      // SysPara_auth();    // mike 00号参数?
+    } else {
+      r_memcpy(ack + 1, buf.payload,  buf.lenght);
+    }
+    memory_release(buf.payload);
+
+    ack->msgLen = ENDIAN_BIG_LITTLE_16(buf.lenght + 2);
+    buf.lenght = sizeof(EybondHeader_t) + buf.lenght;
+    buf.payload = (u8_t *)ack;
+    esp->ack(&buf);
+  }
+  memory_release(buf.payload);
+  return 0;
+}
+
+/*******************************************************************************
+  * @brief
+  * @note   None
+  * @param  None
+*******************************************************************************/
+static u8_t commnuicationData(ESP_t *esp) {
 #pragma pack(1)
   typedef struct {
     u8_t state;
@@ -1158,72 +1216,19 @@ static u8_t specialData_receive(ESP_t *esp) {
     buf.lenght = sizeof(EybondHeader_t) + 1;
     buf.payload = (u8_t *)ack;
   } else {
-//    ack = memory_apply(sizeof(EybondHeader_t) + buf.lenght);
-    ack = Ql_MEM_Alloc(sizeof(EybondHeader_t) + buf.lenght);
-    Ql_memcpy(ack, &esp->head, sizeof(EybondHeader_t));
-    Ql_memcmp(ack + 1, buf.payload, buf.lenght);
+    ack = memory_apply(sizeof(EybondHeader_t) + buf.lenght);
+    r_memcpy(ack, &esp->head, sizeof(EybondHeader_t));
+    r_memcmp(ack + 1, buf.payload, buf.lenght);
     ack->code = code;
     ack->msgLen = buf.lenght + 2;
-//    memory_release(buf.payload);
-    if (buf.payload != NULL) {
-      Ql_MEM_Free(buf.payload);
-    }
+    memory_release(buf.payload);
     buf.lenght += sizeof(EybondHeader_t);
     buf.payload = (u8_t *)ack;
   }
 
   esp->ack(&buf);
-//    memory_release(buf.payload);
-  if (buf.payload != NULL) {
-    Ql_MEM_Free(buf.payload);
-    buf.payload = NULL;
-  }
+  memory_release(buf.payload);
   return 1;
-} */
-
-#ifdef _PLATFORM_L610_
-void proc_eybond_task(s32_t taskId) {
-  ST_MSG msg;
-  u32_t uStackSize = 0;
-  relinkCnt = 0;
-  sPort = 0xff;
-  m_timeCheck_EYB = 0;
-  int timeReport = 60;
-  APP_PRINT("Eybond task run...\r\n");
-  r_memset(&msg, 0, sizeof(ST_MSG));
-  list_init(&rcveList);  
-
-  while (1) {
-    fibo_queue_get(EYBOND_TASK, (void *)&msg, 0);
-    switch (msg.message) {
-      case APP_MSG_UART_READY:
-        APP_DEBUG("Get APP_CMD_UART_READY MSG\r\n");
-        break;
-      case SYS_PARA_CHANGE:
-        break;
-      case APP_MSG_DEVTIMER_ID: {
-        if ((m_timeCheck_EYB % 10) == 0) {
-          APP_DEBUG("Time for device report:%d %ld!!\r\n", timeReport, m_timeCheck_EYB);
-        }
-        m_timeCheck_EYB++;
-        if (m_timeCheck_EYB >= timeReport * 1) {
-          m_timeCheck_EYB = 0;
-          Eybpub_UT_SendMessage(EYBOND_TASK, EYBOND_CMD_REPORT, 0, 0);
-        }
-      }
-        break;
-      case EYBOND_DATA_PROCESS:
-        APP_DEBUG("Get EYBOND_DATA_PROCESS!!\r\n");
-//        ESP_process();
-        break;
-      case EYBOND_CMD_REPORT:
-//        onlineReport();
-        break;
-      default:
-        break;
-    }
-  }
-  fibo_thread_delete();
 }
 #endif
 /******************************************************************************/

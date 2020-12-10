@@ -158,7 +158,7 @@ typedef struct
     char inverter_str[16];
 
     uint32_t data_upload_cycle;
-    uint32_t factory_time;
+    uint64_t factory_time;
     uint64_t current_working_tick;
     uint64_t total_working_time;
     int32 rssi;
@@ -167,5 +167,5 @@ typedef struct
 
 extern Para_Table para;
 
-
+void load_config_para(void);
 #endif

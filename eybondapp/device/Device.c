@@ -11,8 +11,6 @@
 #endif
 #ifdef _PLATFORM_L610_
 #include "fibo_opencpu.h"
-
-
 #endif
 
 #include "eyblib_list.h"
@@ -43,7 +41,7 @@
 // #include "deviceUpdate.h"
 // #include "UpdateTask.h"
 #include "Sineng.h"
-//#include "CommonServer.h"     //mike 20200804
+// #include "CommonServer.h"     //mike 20200804
 #include "eybpub_Debug.h"
 #include "ali_data_packet.h"
 #define DEVICE_LOCK     (0x5A)
@@ -316,7 +314,7 @@ static void deviceCmdSend(void) {
 //  static DeviceInfo_t deviceInfo;
   static Device_t *currentDevice;     //
 
-  APP_DEBUG("Device Step %d waitTime is %04X!!\r\n", currentStep, watiTime);
+//  APP_DEBUG("Device Step %d waitTime is %04X!!\r\n", currentStep, watiTime);
   switch (currentStep) {
     case 0:
       currentDevice = null;
@@ -358,8 +356,7 @@ static void deviceCmdSend(void) {
       break;
     case 2:
       currentDevice->lock = DEVICE_LOCK;
-      if (currentDevice->callBack == null
-          || currentDevice->callBack(currentDevice) == 0) { // call ackProcess
+      if (currentDevice->callBack == null || currentDevice->callBack(currentDevice) == 0) { // call ackProcess
         APP_DEBUG("Step from 2 to 1!!\r\n");
         currentStep = 1;
       } else {
@@ -389,7 +386,7 @@ static void deviceCmdSend(void) {
                   currentCmd->ack.size = deviceInfo.buf->size;
                   currentCmd->ack.payload = deviceInfo.buf->payload;
                 } */
-        APP_DEBUG("Device buf size:%d\r\n", deviceInfo.buf->size);
+//        APP_DEBUG("Device buf size:%d\r\n", deviceInfo.buf->size);
 //        APP_DEBUG("Device waittime:%d\r\n", deviceInfo.waitTime);
 //        APP_DEBUG("Device buf length:%d\r\n", deviceInfo.buf->lenght);
 //        APP_DEBUG("Device buf:%s\r\n", deviceInfo.buf->payload);
@@ -445,7 +442,7 @@ static void deviceCmdSend(void) {
   * @retval None
 *******************************************************************************/
 static void device_callback(DeviceAck_e ack) {
-  APP_DEBUG("ack %04X Step: %d state:%d \r\n", ack, currentStep, currentCmd->state);
+//  APP_DEBUG("ack %04X Step: %d state:%d \r\n", ack, currentStep, currentCmd->state);
   if (ack == DEVICE_ACK_OVERTIME) {
     deviceLEDOff();
 #if TEST_RF
@@ -501,12 +498,6 @@ void proc_device_task (s32_t taskId) {
         DeviceIO_init(null);
         Protocol_init();
         break;
-      case NET_MSG_RIL_READY:
-        APP_DEBUG("Get NET_MSG_RIL_READY MSG\r\n");
-        break;
-      case NET_MSG_RIL_FAIL:
-        APP_DEBUG("Get NET_MSG_RIL_FAIL MSG\r\n");
-        break;
       case NET_MSG_SIM_READY:
         APP_DEBUG("Get NET_MSG_SIM_READY MSG\r\n");
         break;
@@ -540,7 +531,7 @@ void proc_device_task (s32_t taskId) {
         } else {
           log_save("Device modular reset!!");
           APP_DEBUG("Device modular reset!!\r\n");
-//        msg.param1 = DEVICE_MONITOR_NUM;    // mike 20201117
+          msg.param1 = DEVICE_MONITOR_NUM;
         }
         DeviceOvertime = 0;
       case SYS_PARA_CHANGE:   //system parameter change
@@ -563,7 +554,8 @@ void proc_device_task (s32_t taskId) {
         if (m_timeCheck_DEV >= 10) {
           u32_t heepsize = 0, heep_avail = 0, heep_maxblock =0;
           fibo_get_heapinfo(&heepsize, &heep_avail, &heep_maxblock);
-          APP_DEBUG("Device task heep size:%ld avail:%ld maxblock:%ld!!\r\n", heepsize, heep_avail, heep_maxblock);
+          u32_t uTick = fibo_getSysTick();
+          APP_DEBUG("Device task SysTick:%ld heep size:%ld avail:%ld maxblock:%ld!!\r\n", uTick/16384, heepsize, heep_avail, heep_maxblock);
           m_timeCheck_DEV = 0;
         }
 //        APP_DEBUG("Get APP_MSG_DEVTIMER_ID MSG,watiTime:%04X step:%d\r\n", watiTime, currentStep);
@@ -571,7 +563,7 @@ void proc_device_task (s32_t taskId) {
           break;
         }
       case DEVICE_CMD_ID:
-        APP_DEBUG("will send cmd\r\n");
+//        APP_DEBUG("will send cmd\r\n");
         watiTime = 0x8000;
         deviceCmdSend();
         break;

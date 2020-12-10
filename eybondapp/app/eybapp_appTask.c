@@ -460,6 +460,18 @@ void proc_app_task(s32_t taskId) {
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_FAIL, 0, 0);
         Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_GSM_READY, 0, 0);
         break;
+      case NET_MSG_DNS_READY:
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_DNS_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_DNS_READY, 0, 0);
+        Eybpub_UT_SendMessage(ALIYUN_TASK, NET_MSG_DNS_READY, 0, 0);
+        APP_DEBUG("Net task NET_MSG_DNS_READY\r\n");
+        break;
+      case NET_MSG_DNS_FAIL:
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_DNS_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_DNS_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(ALIYUN_TASK, NET_MSG_DNS_FAIL, 0, 0);
+        APP_DEBUG("Net task NET_MSG_DNS_FAIL\r\n");
+        break;
       case NET_MSG_NET_READY:    // 连接服务器成功消息
         APP_DEBUG("Get NET_MSG_NET_READY MSG\r\n");
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_NET_READY, 0, 0);
@@ -469,7 +481,7 @@ void proc_app_task(s32_t taskId) {
         APP_DEBUG("Get NET_MSG_NET_FAIL MSG\r\n");
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_NET_FAIL, 0, 0);
         Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_NET_FAIL, 0, 0);
-        break;
+        break;      
       case APP_CMD_BEEP_ID:  // mike 20200817 APP蜂鸣指令
         APP_DEBUG("App task APP_CMD_BEEP_ID\r\n");
         Beep_Run();
@@ -492,9 +504,41 @@ void proc_app_task(s32_t taskId) {
 //        APP_DEBUG("App task APP_MSG_TIMER_ID\r\n");
         Eybpub_UT_SendMessage(EYBNET_TASK, APP_MSG_TIMER_ID, 0, 0);
         Key_scan();
+        Clock_Add();
+        if ((DeviceIO_lockState() == &cmdHead) && deviceLockTime++ > (60 * 2)) {
+          APP_DEBUG("DeviceIO_unlock\r\n");
+          DeviceIO_unlock();
+          if (cmdHead.buf != NULL) {
+            memory_release(cmdHead.buf);
+            cmdHead.buf = null;
+          }
+        }
+
+        if (logGetFlag == 0x5AA5) { // 按条显示log信息
+          Buffer_t log;
+          int logIndex = 0;
+          while (logIndex < 100) {
+            r_memset(&log, 0, sizeof(Buffer_t));
+            logGet(&log);
+            if (log.lenght == 0 || log.payload == null) {  // 读完log后就不再显示了
+              logGetFlag = 0;
+              memory_release(log.payload);
+              log.lenght = 0;
+              log.size = 0;
+              break;
+            } else {
+              Print_output(log.payload, log.lenght);
+              Print_output((u8_t *)"\r\n", 2);
+              logIndex++;
+            }
+            memory_release(log.payload);
+            log.lenght = 0;
+            log.size = 0;
+          }
+        }
+        break;
       }
-      break;
-      case APP_DEBUG_MSG_ID:
+      case APP_DEBUG_MSG_ID: {
         buf = (Buffer_t *)msg.param1;
         APP_DEBUG("App task APP_DEBUG_MSG_ID:%s %d\r\n", (char *) buf->payload, buf->lenght);
         if (buf->lenght > 2 && 0 == r_strncmp((char *)buf->payload, "AT", 2)) {
@@ -505,7 +549,8 @@ void proc_app_task(s32_t taskId) {
           strCmp(buf, (void_fun_bufp)((void *)msg.param2));
         }
         break;
-      case APP_DEVICE_IO_ID:
+      }
+      case APP_DEVICE_IO_ID: {
         buf = (Buffer_t *)msg.param1;
         APP_DEBUG("App task APP_DEVICE_IO_ID:%s %d\r\n", (char *) buf->payload, buf->lenght);
         if (buf->lenght > 2 && 0 == r_strncmp((char *)buf->payload, "AT", 2)) {
@@ -516,6 +561,7 @@ void proc_app_task(s32_t taskId) {
           strCmp(buf, (void_fun_bufp)((void *)msg.param2));
         }
         break;
+      }
       default:
         break;
     }

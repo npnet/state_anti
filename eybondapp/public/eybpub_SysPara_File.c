@@ -34,7 +34,7 @@
 #include "eybpub_parameter_number_and_value.h"
 
 #include "eyblib_r_stdlib.h"
-// #include "eyblib_memory.h"       // mike 20200828
+#include "eyblib_memory.h"
 #include "eyblib_swap.h"
 #include "eyblib_list.h"
 
@@ -54,12 +54,12 @@ static u8_t Para_Init_flag = 0;
 // static char para_value[64] = {0};  // 参数值
 
 #ifdef _PLATFORM_BC25_
-ServerAddr_t *ServerAdrrGet(u8_t num) {
+/* ServerAddr_t *ServerAdrrGet(u8_t num) {
   Buffer_t buf;
 //  Buffer_t portBuf;   // mike 20200828
   ServerAddr_t *serverAddr = null;
 
-  Ql_memset(&buf, 0, sizeof(Buffer_t));
+  r_memset(&buf, 0, sizeof(Buffer_t));
   parametr_get(num, &buf);  // TODO获取的buf长度有问题？
 
   if (buf.payload != null && buf.lenght > 5) {
@@ -69,10 +69,9 @@ ServerAddr_t *ServerAdrrGet(u8_t num) {
     r_strsplit(&cmdStr, (char *) buf.payload, ':');
 
     if (cmdStr.count > 0) {
-      len = Ql_strlen((char *) * (int *) cmdStr.node->payload);
-//      serverAddr = memory_apply(sizeof(ServerAddr_t) + len);  // mike 20200828
-      serverAddr = Ql_MEM_Alloc(sizeof(ServerAddr_t) + len);
-      Ql_strcpy(serverAddr->addr, (char *) * (int *) cmdStr.node->payload);
+      len = r_strlen((char *) * (int *) cmdStr.node->payload);
+      serverAddr = memory_apply(sizeof(ServerAddr_t) + len);
+      r_strcpy(serverAddr->addr, (char *) * (int *) cmdStr.node->payload);
       serverAddr->type = 1;
 
       if (cmdStr.count > 1) {
@@ -81,21 +80,16 @@ ServerAddr_t *ServerAdrrGet(u8_t num) {
         // TODO 有问题，一直会进入这里
       }
 
-      /*      if (num == HANERGY_SERVER_ADDR) {           // mike disable Hanrgy sever 24# command for NB platform 20200827
-              serverAddr->port = 8081;
-            } else {
-              serverAddr->port = 502;
-            }  */
+//      if (num == HANERGY_SERVER_ADDR) {           // mike disable Hanrgy sever 24# command for NB platform 20200827
+//        serverAddr->port = 8081;
+//      } else {
+//        serverAddr->port = 502;
+//      }
 
       if (cmdStr.count > 2) {
-        /*        if (r_strfind("UDP", (char*) *(int*) cmdStr.node->next->next->payload) >= 0) {
-                  serverAddr->type = 0;
-                } else if (r_strfind("SSL", (char*) *(int*) cmdStr.node->next->next->payload) >= 0) {
-                  serverAddr->type = 2;
-                } */
-        if (Ql_strstr((char *) * (int *) cmdStr.node->next->next->payload, "UDP") >= 0) {
+        if (r_strstr((char *) * (int *) cmdStr.node->next->next->payload, "UDP") >= 0) {
           serverAddr->type = 0;
-        } else if (Ql_strstr((char *) * (int *) cmdStr.node->next->next->payload, "SSL") >= 0) {
+        } else if (r_strstr((char *) * (int *) cmdStr.node->next->next->payload, "SSL") >= 0) {
           serverAddr->type = 2;
         }
       }
@@ -104,23 +98,16 @@ ServerAddr_t *ServerAdrrGet(u8_t num) {
   }
 
   if (serverAddr->port == 0) {
-//    memory_release(serverAddr);
-    if (serverAddr != NULL) {
-      Ql_MEM_Free(serverAddr);
-      serverAddr = null;
-    }
+    memory_release(serverAddr);
   }
 
 //  memory_release(portBuf.payload);        // mike 20200828
-//  memory_release(buf.payload);            // mike 20200828
-  if (buf.payload != NULL) {
-    Ql_MEM_Free(buf.payload);
-    buf.lenght = 0;
-    buf.size = 0;
-  }
+  memory_release(buf.payload);
+  buf.lenght = 0;
+  buf.size = 0;
 
   return serverAddr;
-}
+} */
 
 void parametr_get(u32_t number, Buffer_t *databuf) {
   char *buf_value = NULL;
@@ -133,36 +120,35 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
   for (j = 0; j < number_of_array_elements; j++) {
     if (number == PDT[j].num) {
       APP_DEBUG("para_meter[%d]num = %d!\r\n", j, number);
-//      Ql_memset(para_value, 0, sizeof(para_value));
-      buf_value = Ql_MEM_Alloc(sizeof(char) * 64);
+      buf_value = memory_apply(sizeof(char) * 64);
       if (buf_value == NULL) {
         APP_DEBUG("MEM Alloc Error\r\n");
         return;
       }
-      Ql_memset(buf_value, 0, sizeof(char) * 64);
+      r_memset(buf_value, 0, sizeof(char) * 64);
       if (number == 5 || number == 6 || number == 11 || number == 16\
           || number == 49 || number == 50 || number == 51 || number == 52\
           || number == 55 || number == 56 || number == 58 ||  number == 54) {
         switch (number) {
           case 5:  // 软件版本号
-            Ql_strcpy(buf_value, defaultPara[j].para);
-            Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+            r_strcpy(buf_value, defaultPara[j].para);
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
             break;
           case 6:  // 硬件版本号
-            Ql_strcpy(buf_value, defaultPara[j].para);
-            Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+            r_strcpy(buf_value, defaultPara[j].para);
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
             break;
           case 11:  // 是否有设备在线
-            Ql_strcpy(buf_value, "1");
-            Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+            r_strcpy(buf_value, "1");
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
             break;
           case 16: {
             s32_t ret = 0;
             ST_Addr_Info_t addr_info;
-            Ql_memset(&addr_info, 0, sizeof(ST_Addr_Info_t));
+            r_memset(&addr_info, 0, sizeof(ST_Addr_Info_t));
             ret = Ql_GetLocalIPAddress(1, &addr_info);
             if (GPRS_PDP_SUCCESS == ret) {
               APP_DEBUG("Get localIPAddress successfully: %s\r\n", addr_info.addr);
@@ -170,7 +156,7 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
               APP_DEBUG("Get localIPAddress failed,ret = %d\r\n", ret);
             }
             Ql_snprintf(buf_value, 64, "%s", addr_info.addr);
-            Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
           }
           break;
@@ -188,52 +174,51 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             }
             switch (OC_reg_state) {
               case REGISTERED_AND_OBSERVED:
-                Ql_strcpy(buf_value, "0");
+                r_strcpy(buf_value, "0");
                 break;
               case REGISTERING:
-                Ql_strcpy(buf_value, "1");
+                r_strcpy(buf_value, "1");
                 break;
               case REJECTED_BY_SERVER:
-                Ql_strcpy(buf_value, "1");
+                r_strcpy(buf_value, "1");
                 break;
               case TIMEOUT_AND_RETRYING:
-                Ql_strcpy(buf_value, "1");
+                r_strcpy(buf_value, "1");
                 break;
               case REGISTERED:
-                Ql_strcpy(buf_value, "0");
+                r_strcpy(buf_value, "0");
                 break;
               case DEREGISTERED:
-                Ql_strcpy(buf_value, "1");
+                r_strcpy(buf_value, "1");
                 break;
               case RESUMPTION_FAILED:
-                Ql_strcpy(buf_value, "1");
+                r_strcpy(buf_value, "1");
                 break;
               case UNINITIALISED:
               default:
-                Ql_strcpy(buf_value, "1");
+                r_strcpy(buf_value, "1");
                 break;
             }
-            Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
           }
           break;
-          case 50:  //GPRS 网络注册状态
+          case 50:  // GPRS 网络注册状态
             // cm_gprs_getcgregstate(&cgreg);
             // cm_itoa(cgreg,cgreg_char,10);
             // memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             // PDT[j].wFunc(&PDT[j],cgreg_char, &len);
             break;
-          case 51:  //固件编译日期
-            Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          case 51:  // 固件编译日期
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], MAKE_DATE, &len);
             break;
-          case 52:  //固件编译时间
-            Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          case 52:  // 固件编译时间
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], MAKE_TIME2, &len);
             break;
-          case 54:  //获取日志
-//            databuf->payload = memory_apply(log_line_len * log_max_line);
-            databuf->payload = Ql_MEM_Alloc(log_line_len * log_max_line);
+          case 54:  // 获取日志
+            databuf->payload = memory_apply(log_line_len * log_max_line);
             PDT[j].rFunc(&PDT[j], databuf->payload, &databuf->lenght);
             // log_i(databuf->payload);
             APP_DEBUG("\r\n");
@@ -249,20 +234,20 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             RIL_NW_GetCSQ(&csq_status);
 //            Ql_snprintf(buf_value, 64, "%d,%d", csq_status.rssi, csq_status.ber);
             Ql_snprintf(buf_value, 64, "%d", csq_status.rssi);
-            Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
           }
           break;
-          case 56:  //通信卡CCID
+          case 56:  // 通信卡CCID
             // cm_get_iccid(para_value);
             RIL_SIM_GetCCID(buf_value);
-            Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
             break;
-          case 58:  //CPUID IMEI
+          case 58:  // CPUID IMEI
             // cm_get_imei(para_value);
             RIL_GetIMEI(buf_value);
-            Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
             break;
           default:
@@ -270,27 +255,24 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
         }
       }
 
-      Ql_memset(buf_value, 0, sizeof(char) * 64);
+      r_memset(buf_value, 0, sizeof(char) * 64);
       PDT[j].rFunc(&PDT[j], buf_value, &len);
 //      APP_DEBUG("%d=%s len=%d\r\n", PDT[j].num, buf_value, len);
       if (len > 0) {
 //        APP_DEBUG("%d=%s len %d\r\n", PDT[j].num, buf_value, len);
         databuf->size = len;
         databuf->lenght = len;
-        databuf->payload = Ql_MEM_Alloc(databuf->size + 1);
+        databuf->payload = memory_apply(databuf->size + 1);  // 将获取的参数传递出去 申请后需要在函数外部释放
         if (databuf->payload == NULL) {
           APP_DEBUG("sys para databuf payload apply fail\r\n");
         } else {
-          Ql_memset(databuf->payload, 0, databuf->size + 1);
-          Ql_memcpy(databuf->payload, buf_value, databuf->lenght);
+          r_memset(databuf->payload, 0, databuf->size + 1);
+          r_memcpy(databuf->payload, buf_value, databuf->lenght);
         }
       } else {
         APP_DEBUG("para fail!\r\n");
       }
-      if (buf_value != NULL) {
-        Ql_MEM_Free(buf_value);
-        buf_value = NULL;
-      }
+      memory_release(buf_value);
       break;
     }
   }
@@ -311,14 +293,14 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
     if (number == PDT[j].num) {
       APP_DEBUG("para[%d] number is %d Old value is %s\r\n", j, number, PDT[j].a);
       APP_DEBUG("para[%d] number is %d New value will be %s\r\n", j, number, data->payload);
-      str = Ql_MEM_Alloc(sizeof(char) * 64);
+      str = memory_apply(sizeof(char) * 64);
       if (str == NULL) {
         APP_DEBUG("MEM Alloc Error\r\n");
         ret = 0x03;
         return ret;
       }
-      Ql_memset(str, 0, sizeof(str));
-      Ql_strncpy(str, (char *)data->payload, Ql_strlen((char *)data->payload));
+      r_memset(str, 0, sizeof(str));
+      r_strncpy(str, (char *)data->payload, r_strlen((char *)data->payload));
       APP_DEBUG("para[%d] number is %d str %s\r\n", j, number, str);
       switch (number) {  // 01/02/03/07/08/12/14/29/34/57 生产是必须写的参数
         case 0:
@@ -343,7 +325,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
           ret = 0x02;
           break;
         case 14: {
-        } 
+        }
         break;
         case 29:
           switch (*(data->payload)) {
@@ -405,23 +387,23 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
           char str_temp_2[64] = {0};
           u16_t len = 0;
           char *P1 = NULL;
-          Ql_memset(str, 0, sizeof(str));
-          Ql_strncpy(str, (char *)data->payload, Ql_strlen((char *)data->payload));
-          Ql_memset(str_temp_1, 0, sizeof(str_temp_1));
-          Ql_memset(str_temp_2, 0, sizeof(str_temp_2));
+          r_memset(str, 0, sizeof(str));
+          r_strncpy(str, (char *)data->payload, r_strlen((char *)data->payload));
+          r_memset(str_temp_1, 0, sizeof(str_temp_1));
+          r_memset(str_temp_2, 0, sizeof(str_temp_2));
           Ql_sprintf(str_temp_2, "#%d-%d-%d-%d#", uart.baudrate, uart.dataBits, uart.stopBits, uart.parity);
           for (i = 0; i < number_of_array_elements; i++) {
             if (14 == PDT[i].num) {
               PDT[i].rFunc(&PDT[i], str_temp_1, &len);
-              P1 = Ql_strstr(str_temp_1, "#");
+              P1 = r_strstr(str_temp_1, "#");
               if (P1) {
                 *P1 = '\0';   // 去掉#号
-                len = Ql_strlen(str_temp_1);
+                len = r_strlen(str_temp_1);
                 APP_DEBUG("%s len:%d\r\n", str_temp_1, len);
-                Ql_strcat(str_temp_1, str_temp_2);
-                len = Ql_strlen(str_temp_1);
+                r_strcat(str_temp_1, str_temp_2);
+                len = r_strlen(str_temp_1);
                 APP_DEBUG("%s len:%d\r\n", str_temp_1, len);
-                Ql_memset((&PDT[i])->a, 0, sizeof((&PDT[i])->a));
+                r_memset((&PDT[i])->a, 0, sizeof((&PDT[i])->a));
                 PDT[i].wFunc(&PDT[i], str_temp_1, &(len));
               }
             }
@@ -441,7 +423,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
           ret = 0x03;
           break;
         }
-        Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+        r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
 //        PDT[j].wFunc(&PDT[j], data->payload, &(data->lenght));
         PDT[j].wFunc(&PDT[j], str, &(data->lenght));
 
@@ -451,10 +433,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
         APP_DEBUG("PARA %d=%s\r\n", PDT[j].num, str);
         break;
       }
-      if (str != NULL) {
-        Ql_MEM_Free(str);
-        str = NULL;
-      }
+      memory_release(str);
     }
     if (j >= number_of_array_elements) {
       APP_DEBUG("para_meter %d is wrongth\r\n", number);
@@ -484,35 +463,35 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
   int j = 0;
   int number = 0;
   char *buf_value = NULL;
-  buf_value = Ql_MEM_Alloc(sizeof(char) * 64);
+  buf_value = memory_apply(sizeof(char) * 64);
   if (buf_value == NULL) {
     APP_DEBUG("MEM Alloc Error\r\n");
     return;
   }
-  Ql_memset(buf_value, 0, sizeof(char) * 64);
+//  r_memset(buf_value, 0, sizeof(char) * 64);
 
   APP_DEBUG("main_parametr_update!\r\n");
   for (j = 0; j < number_of_array_elements; j++) {
     number = PDT[j].num;
-//    Ql_memset(para_value, 0, sizeof(para_value));
+    r_memset(buf_value, 0, sizeof(char) * 64);
     if (number == 5 || number == 6 || number == 11 || number == 49 || number == 50 \
         || number == 51 || number == 52 || number == 55 || number == 56 || number == 58) {
       switch (number) {
         case 5:  //软件版本号
-          Ql_strcpy(buf_value, defaultPara[j].para);
-          Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-          len = Ql_strlen(buf_value);
+          r_strcpy(buf_value, defaultPara[j].para);
+          r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          len = r_strlen(buf_value);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
           break;
         case 6:  //硬件版本号
-          Ql_strcpy(buf_value, defaultPara[j].para);
-          Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-          len = Ql_strlen(buf_value);
+          r_strcpy(buf_value, defaultPara[j].para);
+          r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          len = r_strlen(buf_value);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
           break;
         case 11:  //是否有设备在线
-          Ql_strcpy(buf_value, "1");
-          Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          r_strcpy(buf_value, "1");
+          r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
           len = Ql_strlen(buf_value);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
           break;
@@ -529,15 +508,15 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
           // PDT[j].wFunc(&PDT[j],cgreg_char, &len);
           break;
         case 51:  //固件编译日期
-          Ql_strcpy(buf_value, defaultPara[j].para);
-          Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-          len = Ql_strlen(defaultPara[j].para);
+          r_strcpy(buf_value, defaultPara[j].para);
+          r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          len = r_strlen(defaultPara[j].para);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
           break;
         case 52:  //固件编译时间
-          Ql_strcpy(buf_value, defaultPara[j].para);
-          Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-          len = Ql_strlen(defaultPara[j].para);
+          r_strcpy(buf_value, defaultPara[j].para);
+          r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          len = r_strlen(defaultPara[j].para);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
           break;
         case 55:
@@ -549,23 +528,23 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
           RIL_NW_GetCSQ(&csq_status);
 //          Ql_snprintf(buf_value, 64, "%d,%d", csq_status.rssi, csq_status.ber);
           Ql_snprintf(buf_value, 64, "%d", csq_status.rssi);
-          len = Ql_strlen(buf_value);
-          Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          len = r_strlen(buf_value);
+          r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
           PDT[j].wFunc(&PDT[j], buf_value, &len);
         }
         break;
         case 56:  //通信卡CCID
           // cm_get_iccid(para_value);  //mike 20200824
           RIL_SIM_GetCCID((char *)buf_value);
-          Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-          len = Ql_strlen(buf_value);
+          r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          len = r_strlen(buf_value);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
           break;
         case 58:  //CPUID IMEI
           // cm_get_imei(para_value);  //mike 20200824
           RIL_GetIMEI((char *)buf_value);
-          Ql_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-          len = Ql_strlen(buf_value);
+          r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          len = r_strlen(buf_value);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
           break;
         default:
@@ -573,120 +552,14 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
       }
     }
   }
-  if (buf_value != NULL) {
-    Ql_MEM_Free(buf_value);
-    buf_value = NULL;
-  }
+  memory_release(buf_value);
   parameter_a_module();
   a_copy_to_b();
   parameter_init();  // 保持统一
-}
-
-/* void parametr_default(void) {   // mike 依据default配置重新生成PDT表
-  APP_DEBUG("parametr_default\r\n");
-  u16_t len = 0;
-  int i = 0;
-  for (i = 0; i < number_of_array_elements; i++) {
-    if (Ql_strlen(defaultPara[i].para) <= 0) {
-      continue;
-    }
-    Ql_memset((&PDT[i])->a, 0, sizeof((&PDT[i])->a));
-    len = Ql_strlen(defaultPara[i].para);
-    PDT[i].wFunc(&PDT[i], (void *)defaultPara[i].para, &len);
-  }
-  parameter_a_module();
-  a_copy_to_b();
-  parameter_init();  // 保持统一
-} */
-
-void GET_ALL_data(void) {
-  int j = 0;
-  char *buf  = NULL;
-  u16_t len = 64;
-
-  for (j = 0; j < number_of_array_elements; j++) {
-    //日志系统
-    if (PDT[j].num == 54) {
-      continue;
-    }
-
-    buf = Ql_MEM_Alloc(sizeof(char) * 64);
-    Ql_memset(buf, 0, sizeof(char) * 64);
-    PDT[j].rFunc(&PDT[j], buf, &len);
-    if (Ql_strlen(buf) > 0) {
-      APP_PRINT("%d=%s\r\n", PDT[j].num, buf);
-    }
-    if (buf != NULL) {
-      Ql_MEM_Free(buf);
-      buf = NULL;
-    }
-  }
-  Para_Init_flag = 1;
 }
 #endif
 
 #ifdef _PLATFORM_L610_
-ServerAddr_t *ServerAdrrGet(u8_t num) {
-  Buffer_t buf;
-  ServerAddr_t *serverAddr = null;  
-  r_memset(&buf, 0, sizeof(Buffer_t));
-  parametr_get(num, &buf);  // TODO获取的buf长度有问题?
-  
-  if (buf.payload != null && buf.lenght > 5) {
-    ListHandler_t cmdStr;
-    int len = 0;
-  
-    r_strsplit(&cmdStr, (char *) buf.payload, ':');
-  
-    if (cmdStr.count > 0) {
-      len = r_strlen((char *) * (int *) cmdStr.node->payload);
-      serverAddr = fibo_malloc(sizeof(ServerAddr_t) + len);
-      r_strcpy(serverAddr->addr, (char *) * (int *) cmdStr.node->payload);
-      serverAddr->type = 1;
-  
-      if (cmdStr.count > 1) {
-      serverAddr->port = Swap_charNum((char *) * (int *) cmdStr.node->next->payload);
-      // TODO 有问题，一直会进入这里
-      }
-  
-/*    if (num == HANERGY_SERVER_ADDR) {           // mike disable Hanrgy sever 24# command for NB platform 20200827
-        serverAddr->port = 8081;
-      } else {
-        serverAddr->port = 502;
-      }  */
-
-      if (cmdStr.count > 2) {
-/*        if (r_strfind("UDP", (char*) *(int*) cmdStr.node->next->next->payload) >= 0) {
-            serverAddr->type = 0;
-          } else if (r_strfind("SSL", (char*) *(int*) cmdStr.node->next->next->payload) >= 0) {
-            serverAddr->type = 2;
-          } */
-        if (r_strstr((char *) * (int *) cmdStr.node->next->next->payload, "UDP") != NULL) {
-          serverAddr->type = 0;
-        } else if (r_strstr((char *) * (int *) cmdStr.node->next->next->payload, "SSL") != NULL) {
-          serverAddr->type = 2;
-        }
-      }
-    }
-    list_delete(&cmdStr);
-  }
-  
-  if (serverAddr->port == 0) {
-    if (serverAddr != NULL) {
-      fibo_free(serverAddr);
-      serverAddr = null;
-    }
-  }  
-
-  if (buf.payload != NULL) {
-    fibo_free(buf.payload);
-    buf.lenght = 0;
-    buf.size = 0;
-  }
-
-  return serverAddr;
-}
-
 void parametr_get(u32_t number, Buffer_t *databuf) {
   char *buf_value = NULL;
   u16_t len = 0;
@@ -698,8 +571,7 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
   for (j = 0; j < number_of_array_elements; j++) {
     if (number == PDT[j].num) {
       APP_DEBUG("para_meter[%d]num = %ld!\r\n", j, number);
-//      Ql_memset(para_value, 0, sizeof(para_value));
-      buf_value = fibo_malloc(sizeof(char) * 64);
+      buf_value = memory_apply(sizeof(char) * 64);
       if (buf_value == NULL) {
         APP_DEBUG("MEM Alloc Error\r\n");
         return;
@@ -725,8 +597,8 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             PDT[j].wFunc(&PDT[j], buf_value, &len);
             break;
           case 16: {  // 查询IP地址
-          }
             break;
+          }
           case 49:  // 查询网络注册信息
             break;
           case 50:  // GPRS 网络注册状态
@@ -749,8 +621,8 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             len = r_strlen(buf_value);
             r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
-          }
             break;
+          }
           case 56:  // 通信卡CCID
             fibo_get_ccid((u8_t *)buf_value);
             r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
@@ -772,10 +644,10 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
       PDT[j].rFunc(&PDT[j], buf_value, &len);
 //      APP_DEBUG("%d=%s len=%d\r\n", PDT[j].num, buf_value, len);
       if (len > 0) {
-//        APP_DEBUG("%d=%s len %d\r\n", PDT[j].num, buf_value, len);
+//      APP_DEBUG("%d=%s len %d\r\n", PDT[j].num, buf_value, len);
         databuf->size = len;
         databuf->lenght = len;
-        databuf->payload = fibo_malloc(databuf->size + 1);
+        databuf->payload = memory_apply(databuf->size + 1);  // 将获取的参数传递出去 申请后需要在函数外部释放
         if (databuf->payload == NULL) {
           APP_DEBUG("sys para databuf payload apply fail\r\n");
         } else {
@@ -785,14 +657,11 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
       } else {
         APP_DEBUG("para fail!\r\n");
       }
-      if (buf_value != NULL) {
-        fibo_free(buf_value);
-        buf_value = NULL;
-      }
+      memory_release(buf_value);
       break;
     }
   }
-    
+
 //  APP_DEBUG("index: %d totle: %d\r\n", j, number_of_array_elements);
   if (j >= number_of_array_elements) {
     databuf->size = 0;
@@ -809,7 +678,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
     if (number == PDT[j].num) {
       APP_DEBUG("para[%d] number is %ld Old value is %s\r\n", j, number, PDT[j].a);
       APP_DEBUG("para[%d] number is %ld New value will be %s\r\n", j, number, data->payload);
-      str = fibo_malloc(sizeof(char) * 64);
+      str = memory_apply(sizeof(char) * 64);
       if (str == NULL) {
         APP_DEBUG("MEM Alloc Error\r\n");
         ret = 0x03;
@@ -841,8 +710,8 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
           ret = 0x02;
           break;
         case 14: {
-        } 
           break;
+        }
         case 29:
           switch (*(data->payload)) {
             case '1':  // 采集器重启
@@ -923,12 +792,12 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
               }
             }
           }
-        }
           break;
+        }
         default:
           break;
       }
-  
+
       if (ret == 0x00) {
         //这里只是写入成功，但最后是不是更新成功未知
         ret = 0x00;
@@ -940,17 +809,14 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
         }
         r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
         PDT[j].wFunc(&PDT[j], str, &(data->lenght));
- 
+
         if (number == 21) {
           log_save("set para 21: %s", (&PDT[j])->a);
         }
         APP_DEBUG("PARA %d=%s\r\n", PDT[j].num, str);
         break;
       }
-      if (str != NULL) {
-        fibo_free(str);
-        str = NULL;
-      }
+      memory_release(str);
     }
     if (j >= number_of_array_elements) {
       APP_DEBUG("para_meter %ld is wrongth\r\n", number);
@@ -958,14 +824,14 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
     }
   }
   // start_timer();
-  if (ret == 0x00) {
+  if (ret == 0x00 && number != LOCAL_TIME) {  // mike 心跳时间不存到参数系统
     parameter_a_module();
     a_copy_to_b();
     parameter_init();  // 保持统一
     if (number == DEVICE_MONITOR_NUM || number == DEVICE_PROTOCOL || number == DEVICE_UART_SETTING) {
       Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, 0, 0);
-    } else if (number == DEVICE_PNID || number == NB_SERVER_ADDR || number == NB_SERVER_PORT) {
-      Net_close();
+    } else if (number == DEVICE_PNID || number == EYBOND_SERVER_ADDR) {
+      Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_RESTART_ID, 0, 0);    // 或者NET_CMD_RESTART_ID
     }
   }
   return ret ;
@@ -976,15 +842,16 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
   int j = 0;
   int number = 0;
   char *buf_value = NULL;
-  buf_value = fibo_malloc(sizeof(char) * 64);
+  buf_value = memory_apply(sizeof(char) * 64);
   if (buf_value == NULL) {
     APP_DEBUG("MEM Alloc Error\r\n");
     return;
   }
-  r_memset(buf_value, 0, sizeof(char) * 64);
-    
+//  r_memset(buf_value, 0, sizeof(char) * 64);
+
   APP_DEBUG("main_parametr_update!\r\n");
   for (j = 0; j < number_of_array_elements; j++) {
+    r_memset(buf_value, 0, sizeof(char) * 64);
     number = PDT[j].num;
     if (number == 5 || number == 6 || number == 11 || number == 49 || number == 50 \
         || number == 51 || number == 52 || number == 55 || number == 56 || number == 58) {
@@ -1031,16 +898,15 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
           len = r_strlen(defaultPara[j].para);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
           break;
-        case 55:  // 获取CSQ值
-          {
-            s8_t nrssi = 0, nber = 0;
-            fibo_get_csq((INT32 *)&nrssi, (INT32 *)&nber);
-            snprintf(buf_value, 64, "%d", nrssi);
-            len = r_strlen(buf_value);
-            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-            PDT[j].wFunc(&PDT[j], buf_value, &len);
-          }
+        case 55: {  // 获取CSQ值
+          s8_t nrssi = 0, nber = 0;
+          fibo_get_csq((INT32 *)&nrssi, (INT32 *)&nber);
+          snprintf(buf_value, 64, "%d", nrssi);
+          len = r_strlen(buf_value);
+          r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          PDT[j].wFunc(&PDT[j], buf_value, &len);
           break;
+        }
         case 56:  // 通信卡CCID
           fibo_get_ccid((u8_t *)buf_value);
           r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
@@ -1058,40 +924,77 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
       }
     }
   }
-  if (buf_value != NULL) {
-    fibo_free(buf_value);
-    buf_value = NULL;
-  }
+  memory_release(buf_value);
   parameter_a_module();
   a_copy_to_b();
   parameter_init();  // 保持统一
 }
+#endif
 
-void GET_ALL_data(void) {
-  int j = 0;
-  char *buf  = NULL;
-  u16_t len = 64;
-    
-  for (j = 0; j < number_of_array_elements; j++) {
-    //日志系统
-    if (PDT[j].num == 54) {
-      continue;
+ServerAddr_t *ServerAdrrGet(u8_t num) {
+  Buffer_t buf;
+  Buffer_t portBuf;
+  ServerAddr_t *serverAddr = null;
+  r_memset(&buf, 0, sizeof(Buffer_t));
+  r_memset(&portBuf, 0, sizeof(Buffer_t));
+  parametr_get(num, &buf);  // TODO获取的buf长度有问题?
+
+  if (buf.payload != null && buf.lenght > 5) {
+    ListHandler_t cmdStr;
+    int len = 0;
+
+    r_strsplit(&cmdStr, (char *) buf.payload, ':');
+
+    if (cmdStr.count > 0) {
+      len = r_strlen((char *) * (int *) cmdStr.node->payload);
+      serverAddr = memory_apply(sizeof(ServerAddr_t) + len);
+      r_strcpy(serverAddr->addr, (char *) * (int *) cmdStr.node->payload);
+      serverAddr->type = 1;
+      if (num == SARNATH_SERVER_ADDR) {
+        parametr_get(SARNATH_SERVER_PORT, &portBuf);
+        serverAddr->port = Swap_charNum((char *)portBuf.payload);
+      } else {
+        serverAddr->port = 502;
+      }
+
+      if (num == HANERGY_SERVER_ADDR) {
+        serverAddr->port = 8081;
+      } else {
+        serverAddr->port = 502;
+      }
+
+      if (cmdStr.count > 1) {
+        serverAddr->port = Swap_charNum((char *) * (int *) cmdStr.node->next->payload);
+        // TODO 有问题，一直会进入这里
+      }
+
+      if (cmdStr.count > 2) {
+        if (r_strstr((char *) * (int *) cmdStr.node->next->next->payload, "UDP") != NULL) {
+          serverAddr->type = 0;
+        } else if (r_strstr((char *) * (int *) cmdStr.node->next->next->payload, "SSL") != NULL) {
+          serverAddr->type = 2;
+        }
+      }
     }
-    
-    buf = fibo_malloc(sizeof(char) * 64);
-    r_memset(buf, 0, sizeof(char) * 64);
-    PDT[j].rFunc(&PDT[j], buf, &len);
-    if (r_strlen(buf) > 0) {
-      APP_PRINT("%d=%s\r\n", PDT[j].num, buf);
-    }
-    if (buf != NULL) {
-      fibo_free(buf);
-      buf = NULL;
+    list_delete(&cmdStr);
+  }
+
+  if (serverAddr->port == 0) {
+    if (serverAddr != NULL) {
+      memory_release(serverAddr);
+      serverAddr = null;
     }
   }
-  Para_Init_flag = 1;
+
+  memory_release(portBuf.payload);
+  portBuf.size = 0;
+  portBuf.lenght = 0;
+  memory_release(buf.payload);
+  buf.lenght = 0;
+  buf.size = 0;
+
+  return serverAddr;
 }
-#endif
 
 void SysPara_init(void) {
   APP_DEBUG("SysPara_init\r\n");
@@ -1119,6 +1022,28 @@ void parametr_default(void) {   // mike 依据default配置重新生成PDT表
   parameter_a_module();
   a_copy_to_b();
   parameter_init();  // 保持统一
+}
+
+void GET_ALL_data(void) {
+  int j = 0;
+  char *buf  = NULL;
+  u16_t len = 64;
+
+  for (j = 0; j < number_of_array_elements; j++) {
+    //日志系统
+    if (PDT[j].num == 54) {
+      continue;
+    }
+
+    buf = memory_apply(sizeof(char) * 64);
+    r_memset(buf, 0, sizeof(char) * 64);
+    PDT[j].rFunc(&PDT[j], buf, &len);
+    if (r_strlen(buf) > 0) {
+      APP_PRINT("%d=%s\r\n", PDT[j].num, buf);
+    }
+    memory_release(buf);
+  }
+  Para_Init_flag = 1;
 }
 
 /******************************************************************************/

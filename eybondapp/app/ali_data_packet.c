@@ -1,5 +1,6 @@
 
 #include "ali_data_packet.h"
+#include "eyblib_memory.h"
 
 static GinlongMonitor__MNotification notification = {0} ;
 static GinlongMonitor__MCollector1 collector1   =  {0};
@@ -290,62 +291,166 @@ void set_inverter_packet_data(GinlongMonitor__MInverter1  *ginlongmonitor__minve
 
 }
 
+#define EYBOND_DEFAULT_ALI_PRODUCTKEY    "a1WBg7jGkkT"
+#define EYBOND_DEFAULT_ALI_DEVICENAME    "L610_MQTT_ALI_DEV_1"
+#define EYBOND_DEFAULT_ALI_DEVICESECRET  "13bb5d52d7c846f193df838c441e710a"
+
 void load_config_para(void)
 {
     Buffer_t databuf;
-    char software_ver[10]= {0};
-    memset(&databuf,0,sizeof(databuf));
+    char software_ver[32]= {0};
+    r_memset(software_ver, '\0', sizeof(software_ver));
+    databuf.lenght = 0;
+    databuf.size = 0;
+    databuf.payload = NULL;
     parametr_get(5, &databuf);
-    strncpy(software_ver,databuf.payload,databuf.lenght+1);//软件版本
+    if (databuf.payload != NULL) {
+      strncpy(software_ver, (char *)databuf.payload,databuf.lenght+1);//软件版本
+      memory_release(databuf.payload);
+    } else {
+      strncpy(software_ver, "0.0.0.0", r_strlen("0.0.0.0"));
+    }
     para.software_ver = collector_version_convert(software_ver);
-    APP_PRINT("after of cov software_ver = %x\r\n",para.software_ver);
+    APP_PRINT("after of cov software_ver = %lx\r\n",para.software_ver);
 
-    memset(&databuf,0,sizeof(databuf));
+    databuf.lenght = 0;
+    databuf.size = 0;
     parametr_get(92, &databuf);
-    strncpy(para.product_key,databuf.payload,databuf.lenght+1);//product_key
+    if (databuf.payload != NULL) {
+      if (databuf.lenght > 1) {
+        strncpy(para.product_key,(char *)databuf.payload,databuf.lenght+1);//product_key
+      } else {
+        strncpy(para.product_key,EYBOND_DEFAULT_ALI_PRODUCTKEY,r_strlen(EYBOND_DEFAULT_ALI_PRODUCTKEY));
+      }
+      memory_release(databuf.payload);
+    } else {
+      strncpy(para.product_key,EYBOND_DEFAULT_ALI_PRODUCTKEY,r_strlen(EYBOND_DEFAULT_ALI_PRODUCTKEY));
+    }
     APP_PRINT("product_key = %s\r\n",para.product_key);
 
-    memset(&databuf,0,sizeof(databuf));
+    databuf.lenght = 0;
+    databuf.size = 0;
     parametr_get(93, &databuf);
-    strncpy(para.device_name,databuf.payload,databuf.lenght+1);//device_name
+    if (databuf.payload != NULL) {
+      if (databuf.lenght > 1) {
+        strncpy(para.device_name,(char *)databuf.payload,databuf.lenght+1);//device_name
+      } else {
+        strncpy(para.device_name, EYBOND_DEFAULT_ALI_DEVICENAME, r_strlen(EYBOND_DEFAULT_ALI_DEVICENAME));
+      }
+      memory_release(databuf.payload);
+    } else {
+      strncpy(para.device_name, EYBOND_DEFAULT_ALI_DEVICENAME, r_strlen(EYBOND_DEFAULT_ALI_DEVICENAME));
+    }
     APP_PRINT("device_name = %s\r\n",para.device_name);
 
-    memset(&databuf,0,sizeof(databuf));
+    databuf.lenght = 0;
+    databuf.size = 0;
     parametr_get(94, &databuf);
-    strncpy(para.device_secret,databuf.payload,databuf.lenght+1);//
+    if (databuf.payload != NULL) {
+      if (databuf.lenght > 1) {
+        strncpy(para.device_secret,(char *)databuf.payload,databuf.lenght+1);//device_secret
+      } else {
+        strncpy(para.device_secret, EYBOND_DEFAULT_ALI_DEVICESECRET, r_strlen(EYBOND_DEFAULT_ALI_DEVICESECRET));
+      }
+      memory_release(databuf.payload);
+    } else {
+      strncpy(para.device_secret, EYBOND_DEFAULT_ALI_DEVICESECRET, r_strlen(EYBOND_DEFAULT_ALI_DEVICESECRET));
+    }
     APP_PRINT("device_secret = %s\r\n",para.device_secret);
 
-    memset(&databuf,0,sizeof(databuf));
+    databuf.lenght = 0;
+    databuf.size = 0;
     parametr_get(95, &databuf);
-    strncpy(para.pub_topic,databuf.payload,databuf.lenght+1);//
+    if (databuf.payload != NULL) {
+      if (databuf.lenght > 1) {
+        strncpy(para.pub_topic,(char *)databuf.payload,databuf.lenght+1);//pub_topic
+      } else {
+        strncpy(para.pub_topic, "hello", r_strlen("hello"));
+      }
+      memory_release(databuf.payload);
+    } else {
+      strncpy(para.pub_topic, "hello", r_strlen("hello"));
+    }
     APP_PRINT("pub_topic = %s\r\n",para.pub_topic);
 
-    memset(&databuf,0,sizeof(databuf));
+    databuf.lenght = 0;
+    databuf.size = 0;
     parametr_get(96, &databuf);
-    strncpy(para.sub_topic,databuf.payload,databuf.lenght+1);//
+    if (databuf.payload != NULL) {
+      if (databuf.lenght > 1) {
+        strncpy(para.sub_topic,(char *)databuf.payload,databuf.lenght+1);//sub_topic
+      } else {
+        strncpy(para.sub_topic, "world", r_strlen("world"));
+      }
+      memory_release(databuf.payload);
+    } else {
+      strncpy(para.sub_topic, "world", r_strlen("world"));
+    }
     APP_PRINT("sub_topic = %s\r\n",para.sub_topic);
 
-    memset(&databuf,0,sizeof(databuf));
-    parametr_get(97, &databuf);
-    strncpy(para.TotoalWorkTime,databuf.payload,databuf.lenght+1);//
-    APP_PRINT("TotoalWorkTime = %s\r\n",para.TotoalWorkTime);
-    para.total_working_time = atoi(para.TotoalWorkTime);
+    databuf.lenght = 0;
+    databuf.size = 0;
+//    parametr_get(97, &databuf);
+    parametr_get(26, &databuf);
+    if (databuf.payload != NULL) {
+      if (databuf.lenght > 1) {
+        strncpy(para.TotoalWorkTime,(char *)databuf.payload,databuf.lenght+1);//TotoalWorkTime
+      } else {
+        strncpy(para.TotoalWorkTime, "2020-12-10 20:45:00", r_strlen("2020-12-10 20:45:00"));
+      }
+      memory_release(databuf.payload);
+    } else {
+      strncpy(para.TotoalWorkTime, "2020-12-10 20:45:00", r_strlen("2020-12-10 20:45:00"));
+    }
+    APP_PRINT("TotoalWorkTime = %s\r\n", para.TotoalWorkTime);
+    para.total_working_time = get_tick(para.TotoalWorkTime);
+    APP_PRINT("total_working_time = %lld\r\n", para.total_working_time);
 
-    memset(&databuf,0,sizeof(databuf));
-    parametr_get(82, &databuf);//设备数据上报周期
-    para.data_upload_cycle = atoi(databuf.payload);
-    APP_PRINT("data_upload_cycle = %d\r\n",para.data_upload_cycle);
+    databuf.lenght = 0;
+    databuf.size = 0;
+    parametr_get(82, &databuf); //设备数据上报周期
+    if (databuf.payload != NULL) {
+      if (databuf.lenght > 1) {
+        para.data_upload_cycle = atoi((char *)databuf.payload); //data_upload_cycle
+      } else {
+        para.data_upload_cycle = 300;
+      }
+      memory_release(databuf.payload);
+    } else {
+      para.data_upload_cycle = 300;
+    }
+    APP_PRINT("data_upload_cycle = %ld\r\n",para.data_upload_cycle);
 
 
-    memset(&databuf,0,sizeof(databuf));
+    databuf.lenght = 0;
+    databuf.size = 0;
     parametr_get(07, &databuf);//出厂时间
-    para.factory_time = get_tick(databuf.payload);
-    APP_PRINT("factory_time = %ld\r\n",para.factory_time );
+    if (databuf.payload != NULL) {
+      if (databuf.lenght > 1) {
+        para.factory_time = get_tick((char *)databuf.payload); //factory_time
+      } else {
+        para.factory_time = get_tick("2020-12-10 20:40:00");
+      }
+      memory_release(databuf.payload);
+    } else {
+      para.factory_time = get_tick("2020-12-10 20:40:00");
+    }
+    APP_PRINT("factory_time = %lld\r\n",para.factory_time );
 
-    memset(&databuf,0,sizeof(databuf));
+    databuf.lenght = 0;
+    databuf.size = 0;
     parametr_get(55, &databuf);//基站信号强度
-    para.rssi = atoi(databuf.payload);
-    APP_PRINT("rssi = %d\r\n",para.rssi );
+    if (databuf.payload != NULL) {
+      if (databuf.lenght > 1) {
+        para.rssi = atoi((char *)databuf.payload); //rssi
+      } else {
+        para.rssi = 0;
+      }
+      memory_release(databuf.payload);
+    } else {
+      para.rssi = 0;
+    }
+    APP_PRINT("rssi = %ld\r\n", para.rssi);
 
 }
 

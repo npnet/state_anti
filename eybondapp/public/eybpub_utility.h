@@ -20,6 +20,7 @@
 #define WATCHDOG_PIN	(PINNAME_GPIO5)
 // #define WATCHDOG_PIN	(PINNAME_GPIO2)
 #define SERIAL_RX_BUFFER_LEN  1024
+#define MAX_NET_BUFFER_LEN    512
 
 s32 ReadSerialPort(Enum_SerialPort port,u8* pBuffer, u32 bufLen);
 #endif
@@ -37,6 +38,7 @@ s32 ReadSerialPort(Enum_SerialPort port,u8* pBuffer, u32 bufLen);
 #define ADC0_PORT	    (45)
 
 #define SERIAL_RX_BUFFER_LEN  1024
+#define MAX_NET_BUFFER_LEN    1024
 
 #define DEBUG_UART_TXD       28
 #define DEBUG_UART_RXD       29

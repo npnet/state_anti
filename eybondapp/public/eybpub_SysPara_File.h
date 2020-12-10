@@ -17,18 +17,30 @@
 #define GPRS_CSQ_VALUE      (55)
 #define GPRS_CCID_ADDR      (56)
 #define GPRS_APN_ADDR       (57)
-// #define EYBOND_SERVER_ADDR  (21)
+#ifdef _PLATFORM_BC25_
 #define NB_SERVER_ADDR      (21)
-// #define HANERGY_SERVER_ADDR     (24)
 #define NB_SERVER_PORT      (24)
-// #define STATE_GRID_SERVER_ADDR  (23)
+#endif
+#ifdef _PLATFORM_L610_
+#define EYBOND_SERVER_ADDR      (21)
 // #define SAJ_SERVER_ADDR         (22)
+// #define STATE_GRID_SERVER_ADDR  (23)
+#define HANERGY_SERVER_ADDR     (24)
+/* Sarnath parameters*/
+#define SARNATH_SERVER_ADDR     (71)
+#define SARNATH_SERVER_PORT     (72)
+#define SARNATH_FACTORY_ID      (73)
+#define SARNATH_LOGGER_ID       (74)
+#define SARNATH_UPLOAD_TIME     (75)
+#endif
+
 #define GPRS_BASE_ID            (59)
 // #define STATE_GRID_SN           (65)
 // #define STATE_GRID_USER_NAME    (66)
 // #define STATE_GRID_PASSWORD     (67)
 // #define STATE_GRID_REGISTER_ID  (68)
 
+#define LOCAL_TIME              (26)
 #define TIME_ZONE_ADDR          (25)
 
 #define DEVICE_MONITOR_NUM      (12)

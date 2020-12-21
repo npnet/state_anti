@@ -7,6 +7,10 @@
 #include "L610_conn_ali_net.h"
 #include "eybpub_SysPara_File.h"
 #include "sci_types.h"
+#include "Device.h"
+#include "eybapp_appTask.h"
+#include "eybpub_utility.h"
+
 
 #pragma pack(1)
 typedef struct
@@ -143,6 +147,12 @@ extern Inverter_Packet4 *inverter_data4;
 extern Inverter_Packet5 *inverter_data5;
 extern Inverter_Packet6 *inverter_data6;
 
+extern Inverter_Packet1 packet1 ;
+extern Inverter_Packet2 packet2 ;
+extern Inverter_Packet3 packet3 ;
+extern Inverter_Packet4 packet4 ;
+extern Inverter_Packet5 packet5 ;
+extern Inverter_Packet6 packet6 ;
 
 
 
@@ -158,14 +168,26 @@ typedef struct
     char inverter_str[16];
 
     uint32_t data_upload_cycle;
-    uint64_t factory_time;
+    uint32_t factory_time;
     uint64_t current_working_tick;
     uint64_t total_working_time;
     int32 rssi;
-
+	char iccid[21];
+	
+	uint32_t lac;//定位LAC,位置区代码
+	uint64_t ci;//定位ci,小区代码
 } Para_Table;
 
 extern Para_Table para;
 
 void load_config_para(void);
+//void set_par_lac_ci(uint32_t lac ,uint32_t ci);
+
+
+#define  HTTP_URL_LEN 200
+#define  STR_RET_SIZE 100
+
+extern char http_url[HTTP_URL_LEN];
+
+
 #endif

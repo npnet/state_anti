@@ -266,6 +266,7 @@ void Device_remove(Device_t *device) {
   Device_t *dev = list_find(&DeviceList, device_cmp, device);
 
   if (dev != null) {
+  	APP_PRINT("dev dlear\r\n");
     DeviceCmd_clear(dev);     // mike 20200915 打开透传会死机 与deviceClear冲突
     list_nodeDelete(&DeviceList, dev);
   }
@@ -469,7 +470,9 @@ static void device_callback(DeviceAck_e ack) {
   Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
+  APP_PRINT("this is dev 475 print \r\n");
   Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
+ 
 #endif
 }
 

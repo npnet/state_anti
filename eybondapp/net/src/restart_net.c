@@ -6,7 +6,7 @@
 #include "restart_net.h"
 #include "eybpub_watchdog.h"
 #include "eyblib_list.h"
-
+#include "ali_data_packet.h"
 //宏定义
 //#define CMD_FEEDDOG             1
 #define single_sim_card         0
@@ -38,6 +38,7 @@ u32_t g_EventFlag = 0;
 u8_t g_RemoteIp[DEF_IP_MAX_SIZE]       = {0};    //IP
 u8_t g_RemotePort[DEF_PORT_MAX_SIZE]   = {"502"};    //端口号 0-65535
 u32_t g_SemFlag = 0;
+uint32_t g_SemAppUpdateFlag = 0;
 
 u32_t EYBRELINK_TASK=0;
 static u8_t relink_flag=0;          //=1重连网络
@@ -110,6 +111,11 @@ static s32_t relink_per1s(void)
 		    if(1 == sim_reg_info.nStatus){
                 //SIM卡已注册
                 APP_PRINT("\r\n\sim regitster success\r\n");
+//				APP_PRINT("sim_reg_info.gsm_scell_info.lac = %d\r\n",sim_reg_info.gsm_scell_info.lac);
+//				APP_PRINT("sim_reg_info.gsm_scell_info.cell_id = %d\r\n",sim_reg_info.gsm_scell_info.cell_id);
+//				APP_PRINT("sim_reg_info.lte_scell_info.tac = %d\r\n",sim_reg_info.lte_scell_info.tac);
+//				APP_PRINT("sim_reg_info.lte_scell_info.cell_id = %d\r\n",sim_reg_info.lte_scell_info.cell_id);
+				set_par_lac_ci(sim_reg_info.lte_scell_info.tac,sim_reg_info.lte_scell_info.cell_id);
                 sim_register_times=0;
                 //下一步：激活PDP
                 relink_index=ACTIVE_PDP; 
@@ -570,6 +576,17 @@ void proc_relink_task (s32_t relink)
 	}else{
 	APP_PRINT("sem create success\r\n");
 	}
+
+	 g_SemAppUpdateFlag = fibo_sem_new(0);//信号量升级
+    if(g_SemAppUpdateFlag < 0)
+    {
+        APP_PRINT("g_SemAppUpdateFlag create failure\r\n");
+    }
+    else
+    {
+        APP_PRINT("g_SemAppUpdateFlag create success\r\n");
+    }
+	
     EYBRELINK_TASK = fibo_queue_create(5, sizeof(int));
 
     //开机重连网络

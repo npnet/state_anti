@@ -719,6 +719,7 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
   {95,  ""                        },         /*pub_topic*/
   {96,  ""                        },         /*sub_topic*/
   {97,  "0"                       },         /*total_working_time 累计工作时间*/
+  {98,  ""                        },         /*采集器版本*/
 };
 
 /* 数采器参数读写接口 */
@@ -779,6 +780,7 @@ struct _ParamDescripTable_t PDT[] = {
   {95,  "0",                       setPubTopic,                getPubTopic   },         /*pub_topic*/
   {96,  "0",                       setSubTopic,                getSubTopic   },         /*sub_topic*/
   {97,  "0",                       setTotoalWorkTime,          getTotoalWorkTime },     /*total_working_time 累计工作时间*/
+  {98,  "00000000",                setCollectorVersion,         getCollectorVersion},    /*采集器版本*/
 };
 /*----------------------------------------------------------------------------*
 **                             Global Vars                                    *

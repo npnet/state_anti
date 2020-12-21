@@ -14,7 +14,7 @@ PROTOBUF_C__BEGIN_DECLS
 #endif
 
 
-typedef struct _GinlongMonitor__Packet GinlongMonitor__Packet;
+typedef struct _GinlongMonitor__Packet   GinlongMonitor__Packet;
 typedef struct _GinlongMonitor__MCallNotification GinlongMonitor__MCallNotification;
 typedef struct _GinlongMonitor__MNotification GinlongMonitor__MNotification;
 typedef struct _GinlongMonitor__MCollector1 GinlongMonitor__MCollector1;

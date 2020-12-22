@@ -29,11 +29,32 @@ typedef enum
     DRV_CHARGER_TYPE_CDP,
     DRV_CHARGER_TYPE_UNKOWN
 } drvChargerType_t;
+#ifdef CONFIG_FIBOCOM_BASE
+typedef enum
+{
+    // Charge message.
+    CHR_CAP_IND = 0x1, // Notify the battery's capacity
 
+    CHR_CHARGE_START_IND, // start the charge process.
+    CHR_CHARGE_END_IND,   // the charge ended.
+
+    CHR_WARNING_IND,  // the capacity is low, should charge.
+    CHR_SHUTDOWN_IND, // the capacity is very low and must shutdown.
+
+    CHR_CHARGE_FINISH,     // the charge has been completed.
+    CHR_CHARGE_DISCONNECT, // the charge be disconnect
+    CHR_CHARGE_FAULT,      // the charge fault, maybe the voltage of charge is too low.
+
+    CHR_MSG_MAX_NUM
+} CHR_SVR_MSG_SERVICE_E;
+#endif
 typedef void (*drvChargerPlugCB_t)(void *ctx, bool plugged);
 
+#ifdef CONFIG_FIBOCOM_BASE
+typedef void (*drvChargerNoticeCB_t)(CHR_SVR_MSG_SERVICE_E msg);
+#else
 typedef void (*drvChargerNoticeCB_t)(void);
-
+#endif
 void drvChargerInit(void);
 
 void drvChargerSetNoticeCB(drvChargerNoticeCB_t notice_cb);

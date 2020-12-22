@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 #include <string.h>
-#include "bt_config.h"
+#include "bluetooth/bt_config.h"
 #include "osi_api.h"
 #include "osi_log.h"
 
@@ -115,6 +115,8 @@ typedef struct _X_64_T
 typedef X_64_T int64;
 #endif
 
+typedef unsigned int long UINT24;
+
 #ifdef WIN_UNIT_TEST
 #define LOCAL
 #define CONST
@@ -172,6 +174,79 @@ typedef uint32 BLOCK_ID;
 #define BIT_30 0x40000000
 #define BIT_31 0x80000000
 
+#define SCI_ASSERT(exp) assert(exp)
+#define Assert(exp) assert(exp)
+
+typedef enum
+{
+    BT_INQ_DISABLE = 0x00,
+    BT_INQ_IDLE,
+    BT_INQ_PENDING
+} BT_INQUIRY_STATE_E;
+
+typedef uint32 BT_STATUS;
+
+#define BT_SUCCESS 0
+#define BT_ERROR 1
+#define BT_PENDING 2
+#define BT_BUSY 3
+#define BT_NO_RESOURCE 4
+#define BT_NOT_FOUND 5
+#define BT_DEVICE_NOT_FOUND 6
+#define BT_CONNECTION_FAILED 7
+#define BT_TIMEOUT 8
+#define BT_NO_CONNECTION 9
+#define BT_INVALID_PARM 10
+#define BT_NOT_SUPPORTED 11
+#define BT_CANCELLED 12
+
+#define BT_IN_PROGRESS 19
+#define BT_RESTRICTED 20
+#define BT_INVALID_HANDLE 30
+#define BT_PACKET_TOO_SMALL 31
+#define BT_NO_PAIR 32
+
+#define BT_FAILED 0x41
+#define BT_DISCONNECT 0x43
+#define BT_NO_CONNECT 0x44
+#define BT_IN_USE 0x45
+#define BT_MEDIA_BUSY 0x46
+
+#define BT_OFF 0x50
+
+#define MAX_PHONE_NUMBER 16
+
+typedef enum
+{
+    SPP_PORT_SPEED_2400 = 0x00,
+    SPP_PORT_SPEED_4800 = 0x01,
+    SPP_PORT_SPEED_7200 = 0x02,
+    SPP_PORT_SPEED_9600 = 0x03,
+    SPP_PORT_SPEED_19200 = 0x04,
+    SPP_PORT_SPEED_38400 = 0x05,
+    SPP_PORT_SPEED_57600 = 0x06,
+    SPP_PORT_SPEED_115200 = 0x07,
+    SPP_PORT_SPEED_230400 = 0x08,
+    SPP_PORT_SPEED_UNUSED = 0xFF
+} BT_SPP_PORT_SPEED_E;
+
+enum BT_PROTOCOL_STATE
+{
+    BT_PROTOCOL_DISCONNECTED = 0x00,
+    BT_PROTOCOL_CONNECTED = 0x01,
+};
+
+enum BT_PROTOCOL_POSTION
+{
+    BT_SWITCH_POS = 0x0000,
+    BT_AVRCP_POS,
+    BT_A2DP_POS,
+    BT_HFP_POS,
+    BT_SPP_POS,
+    BT_GATT_POS,
+    BT_POS_MAX = 32,
+};
+
 #ifdef WIN32
 #define PACK
 #else
@@ -181,12 +256,9 @@ typedef uint32 BLOCK_ID;
 /* some usefule marcos */
 #define Bit(_i) ((u32)1 << (_i))
 
-#ifdef CONFIG_FIBOCOM_BASE
-#else
-#define MAX(_x, _y) (((_x) > (_y)) ? (_x) : (_y))
-#define MIN(_x, _y) (((_x) < (_y)) ? (_x) : (_y))
-#endif
+//#define MAX(_x, _y) (((_x) > (_y)) ? (_x) : (_y))
 
+//#define MIN(_x, _y) (((_x) < (_y)) ? (_x) : (_y))
 #define WORD_LO(_xxx) ((uint8)((int16)(_xxx)))
 #define WORD_HI(_xxx) ((uint8)((int16)(_xxx) >> 8))
 
@@ -252,6 +324,74 @@ extern void SCI_TraceCapData(
     const void *src_ptr, // Beginer of address to be traced out.
     uint32_t size        // Size in bytes to be traced out.
 );
+
+#define ARRAY_REV_TO_STREAM(p, a, len)              \
+    do                                              \
+    {                                               \
+        register int ijk;                           \
+        for (ijk = 0; ijk < (len); ijk++)           \
+            *(p)++ = (uint8)((a)[(len)-1 - (ijk)]); \
+    } while (0)
+#define ARRAY_TO_STREAM(p, a, len)        \
+    do                                    \
+    {                                     \
+        register int ijk;                 \
+        for (ijk = 0; ijk < (len); ijk++) \
+            *(p)++ = (uint8)((a)[(ijk)]); \
+    } while (0)
+
+#define UINT32_TO_STREAM(p, u32)       \
+    do                                 \
+    {                                  \
+        *(p)++ = (uint8)(u32);         \
+        *(p)++ = (uint8)((u32) >> 8);  \
+        *(p)++ = (uint8)((u32) >> 16); \
+        *(p)++ = (uint8)((u32) >> 24); \
+    } while (0)
+#define UINT24_TO_STREAM(p, u24)       \
+    do                                 \
+    {                                  \
+        *(p)++ = (uint8)(u24);         \
+        *(p)++ = (uint8)((u24) >> 8);  \
+        *(p)++ = (uint8)((u24) >> 16); \
+    } while (0)
+#define UINT16_TO_STREAM(p, u16)      \
+    do                                \
+    {                                 \
+        *(p)++ = (uint8)(u16);        \
+        *(p)++ = (uint8)((u16) >> 8); \
+    } while (0)
+#define UINT8_TO_STREAM(p, u8) \
+    do                         \
+    {                          \
+        *(p)++ = (uint8)(u8);  \
+    } while (0)
+
+#define STREAM_TO_UINT8(u8, p) \
+    do                         \
+    {                          \
+        u8 = (uint8)(*(p));    \
+        (p) += 1;              \
+    } while (0)
+#define STREAM_TO_UINT16(u16, p)                                \
+    do                                                          \
+    {                                                           \
+        u32 = ((uint16)(*(p)) + (((uint16)(*((p) + 1))) << 8)); \
+        (p) += 2;                                               \
+    } while (0)
+#define STREAM_TO_UINT24(u32, p)                                                                       \
+    do                                                                                                 \
+    {                                                                                                  \
+        u32 = (((uint32)(*(p))) + ((((uint32)(*((p) + 1)))) << 8) + ((((uint32)(*((p) + 2)))) << 16)); \
+        (p) += 3;                                                                                      \
+    } while (0)
+
+#define STREAM_TO_UINT32(u32, p)                                                                                                          \
+    do                                                                                                                                    \
+    {                                                                                                                                     \
+        u32 = (((uint32)(*(p))) + ((((uint32)(*((p) + 1)))) << 8) + ((((uint32)(*((p) + 2)))) << 16) + ((((uint32)(*((p) + 3)))) << 24)); \
+        (p) += 4;                                                                                                                         \
+    } while (0)
 
 #define SCI_GetCurrentTime() (uint32) osiUpTime()
 #define SCI_GetTickCount() (uint32) osiUpTime()

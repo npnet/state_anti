@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include "hal_config.h"
 #include "osi_compiler.h"
+#include "fibocom.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -148,7 +149,10 @@ enum
     HAL_POWER_VDD28 = OSI_MAKE_TAG('V', 'D', 'D', '2'),
     HAL_POWER_VIO18 = OSI_MAKE_TAG('V', 'I', 'O', '1'),
     HAL_POWER_KEYLED = OSI_MAKE_TAG('K', 'E', 'Y', 'L'),
-    HAL_POWER_BACK_LIGHT = OSI_MAKE_TAG('B', 'A', 'C', 'K'),
+    HAL_POWER_BACK_LIGHT = OSI_MAKE_TAG('B', 'A', 'C', 'K'),    
+#if defined(CONFIG_FIBOCOM_MC610) || defined(CONFIG_FIBOCOM_MC615)     
+    HAL_POWER_BACK_LIGHT_1 = OSI_MAKE_TAG('B', 'A', 'K', '1'),  
+#endif    
     HAL_POWER_ANALOG = OSI_MAKE_TAG('A', 'N', 'A', 'L'),
     HAL_POWER_CAMFLASH = OSI_MAKE_TAG('C', 'A', 'M', 'F'),
     HAL_POWER_VBAT_RF = OSI_MAKE_TAG('V', 'B', 'R', 'F'),

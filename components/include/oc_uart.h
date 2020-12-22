@@ -4,7 +4,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+// #ifdef CONFIG_FIBOCOM_MAX_APP
 #include "fibo_opencpu_comm.h"
+// #endif
+
 typedef int hal_uart_port_t;
 typedef struct hal_uart_config_s hal_uart_config_t;
 typedef enum hal_uart_data_bits_s hal_uart_data_bits_t;

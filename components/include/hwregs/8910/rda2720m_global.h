@@ -818,6 +818,16 @@ typedef union {
     } b;
 } REG_RDA2720M_GLOBAL_LDO_MMC_REG1_T;
 
+// ldo_vibr_reg1
+typedef union {
+    uint32_t v;
+    struct
+    {
+        uint32_t ldo_vibr_v : 3; // [6:0]
+        uint32_t __31_3 : 29;   // [31:7]
+    } b;
+} REG_RDA2720M_GLOBAL_LDO_VIBR_REG1_T;
+
 // ldo_sd_reg0
 typedef union {
     uint32_t v;

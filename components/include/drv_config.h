@@ -106,4 +106,8 @@
  */
 #define CONFIG_HEADSET_STACK_SIZE 16384
 #endif
+/**
+ * usb ether support dynamic change host mac address
+ */
+/* #undef CONFIG_USB_ETHER_DYNAMIC_HOST_MAC_SUPPORT */
 #endif

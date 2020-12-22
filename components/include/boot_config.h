@@ -28,6 +28,11 @@
 /* #undef CONFIG_BOOT_TRACE_ENABLED */
 
 /**
+ * Perform signature check before flash write
+ */
+/* #undef CONFIG_FDL_FLASH_SIGCHECK_BEFORE_WRITE */
+
+/**
  * bootloader image start address (8910, 8811)
  *
  * This is the bootloader loaded address in SRAM, rather than the address

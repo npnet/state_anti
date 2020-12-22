@@ -37,6 +37,7 @@ typedef enum
     AUSTREAM_FORMAT_MP3,     ///< MP3
     AUSTREAM_FORMAT_AMRNB,   ///< AMR-NB
     AUSTREAM_FORMAT_AMRWB,   ///< AMR_WB
+    AUSTREAM_FORMAT_SBC,     ///< bt SBC
 } auStreamFormat_t;
 
 /**
@@ -284,6 +285,16 @@ typedef enum
     AUENCODER_QUALITY_HIGH,   ///< quality high
     AUENCODER_QUALITY_BEST,   ///< quality best
 } auEncodeQuality_t;
+
+/**
+ * \brief BT Work modes
+ */
+typedef enum
+{
+    AU_BT_VOICE_WORK_MODE_NB = 0,
+    AU_BT_VOICE_WORK_MODE_WB,
+    AU_BT_VOICE_WORK_MODE_NO,
+} auBtVoiceWorkMode_t;
 
 /**
  * \brief check whether sample format matches of 2 audio frames

@@ -1197,7 +1197,11 @@
  */
 #if !defined TCP_MAXRTX || defined __DOXYGEN__
 #ifdef CONFIG_FIBOCOM_OPENCPU
+#ifdef CONFIG_FIBOCOM_ALIOS
+#define TCP_MAXRTX                      6
+#else
 #define TCP_MAXRTX                      3
+#endif
 #else
 #define TCP_MAXRTX                      6
 #endif

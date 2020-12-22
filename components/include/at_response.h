@@ -19,7 +19,12 @@
 #include "osi_compiler.h"
 #include "fibocom.h"
 //OSI_EXTERN_C_BEGIN
-
+#ifdef CONFIG_FIBOCOM_DAQU
+extern void atCmdClvlRespERROR(atCmdEngine_t *engine); 
+extern void RETURN_CLVLOK(atCmdEngine_t *engine);
+extern void atCmdClvlRespOK(atCmdEngine_t *engine);
+extern void atCmdClvlRespERROR(atCmdEngine_t *engine);
+#endif
 #ifndef DOXYGEN
 #define RETURN_CMS_ERR(engine, err) OSI_DO_WHILE0(atCmdRespCmsError(engine, err); return;)
 #define RETURN_CME_ERR(engine, err) OSI_DO_WHILE0(atCmdRespCmeError(engine, err); return;)
@@ -27,6 +32,10 @@
 #define RETURN_OK_CME_ERR(engine, res) OSI_DO_WHILE0(int _c = (res); atCmdEngine_t *_e = (engine); if (_c == 0) atCmdRespOK(_e); else atCmdRespCmeError(_e, _c); return;)
 #define RETURN_FOR_ASYNC() OSI_DO_WHILE0(return;)
 #ifdef CONFIG_FIBOCOM_BASE
+#ifdef CONFIG_FIBOCOM_DAQU
+#define RETURN_CLVLOK(engine) OSI_DO_WHILE0(atCmdClvlRespOK(engine); return;)
+#define RETURN_CLVLERROR(engine) OSI_DO_WHILE0(atCmdClvlRespERROR(engine); return;)
+#endif
 #define RETURN_GTTOK(engine) OSI_DO_WHILE0(atCmdGttRespOK(engine); return;)
 #define RETURN_GTTERROR(engine) OSI_DO_WHILE0(atCmdGTTRespERROR(engine); return;)
 #define RETURN_AUDOK(engine) OSI_DO_WHILE0(atCmdAudRespOK(engine); return;)
@@ -305,6 +314,26 @@
 
 #endif
 
+#if defined(CONFIG_FIBOCOM_LIANDI)
+typedef  struct   UrcInfo
+{
+    atCmdEngine_t *engine;
+    int  len;
+    char *urctext;
+    struct   UrcInfo *next;
+}UrcInfo;
+
+typedef  struct   UrcInfoList
+{
+    UrcInfo  *pHead;
+    UrcInfo  *pTail;  
+    osiMutex_t *Mutex;   
+}UrcInfoList;
+
+void  fibocom_urc_init();
+void  fibocom_post_urcinfo();
+bool  fibocom_add_urcinfo(atCmdEngine_t *engine, const char *text, int len);
+#endif
 /**
  * response info text
  *
@@ -663,6 +692,13 @@ const char *_getCCresultCodeText(int code);
 #ifdef CONFIG_FIBOCOM_BASE
 void atCmdRespCisError(atCmdEngine_t *engine, int code);
 void atCmdRespDefUrcTextNoCR(const char * text);
+#endif
+
+#if defined(CONFIG_FIBOCOM_HELLOBIKE)
+void atCmdRespOK_Bike(atCmdEngine_t *engine);
+void atCmdFinish_hellobike(atCmdEngine_t *engine);
+void atCmdRespInfoNText_HL(atCmdEngine_t *engine, const char *text, size_t length);
+
 #endif
 
 //OSI_EXTERN_C_END

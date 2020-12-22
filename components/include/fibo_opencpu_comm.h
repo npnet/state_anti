@@ -139,6 +139,7 @@ typedef enum
     GAPP_SIG_FTPCLOSE_FAIL,
     GAPP_SIG_BLE_REMOTE_MTU_IND,
     GAPP_SIG_AUDREC_END,
+    GAPP_SIG_KEYPAD_VALUE,    
 } GAPP_SIGNAL_ID_T;
 
 typedef void (*fibo_signal_t)(GAPP_SIGNAL_ID_T sig, va_list arg);

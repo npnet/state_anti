@@ -86,6 +86,9 @@ uint16_t *drvCamPreviewDQBUF(void);
 void drvCamPreviewQBUF(uint16_t *pFrameBuf);
 bool drvCamStopPreview(void);
 bool drvCamCaptureImage(uint16_t **pFrameBuf);
+#ifndef CONFIG_LC610N_CN_00_92_1200_XINDALU
+bool drvCamGePrevStatus(void);
+#endif
 void drvCamClose(void);
 
 OSI_EXTERN_C_END

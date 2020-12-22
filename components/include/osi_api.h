@@ -1622,6 +1622,24 @@ void osiMessageQueueDelete(osiMessageQueue_t *mq);
 bool osiMessageQueuePut(osiMessageQueue_t *mq, const void *msg);
 
 /**
+ * put a message to message queue front
+ *
+ * \p msg should hold content size the same as \p msg_size specified at
+ * \p osiMessageQueueCreate.
+ *
+ * After put, the content of \p msg will be copied to message queue.
+ *
+ * When \p mq is full, it will be blocked until there are rooms.
+ *
+ * \param mq    message queue pointer
+ * \param msg   mesage pointer
+ * \return
+ *      - true on success
+ *      - false on invalid parameter
+ */
+bool osiMessageQueuePutToFront(osiMessageQueue_t *mq, const void *msg);
+
+/**
  * put a message to message queue with timeout
  *
  * This can be called in ISR. And in ISR, \p timeout must be 0.
@@ -1634,6 +1652,20 @@ bool osiMessageQueuePut(osiMessageQueue_t *mq, const void *msg);
  *      - false on invalid parameter or timeout
  */
 bool osiMessageQueueTryPut(osiMessageQueue_t *mq, const void *msg, uint32_t timeout);
+
+/**
+ * put a message to message queue front with timeout
+ *
+ * This can be called in ISR. And in ISR, \p timeout must be 0.
+ *
+ * \param mq        message queue pointer
+ * \param msg       mesage pointer
+ * \param timeout   timeout in milliseconds
+ * \return
+ *      - true on success
+ *      - false on invalid parameter or timeout
+ */
+bool osiMessageQueueTryPutToFront(osiMessageQueue_t *mq, const void *msg, uint32_t timeout);
 
 /**
  * get a message to message queue

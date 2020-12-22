@@ -32,6 +32,6 @@
 #define LOG_REPORT_TO_CLOUD
 #define DEVICE_MODEL_ENABLED
 #define HAL_KV
-// #define SUPPORT_TLS
+#define SUPPORT_TLS
 
 #endif

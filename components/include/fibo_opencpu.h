@@ -15,7 +15,9 @@
 #include "lwip/ip_addr.h"
 #include "lwip/sockets.h"
 #include "ppp_interface.h"
+#ifndef CONFIG_FIBOCOM_MAX_APP
 #include "oc_mqtt.h"
+#endif
 #include "oc_uart.h"
 #include "oc_adc.h"
 #include "fibo_opencpu_comm.h"
@@ -31,12 +33,12 @@
 #include "mbedtls/des.h"
 #include "mbedtls/rsa.h"
 #include "mbedtls/md5.h"
-#include "att.h"
-#include "gatt.h"
+//#include "att.h"
+//#include "gatt.h"
 #include "expat.h"
 #include "oc_ccid.h"
 #include "oc_mbedtls.h"
-
+#include "oc_ble.h"
 
 /* FOTA ERROR CODE */
 #define OTA_ERRCODE_MEMLEAK				(-1)
@@ -210,6 +212,7 @@ typedef enum
     BOOTCAUSE_BY_PIN_RST,
     BOOTCAUSE_BY_PIN_PWR,
     BOOTCAUSE_BY_CHARGE,
+    BOOTCAUSE_BY_DUMP,
 } POWER_ON_CAUSE;
 
 
@@ -366,8 +369,10 @@ extern INT32 fibo_setRTC(hal_rtc_time_t *time);
 extern INT32 fibo_getRTC(hal_rtc_time_t *time);
 extern UINT32 fibo_queue_create(UINT32 msg_count, UINT32 msg_size);
 extern INT32 fibo_queue_put(UINT32 msg_id, const void *msg, UINT32 timeout);
+extern INT32 fibo_queue_put_to_front(UINT32 msg_id, const void *msg, UINT32 timeout);
 extern INT32 fibo_queue_get(UINT32 msg_id, void *msg, UINT32 timeout);
 extern INT32 fibo_queue_put_isr(UINT32 msg_id, const void *msg);
+extern INT32 fibo_queue_put_to_front_isr(UINT32 msg_id, const void *msg);
 extern INT32 fibo_queue_get_isr(UINT32 msg_id, void *msg);
 extern void fibo_queue_delete(UINT32 msg_id);
 extern UINT32 fibo_queue_space_available(UINT32 msg_id);
@@ -385,9 +390,16 @@ extern INT32 fibo_rng_generate(void *buf, UINT32 len);
 //extern INT32 fibo_setRTC_timerCB(void (*cb)(void *), void *user_data);
 
 /* timer function */
+extern UINT32 fibo_timer_create(void (*fn)(void *arg), void *arg);
+extern bool fibo_timer_start(UINT32 timer_id, UINT32 ms);
+extern bool fibo_timer_period_start(UINT32 timer_id, UINT32 ms);
+extern UINT32 fibo_rtc_irq_create(void (*fn)(void *arg), void *arg);
+extern bool fibo_rtc_irq_start(UINT32 timer_id, UINT32 us);
+extern bool fibo_rtc_irq_period_start(UINT32 timer_id, UINT32 ms);
 extern UINT32 fibo_timer_new(UINT32 ms, void (*fn)(void *arg), void *arg);
 extern UINT32 fibo_timer_period_new(UINT32 ms, void (*fn)(void *arg), void *arg);
 extern INT32 fibo_timer_free(UINT32 timerid);
+extern bool fibo_timer_stop(UINT32 timerid);
 extern UINT32 fibo_setRtc_Irq(UINT32 us,void(* fn)(void * arg),void * arg);
 extern UINT32 fibo_setRtc_Irq_period(UINT32 ms, void (*fn)(void *arg), void *arg);
 
@@ -614,6 +626,7 @@ extern INT32 fibo_appfw_handle_no_reboot(INT8 *data, UINT32 len);
 
 //audio
 extern INT32 fibo_audio_play(INT32 type,INT8 * filename);
+extern INT32 fibo_audio_path_play(INT32 type,INT8 * filepath,auPlayerCallback_t cb_ctx);
 extern INT32 fibo_audio_stop(void);
 extern INT32 fibo_audio_pause(void);
 extern INT32 fibo_audio_resume(void);
@@ -649,6 +662,14 @@ extern INT32 fibo_ext_flash_read(UINT32 faddr, UINT8 *data,UINT32 size);
 extern INT32 fibo_ext_flash_write(UINT32 faddr, UINT8 *data,UINT32 size);
 extern INT32 fibo_ext_flash_erase(UINT32 faddr, UINT32 size);
 
+#ifdef CONFIG_FIBOCOM_NANDFLASH
+//nand flash
+extern void fibo_spi_nand_init(void);
+extern void fibo_spi_nand_get_id(void);
+extern int fibo_spi_nand_erase(uint32_t block);
+extern int fibo_spi_nand_read(unsigned char *buf,unsigned int block,unsigned int stradr, unsigned int len);
+extern int fibo_spi_nand_write(unsigned char *buf,unsigned int block,unsigned int stradr, unsigned int len);
+#endif
 //get IMEI
 extern INT32 fibo_get_imei(UINT8 *imei, CFW_SIM_ID nSimID);
 
@@ -680,6 +701,7 @@ extern INT32 fibo_http_post(oc_http_param_t *pstHttpParam, UINT8 *pPostData,UINT
 extern INT32 fibo_http_response_header_foreach(oc_http_param_t *pstHttpParam, http_read_header_callback callback);
 extern INT32 fibo_http_response_status_line(oc_http_param_t *pstHttpParam);
 extern INT32 fibo_http_post_ex(oc_http_param_t *pstHttpParam, UINT8 *pPostData,UINT8 *pUserDefHeader,size_t length);
+extern INT32 fibo_http_send_big_data(oc_http_param_t *pstHttpParam, UINT8 *pUserDefHeader, uint32_t buf_len);
 //sftp
 INT32 fibo_sftp_open(char * remoteaddr,  const char *username,const char *password,int32_t uRemotePort);
 INT32 fibo_sftp_close(void);
@@ -788,6 +810,7 @@ extern INT32 fibo_getChargeCur(void);
 extern INT8 *fibo_get_hw_verno(void);
 extern INT8 *fibo_get_sw_verno(void);
 extern INT32 fibo_set_app_version(char *ver);
+extern INT32 fibo_get_version_info(char *outstr, int32_t outlen);
 
 
 //for HengKe, Other customers can not use this function, otherwise it will cause fatal problems
@@ -832,6 +855,8 @@ extern INT32 fibo_ble_update_connection(int Handle,int MaxInterval,int MinInterv
 extern INT32 fibo_ble_set_scan_param(         int Type,int Interval,int Window,int Filter);
 extern INT32 fibo_ble_scan_enable(int ScanEnable);
 extern INT32 fibo_ble_client_int(void *parma);
+extern INT32 fibo_ble_client_server_int(fibo_ble_btgatt_callback_t *parma);
+
 extern INT32 fibo_ble_client_filter_manufacturer(UINT8 *data);
 extern INT32 fibo_ble_client_filter_uuid(UINT8 *uuid);
 extern INT32 fibo_ble_client_filter_name(UINT8 *name);
@@ -858,6 +883,8 @@ extern INT32 fibo_ble_enable_dev(int onoff);
 //BLE SERVER
 extern INT32 fibo_ble_add_service_and_characteristic(const gatt_element_t *gatt_element, UINT32 size);
 extern INT32 fibo_ble_notify(gatt_le_data_info_t *data,int type);
+extern INT32 fibo_ble_set_scan_response_data(UINT8 *data,UINT8 length);
+
 //ibeacon
 extern INT32  fibo_ibeacon_enable(uint8_t AdvEnable);
 extern INT32  fibo_set_ibeacon_param(int param_count,int AdvMin,int AdvMax,int AdvType,int OwnAddrType,int DirectAddrType,char *DirectAddr,int AdvChannMap,int AdvFilter);
@@ -1100,6 +1127,7 @@ extern void fibo_usb_ccid_close(drvCCID_t *ccid);
 
 extern INT32 fibo_charger_turnon(void);
 extern INT32 fibo_charger_turnoff(void);
+extern INT32 fibo_ischarger_overvol(void);
 extern INT32 fibo_set_usbmode(uint8_t usbmode);
 extern INT32 fibo_get_usbmode(void);
 
@@ -1133,6 +1161,11 @@ extern int fibo_tls_read(uintptr_t handle, unsigned char *msg, size_t totalLen, 
 extern bool fibo_get_security_flag(void);
 extern INT32 fibo_SpecialGpio_Init(void);
 
+extern INT32 fibo_sink_OnOff(UINT32 sinknum, BOOL onOff);
+extern INT32 fibo_sinkLevel_Set(UINT32 sinknum, UINT32 light_level);
+extern bool fibo_keypad_msg_mod(bool  en);
+extern void fibo_charger_set_notice_callbk(drvChargerNoticeCB_t cb);
+extern uint32_t fibo_RFCAL_POC();
 #ifdef CONFIG_FIBOCOM_ALIOS
 #include "mqtt_api.h"
 extern bool fibo_aliyunMQTT_cloudauth(void* product_key, void* device_name, void* device_secret, void* host, void* product_secret);
@@ -1142,6 +1175,7 @@ extern bool fibo_aliyunMQTT_cloudPub(void* client_handle, char* topic, int qos, 
 extern bool fibo_aliyunMQTT_cloudUnsub(void* client_handle, char* topic);
 extern bool fibo_aliyunMQTT_cloudDisconn(void** p_client_handle);
 extern bool fibo_aliyunMQTT_cloudPub_FixedLen(void* client_handle, char* topic, int qos, uint8_t* payload, int payloadLen);
+extern bool fibo_aliyunMQTT_Tls_enable(uint8_t tls_switch);
 #endif
 #endif
 

@@ -191,7 +191,7 @@
       </region>
       <region title="nb_meas" base="0x41926000" size="792" skip="0">
          <require addr="0x41804038" mask="0x80000" value="0x80000"/>
-   </region>
+      </region>
       <region title="nb_locseq_gen" base="0x41926400" size="60" skip="0">
          <require addr="0x41804038" mask="0x80000" value="0x80000"/>
       </region>

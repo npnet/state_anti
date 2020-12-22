@@ -58,6 +58,6 @@
 /**
   * diag bt autotest support
   */
-#define CONFIG_DIAG_BT_AUTOTEST_SUPPORT
+/* #undef CONFIG_DIAG_BT_AUTOTEST_SUPPORT */
 
 #endif

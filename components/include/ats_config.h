@@ -19,8 +19,8 @@
 // Auto generated. Don't edit it manually!
 
 #define GMI_ID "FIBOCOM"
-#define GMM_ID "L610_CN_00_90_ALIOS-debug"
-#define GMR_ID "DEVEL-gL610_CN_00_90_ALIOS_V06_202010201559-1-g05a30df9"
+#define GMM_ID "L610_CN_02_90_ALIOS_OPENCPU-debug"
+#define GMR_ID "DEVEL-gMC615_CN_20_00_V01_202012111651-dirty"
 
 /**
  * Whether to support coap AT commands
@@ -115,22 +115,22 @@
 /**
  * whether some bt test at command can be used
  */
-#define CONFIG_AT_SPBTTEST_SUPPORT
+/* #undef CONFIG_AT_SPBTTEST_SUPPORT */
 
 /**
  * whether some ble test at command can be used
  */
-#define CONFIG_AT_SPBLETEST_SUPPORT
+/* #undef CONFIG_AT_SPBLETEST_SUPPORT */
 
 /**
  * whether some ble test at command can be used
  */
-#define CONFIG_AT_SPBLE_SUPPORT
+/* #undef CONFIG_AT_SPBLE_SUPPORT */
 
 /**
  * whether some bt basic at command can be used
  */
-#define CONFIG_AT_BT_CLASSIC_SUPPORT
+/* #undef CONFIG_AT_BT_CLASSIC_SUPPORT */
 
 /**
  * whether some btcomm at command can be used

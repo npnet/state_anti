@@ -95,6 +95,289 @@ typedef uint8_t UINT8;
 // Range in [start, end]
 #define HWP_ADDRESS_RANGE(hwp) (uintptr_t)(hwp), (uintptr_t)(hwp) + sizeof(*(hwp)) - 1
 
+/**
+ * \brief write register fields by register type
+ *
+ * All other fields not listed are write to 0. Now, at most 9 fields are supported.
+ * The return value is the value to be written to register.
+ *
+ * Example:
+ * \code{.cpp}
+ * unsigned val = REGT_FIELD_WRITE(hwp_sysCtrl->sel_clock, REG_SYS_CTRL_SEL_CLOCK_T,
+ *                                 sys_sel_fast, 1, soft_sel_spiflash, 1);
+ * \endcode
+ */
+#define REGT_FIELD_WRITE(reg, type, ...) __REGT_FIELD_WRITE(reg, type, ##__VA_ARGS__)
+
+/**
+ * \brief change register fields by register type
+ *
+ * Similar to \p REGT_FIELD_WRITE, just all other fields not listed will be kept.
+ * Inside, it is read-modify-write.
+ */
+#define REGT_FIELD_CHANGE(reg, type, ...) __REGT_FIELD_CHANGE(reg, type, ##__VA_ARGS__)
+
+/**
+ * \brief write ADI register fields by register type
+ *
+ * Similar to \p REGT_FIELD_WRITE, just the register is ADI register.
+ */
+#define REGT_ADI_FIELD_WRITE(reg, type, ...) __REGT_ADI_FIELD_WRITE(reg, type, ##__VA_ARGS__)
+
+/**
+ * \brief change ADI register fields by register type
+ *
+ * Similar to \p REGT_FIELD_CHANGE, just the register is ADI register.
+ */
+#define REGT_ADI_FIELD_CHANGE(reg, type, ...) __REGT_ADI_FIELD_CHANGE(reg, type, ##__VA_ARGS__)
+
+/**
+ * \brief write register fields by a variable
+ *
+ * Similar to \p REGT_FIELD_WRITE, just the second parameter is a variable with
+ * type of the register.
+ *
+ * Example:
+ * \code{.cpp}
+ * REG_SYS_CTRL_SEL_CLOCK_T sel_clock;
+ * unsigned val = REGV_FIELD_WRITE(hwp_sysCtrl->sel_clock, sel_clock,
+ *                                sys_sel_fast, 1, soft_sel_spiflash, 1);
+ * \endcode
+ */
+#define REGV_FIELD_WRITE(reg, var, ...) __REGV_FIELD_WRITE(reg, var, ##__VA_ARGS__)
+
+/**
+ * \brief change register fields by a variable
+ *
+ * Similar to \p REGT_FIELD_CHANGE, just the second parameter is a variable with
+ * type of the register.
+ */
+#define REGV_FIELD_CHANGE(reg, var, ...) __REGV_FIELD_CHANGE(reg, var, ##__VA_ARGS__)
+
+/**
+ * \brief write ADI register fields by a variable
+ *
+ * Similar to \p REGT_ADI_FIELD_WRITE, just the second parameter is a variable with
+ * type of the register.
+ */
+#define REGV_ADI_FIELD_WRITE(reg, var, ...) __REGV_ADI_FIELD_WRITE(reg, var, ##__VA_ARGS__)
+
+/**
+ * \brief change ADI register fields by a variable
+ *
+ * Similar to \p REGT_ADI_FIELD_CHANGE, just the second parameter is a variable with
+ * type of the register.
+ */
+#define REGV_ADI_FIELD_CHANGE(reg, var, ...) __REGV_ADI_FIELD_CHANGE(reg, var, ##__VA_ARGS__)
+
+/**
+ * \brief loop wait register field to meet a condition by register type
+ *
+ * Example:
+ * \code{.cpp}
+ * REGT_WAIT_FIELD_NEZ(hwp_sysCtrl->sel_clock, REG_SYS_CTRL_SEL_CLOCK_T, pll_locked);
+ * \endcode
+ */
+#define REGT_WAIT_FIELD_EQ(reg, type, field, expected) _REGT_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_EQ)
+#define REGT_WAIT_FIELD_NE(reg, type, field, expected) _REGT_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_NE)
+#define REGT_WAIT_FIELD_GT(reg, type, field, expected) _REGT_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_GT)
+#define REGT_WAIT_FIELD_GE(reg, type, field, expected) _REGT_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_GE)
+#define REGT_WAIT_FIELD_LT(reg, type, field, expected) _REGT_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_LT)
+#define REGT_WAIT_FIELD_LE(reg, type, field, expected) _REGT_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_LE)
+#define REGT_WAIT_FIELD_EQZ(reg, type, field) REGT_WAIT_FIELD_EQ(reg, type, field, 0)
+#define REGT_WAIT_FIELD_NEZ(reg, type, field) REGT_WAIT_FIELD_NE(reg, type, field, 0)
+
+/**
+ * \brief loop wait ADI register field to meet a condition by register type
+ */
+#define REGT_ADI_WAIT_FIELD_EQ(reg, type, field, expected) _REGT_ADI_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_EQ)
+#define REGT_ADI_WAIT_FIELD_NE(reg, type, field, expected) _REGT_ADI_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_NE)
+#define REGT_ADI_WAIT_FIELD_GT(reg, type, field, expected) _REGT_ADI_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_GT)
+#define REGT_ADI_WAIT_FIELD_GE(reg, type, field, expected) _REGT_ADI_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_GE)
+#define REGT_ADI_WAIT_FIELD_LT(reg, type, field, expected) _REGT_ADI_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_LT)
+#define REGT_ADI_WAIT_FIELD_LE(reg, type, field, expected) _REGT_ADI_WAIT_FIELD(reg, type, field, expected, _REG_WAIT_OP_LE)
+#define REGT_ADI_WAIT_FIELD_EQZ(reg, type, field) REGT_ADI_WAIT_FIELD_EQ(reg, type, field, 0)
+#define REGT_ADI_WAIT_FIELD_NEZ(reg, type, field) REGT_ADI_WAIT_FIELD_NE(reg, type, field, 0)
+
+/**
+ * \brief loop wait register field to meet a condition by a variable
+ *
+ * Example:
+ * \code{.cpp}
+ * REG_SYS_CTRL_SEL_CLOCK_T sel_clock;
+ * REG_WAIT_FIELD_NEZ(sel_clock, hwp_sysCtrl->sel_clock, pll_locked);
+ * \endcode
+ */
+#define REGV_WAIT_FIELD_EQ(reg, var, field, expected) _REGV_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_EQ)
+#define REGV_WAIT_FIELD_NE(reg, var, field, expected) _REGV_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_NE)
+#define REGV_WAIT_FIELD_GT(reg, var, field, expected) _REGV_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_GT)
+#define REGV_WAIT_FIELD_GE(reg, var, field, expected) _REGV_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_GE)
+#define REGV_WAIT_FIELD_LT(reg, var, field, expected) _REGV_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_LT)
+#define REGV_WAIT_FIELD_LE(reg, var, field, expected) _REGV_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_LE)
+#define REGV_WAIT_FIELD_EQZ(reg, var, field) REGV_WAIT_FIELD_EQ(reg, var, field, 0)
+#define REGV_WAIT_FIELD_NEZ(reg, var, field) REGV_WAIT_FIELD_NE(reg, var, field, 0)
+
+/**
+ * \brief loop wait ADI register field to meet a condition by a variable
+ */
+#define REGV_ADI_WAIT_FIELD_EQ(reg, var, field, expected) _REGV_ADI_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_EQ)
+#define REGV_ADI_WAIT_FIELD_NE(reg, var, field, expected) _REGV_ADI_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_NE)
+#define REGV_ADI_WAIT_FIELD_GT(reg, var, field, expected) _REGV_ADI_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_GT)
+#define REGV_ADI_WAIT_FIELD_GE(reg, var, field, expected) _REGV_ADI_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_GE)
+#define REGV_ADI_WAIT_FIELD_LT(reg, var, field, expected) _REGV_ADI_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_LT)
+#define REGV_ADI_WAIT_FIELD_LE(reg, var, field, expected) _REGV_ADI_WAIT_FIELD(reg, var, field, expected, _REG_WAIT_OP_LE)
+#define REGV_ADI_WAIT_FIELD_EQZ(reg, var, field) REGV_ADI_WAIT_FIELD_EQ(reg, var, field, 0)
+#define REGV_ADI_WAIT_FIELD_NEZ(reg, var, field) REGV_ADI_WAIT_FIELD_NE(reg, var, field, 0)
+
+// ============================================================================
+// Implementation
+// ============================================================================
+
+#define _REGT_WAIT_FIELD(reg, type, field, expected, op) \
+    do                                                   \
+    {                                                    \
+        type var;                                        \
+        for (;;)                                         \
+        {                                                \
+            (var).v = (reg);                             \
+            if (op((var).b.field, (expected)))           \
+                break;                                   \
+        }                                                \
+    } while (0)
+
+#define _REGT_ADI_WAIT_FIELD(reg, type, field, expected, op) \
+    do                                                       \
+    {                                                        \
+        type var;                                            \
+        for (;;)                                             \
+        {                                                    \
+            (var).v = halAdiBusRead(&(reg));                 \
+            if (op((var).b.field, (expected)))               \
+                break;                                       \
+        }                                                    \
+    } while (0)
+
+#define _REGV_WAIT_FIELD(reg, var, field, expected, op) \
+    do                                                  \
+    {                                                   \
+        for (;;)                                        \
+        {                                               \
+            (var).v = (reg);                            \
+            if (op((var).b.field, (expected)))          \
+                break;                                  \
+        }                                               \
+    } while (0)
+
+#define _REGV_ADI_WAIT_FIELD(reg, var, field, expected, op) \
+    do                                                      \
+    {                                                       \
+        for (;;)                                            \
+        {                                                   \
+            (var).v = halAdiBusRead(&(reg));                \
+            if (op((var).b.field, (expected)))              \
+                break;                                      \
+        }                                                   \
+    } while (0)
+
+#define _REG_WAIT_OP_EQ(a, b) ((a) == (b))
+#define _REG_WAIT_OP_NE(a, b) ((a) != (b))
+#define _REG_WAIT_OP_GT(a, b) ((a) > (b))
+#define _REG_WAIT_OP_GE(a, b) ((a) >= (b))
+#define _REG_WAIT_OP_LT(a, b) ((a) < (b))
+#define _REG_WAIT_OP_LE(a, b) ((a) <= (b))
+
+#define __REGT_FIELD_WRITE(reg, type, ...) ({ \
+    type _val = {};                           \
+    __REGV_SET(_val, __VA_ARGS__);            \
+    reg = _val.v;                             \
+    _val.v;                                   \
+})
+
+#define __REGT_FIELD_CHANGE(reg, type, ...) ({ \
+    type _val = {.v = reg};                    \
+    __REGV_SET(_val, __VA_ARGS__);             \
+    reg = _val.v;                              \
+    _val.v;                                    \
+})
+
+#define __REGT_ADI_FIELD_WRITE(reg, type, ...) ({ \
+    type _val = {};                               \
+    __REGV_SET(_val, __VA_ARGS__);                \
+    halAdiBusWrite(&(reg), _val.v);               \
+    _val.v;                                       \
+})
+
+#define __REGT_ADI_FIELD_CHANGE(reg, type, ...) ({ \
+    type _val = {};                                \
+    __REGV_SET(_val, __VA_ARGS__);                 \
+    type _maskoff = {0xffffffff};                  \
+    __REGV_MASKOFF(_maskoff, __VA_ARGS__);         \
+    halAdiBusChange(&(reg), ~_maskoff.v, _val.v);  \
+})
+
+#define __REGV_FIELD_WRITE(reg, var, ...) ({ \
+    var.v = 0;                               \
+    __REGV_SET(var, __VA_ARGS__);            \
+    reg = var.v;                             \
+    var.v;                                   \
+})
+
+#define __REGV_FIELD_CHANGE(reg, var, ...) ({ \
+    var.v = reg;                              \
+    __REGV_SET(var, __VA_ARGS__);             \
+    reg = var.v;                              \
+    var.v;                                    \
+})
+
+#define __REGV_ADI_FIELD_WRITE(reg, var, ...) ({ \
+    var.v = 0;                                   \
+    __REGV_SET(var, __VA_ARGS__);                \
+    halAdiBusWrite(&(reg), var.v);               \
+    var.v;                                       \
+})
+
+#define __REGV_ADI_FIELD_CHANGE(reg, var, ...) ({ \
+    var.v = 0xffffffff;                           \
+    __REGV_MASKOFF(var, __VA_ARGS__);             \
+    unsigned _maskoff = var.v;                    \
+    var.v = 0;                                    \
+    __REGV_SET(var, __VA_ARGS__);                 \
+    unsigned _val = var.v;                        \
+    halAdiBusChange(&(r), ~_maskoff, _val);       \
+})
+
+#define __REGV_SET_IMP2(count, ...) __REGV_SET_##count(__VA_ARGS__)
+#define __REGV_SET_IMP1(count, ...) __REGV_SET_IMP2(count, __VA_ARGS__)
+#define __REGV_SET(...) __REGV_SET_IMP1(OSI_VA_NARGS(__VA_ARGS__), __VA_ARGS__)
+
+#define __REGV_MASKOFF_IMP2(count, ...) __REGV_MASKOFF_##count(__VA_ARGS__)
+#define __REGV_MASKOFF_IMP1(count, ...) __REGV_MASKOFF_IMP2(count, __VA_ARGS__)
+#define __REGV_MASKOFF(...) __REGV_MASKOFF_IMP1(OSI_VA_NARGS(__VA_ARGS__), __VA_ARGS__)
+
+#define __REGV_SET_3(v, f1, v1) ({ v.b.f1 = v1; })
+#define __REGV_SET_5(v, f1, v1, ...) ({ v.b.f1 = v1; __REGV_SET_3(v, __VA_ARGS__); })
+#define __REGV_SET_7(v, f1, v1, ...) ({ v.b.f1 = v1; __REGV_SET_5(v, __VA_ARGS__); })
+#define __REGV_SET_9(v, f1, v1, ...) ({ v.b.f1 = v1; __REGV_SET_7(v, __VA_ARGS__); })
+#define __REGV_SET_11(v, f1, v1, ...) ({ v.b.f1 = v1; __REGV_SET_9(v, __VA_ARGS__); })
+#define __REGV_SET_13(v, f1, v1, ...) ({ v.b.f1 = v1; __REGV_SET_11(v, __VA_ARGS__); })
+#define __REGV_SET_15(v, f1, v1, ...) ({ v.b.f1 = v1; __REGV_SET_13(v, __VA_ARGS__); })
+#define __REGV_SET_17(v, f1, v1, ...) ({ v.b.f1 = v1; __REGV_SET_15(v, __VA_ARGS__); })
+#define __REGV_SET_19(v, f1, v1, ...) ({ v.b.f1 = v1; __REGV_SET_17(v, __VA_ARGS__); })
+
+#define __REGV_MASKOFF_3(v, f1, v1) ({ v.b.f1 = 0; })
+#define __REGV_MASKOFF_5(v, f1, v1, ...) ({ v.b.f1 = 0; __REGV_MASKOFF_3(v, __VA_ARGS__); })
+#define __REGV_MASKOFF_7(v, f1, v1, ...) ({ v.b.f1 = 0; __REGV_MASKOFF_5(v, __VA_ARGS__); })
+#define __REGV_MASKOFF_9(v, f1, v1, ...) ({ v.b.f1 = 0; __REGV_MASKOFF_7(v, __VA_ARGS__); })
+#define __REGV_MASKOFF_11(v, f1, v1, ...) ({ v.b.f1 = 0; __REGV_MASKOFF_9(v, __VA_ARGS__); })
+#define __REGV_MASKOFF_13(v, f1, v1, ...) ({ v.b.f1 = 0; __REGV_MASKOFF_11(v, __VA_ARGS__); })
+#define __REGV_MASKOFF_15(v, f1, v1, ...) ({ v.b.f1 = 0; __REGV_MASKOFF_13(v, __VA_ARGS__); })
+#define __REGV_MASKOFF_17(v, f1, v1, ...) ({ v.b.f1 = 0; __REGV_MASKOFF_15(v, __VA_ARGS__); })
+#define __REGV_MASKOFF_19(v, f1, v1, ...) ({ v.b.f1 = 0; __REGV_MASKOFF_17(v, __VA_ARGS__); })
+
+// ============================================================================
+// Oboleted
+// ============================================================================
+
 // hardware registers are defined as union. The template of union is
 //      union {
 //          uint32_t v;

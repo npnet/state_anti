@@ -612,6 +612,8 @@ void hal_GoudaSetSpiFreq(uint32_t spiFreq);
 extern void halGoudaSetFmarkBusy(bool busy);
 void halGoudaClkDisable(void);
 void halGoudaClkEnable(void);
-
+#ifdef CONFIG_FIBOCOM_BASE
+void boot_halGoudaInit(HAL_GOUDA_LCD_CONFIG_T cfg, uint32_t clk);
+#endif
 /// @} end of group
 #endif // _HAL_GOUDA_H_

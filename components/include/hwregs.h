@@ -78,6 +78,7 @@ extern "C" {
 #include "hwregs/8910/wcn_wlan.h"
 #include "hwregs/8910/wcn_bt_modem.h"
 #include "hwregs/8910/wcn_bt_link.h"
+#include "hwregs/8910/wcn_comregs.h"
 #include "hwregs/8910/wcn_sys_ctrl.h"
 #include "hwregs/8910/aes.h"
 #elif defined(CONFIG_SOC_6760)

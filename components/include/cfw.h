@@ -1799,6 +1799,9 @@ uint32_t CFW_GetRRCRel();
 */
 uint32_t CFW_SetRRCRel(
     uint32_t value);
+
+uint16_t CFW_GetDrxCyc(
+    CFW_SIM_ID nSimID);
 /*! \brief function retrieves the operator ID by operator name.
 
 \param [out] pOperatorId    Specify the operator identifier in digital format,if the ID length is 5,the array should terminated with 0x0F. For example,the id is 0X04,0X06,0X00,0X00,0X00,0X0F,and its corresponding full name is "China Mobile"
@@ -2400,6 +2403,10 @@ uint32_t CFW_NwGetImei(
     uint16_t nUTI,
     CFW_SIM_ID nSimID);
 
+uint32_t CFW_SimGetOperatorName(
+    uint8_t pOperatorId[6],
+    uint16_t nUTI,
+    CFW_SIM_ID nSimID);
 /*! \brief function retrieves the selected network carrier signal level and Bit error rate.
 
 \param [out] pSignalLevel     Specify the network the signal level values shown below:
@@ -5989,7 +5996,7 @@ uint32_t CFW_SimGetPbkStorage(
     uint8_t nStorage,
     uint16_t nUTI,
     CFW_SIM_ID nSimID);
-void CFW_SimSetProiorityResetFlag(
+uint32_t CFW_SimSetProiorityResetFlag(
     uint8_t nResetFlag);
 
 uint32_t CFW_SatActivation(
@@ -6002,7 +6009,7 @@ uint32_t CFW_SatResponse(
     uint8_t nStatus,
     uint8_t nItemId,
     void *pInputString,
-    uint16_t InputStrLen,
+    uint8_t InputStrLen,
     uint16_t nUTI,
     CFW_SIM_ID nSimID);
 
@@ -9101,11 +9108,14 @@ typedef struct _CFW_SAT_SETUP_IDLE_RSP
 } CFW_SAT_SETUP_IDLE_RSP;
 
 uint32_t CFW_SimGetMeProfile(CFW_PROFILE *pMeProfile, CFW_SIM_ID nSimID);
+uint32_t CFW_SimWakeup(uint16_t nUTI, CFW_SIM_ID nSimID, bool flag);
+uint32_t CFW_SimCloseEx(uint16_t nUTI, CFW_SIM_ID nSimID, bool flag);
 uint32_t SimPollReq(uint8_t nTimerOut, CFW_SIM_ID nSimID);
 uint32_t SimPollOffReq(CFW_SIM_ID nSimID);
 uint32_t CFW_SimInitStage1(CFW_SIM_ID nSimID);
 uint32_t CFW_SimInitStage3(CFW_SIM_ID nSimID);
-uint32_t SimSelectApplicationReq(uint8_t *AID, uint8_t AIDLength, uint8_t ChannelID, CFW_SIM_ID nSimID);
+uint32_t SimSelectApplicationReq(uint8_t *AID, uint8_t AIDLength, CFW_SIM_ID nSimID);
+uint32_t SimSelectApplicationReqV2(uint8_t *AID, uint8_t AIDLength, uint8_t ChannelID, CFW_SIM_ID nSimID);
 uint32_t CFW_SimTPDUCommand(uint8_t *TPDU, uint16_t Length, uint8_t Channel, uint16_t nUTI, CFW_SIM_ID nSimID);
 
 uint32_t CFW_SmsSendMessage(CFW_DIALNUMBER *pNumber, uint8_t *pData, uint16_t nDataSize, uint16_t nUTI, CFW_SIM_ID nSimId);
@@ -9134,7 +9144,9 @@ bool CFW_SatGetSendData(uint8_t *pData, uint8_t *pDataLength, CFW_SIM_ID nSimID)
 bool CFW_SatGetOpenChannelUserInfo(uint8_t *pUser, uint8_t *pUserLen, uint8_t *pPasswd, uint8_t *pPasswdLen, CFW_SIM_ID nSimID);
 bool CFW_SatGetOpenChannelAPN(uint8_t *pAPN, uint8_t *pApnLen, CFW_SIM_ID nSimID);
 bool CFW_SatGetOpenChannelDestAddress(uint8_t *pAddress, uint8_t *pAddressLen, uint8_t *pAddressType, CFW_SIM_ID nSimID);
-bool CFW_SatGetOpenChannelNetInfo(uint16_t *pBufferSize, uint8_t *pBearerType, uint8_t *pTranType, uint16_t *pTranPort, CFW_SIM_ID nSimID);
+bool CFW_SatGetOpenChannelNetInfoV2(uint16_t *pBufferSize, uint8_t *pBearerType, uint8_t *pTranType, uint16_t *pTranPort, CFW_SIM_ID nSimID);
+bool CFW_SatGetOpenChannelNetInfo(uint8_t *pBufferSize, uint8_t *pBearerType, uint8_t *pTranType, uint8_t *pTranPort, CFW_SIM_ID nSimID);
+
 bool CFW_SatGetDisplayText(uint8_t *pText, uint8_t *pTextLength, uint8_t *nScheme, CFW_SIM_ID nSimID);
 
 uint32_t CFW_SimGetEID(uint16_t nUTI, CFW_SIM_ID nSimID);
@@ -9281,4 +9293,8 @@ typedef struct
 bool Cfw_SetTimezone(int8_t timezone);
 
 uint32_t CFW_SmsListFree(void *pListResult, uint8_t nCount, uint8_t nIndex, CFW_SIM_ID nSimID);
+
+uint32_t CFW_SetSignalQuatityFirst(uint32_t signalQuatityFirst, CFW_SIM_ID nSimID);
+uint32_t CFW_GetSignalQuatityFirst(uint32_t *signalQuatityFirst, CFW_SIM_ID nSimID);
+
 #endif

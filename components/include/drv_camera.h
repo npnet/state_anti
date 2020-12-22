@@ -136,6 +136,9 @@ typedef struct sensorInfo
     uint8_t page_turn;
     uint8_t *capturedata;
     uint8_t *previewdata[2];
+	#ifndef CONFIG_LC610N_CN_00_92_1200_XINDALU
+	bool isFirstFrame;
+	#endif
     bool isStopPrev;
     bool isFirst;
     bool isCamIfcStart;
@@ -178,6 +181,9 @@ void drvCamDisableIrq(void);
 void drvCamInitIfc(void);
 void drvCampStartTransfer(uint32_t size, uint8_t *data);
 bool drvWaitCamIfcDone(void);
+#ifndef CONFIG_LC610N_CN_00_92_1200_XINDALU
+void drvCamStopIfc(void);
+#endif
 bool drvCampStopTransfer(uint32_t size, uint8_t *data);
 void drvCampIfcDeinit(void);
 void drvCamDisableMCLK(void);

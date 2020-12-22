@@ -456,6 +456,15 @@ typedef struct
 #ifdef CONFIG_FIBOCOM_BASE
     uint32_t save_ipr;
 #endif
+#ifdef CONFIG_FIBOCOM_HELLO_ZLC
+    uint8_t lte_decline_power;
+#endif
+#ifdef CONFIG_FIBOCOM_HELLOBIKE
+	uint8_t csmp_fo;
+	uint8_t csmp_vp;
+	uint8_t csmp_pid;
+	uint8_t csmp_dcs;
+#endif
 } atSetting_t;
 
 extern atSetting_t gAtSetting;

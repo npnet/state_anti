@@ -241,7 +241,7 @@
 /**
  * reserved NOR flash size for application
  */
-#define CONFIG_APP_FLASH_SIZE 0x3D0000
+#define CONFIG_APP_FLASH_SIZE 0x3cf000
 
 /**
  * external NOR flash physical address of application
@@ -432,6 +432,11 @@
  * PSRAM or DDR size for app image from RAM
  */
 #define CONFIG_APP_FILEIMG_RAM_SIZE  0x0
+
+/**
+ * Whether to verify app image signature when secure boot is enabled
+ */
+/* #undef CONFIG_APPIMG_SIGCHECK_ENABLE */
 
 /**
  * PSRAM or DDR offset for BT firmware load addres

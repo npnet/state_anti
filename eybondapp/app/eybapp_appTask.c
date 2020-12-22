@@ -119,11 +119,11 @@ void proc_app_task(s32_t taskId) {
 
   ret = Ql_Timer_Register(WDG_timer, UserTimerWDGcallback, NULL);  // 注册外部看门狗Timer
   if (ret < QL_RET_OK) {
-    log_save("Register WGD timer(%d) failed!! ret = %d\r\n", WDG_timer, ret);
+    log_save("Register WGD timer(%d) failed!! ret = %d", WDG_timer, ret);
   }
   ret = Ql_Timer_Start(WDG_timer, WDG_time_Interval, TRUE);
   if (ret < 0) {
-    log_save("Start WGD timer failed, ret = %d\r\n", ret);
+    log_save("Start WGD timer failed, ret = %d", ret);
   }
 #ifdef __TEST_FOR_UFS__
   Enum_FSStorage storage = Ql_FS_UFS;
@@ -389,10 +389,10 @@ void proc_app_task(s32_t taskId) {
 
 #ifdef __TEST_FOR_UFS__
   APP_DEBUG("FILE System TEST!\r\n");
-  s8_t space = 0;      // 注意不要做%和/运算
+  u32_t space = 0;      // 注意不要做%和/运算
   // check freespace
   space  = fibo_file_getFreeSize();
-  APP_DEBUG("fibo_file_getFreeSize=%d \r\n", space);
+  APP_DEBUG("fibo_file_getFreeSize=%ld \r\n", space);
   // check total space
   s32_t file_a_size = fibo_file_getSize(g_recName_parameter_aa);
   APP_DEBUG("file_a_size is %ld\r\n", file_a_size);

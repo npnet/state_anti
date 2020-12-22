@@ -9,7 +9,7 @@
 #include "eybapp_appTask.h"
 #include "Device.h"
 #include "L610Net_TCP_EYB.h"
-#include "../net/src/restart_net.h"
+// #include "../net/src/restart_net.h"
 #include "eybpub_Status.h"
 #include "4G_net.h"
 
@@ -44,7 +44,7 @@ static void fibo_aliyunMQTT_connect_callback(void *pcontext, void *pclient, iotx
             memset(ptopic, 0x0, sizeof(char) * (topic_info->topic_len + 1));
             memcpy(ptopic, topic_info->ptopic, topic_info->topic_len);
             APP_PRINT("ali to device connect_callback topic: topic_len:%d, topic:%s\r\n", topic_info->topic_len, ptopic);
-            APP_PRINT("Payload: payload_len:%d, payload:%s\r\n", topic_info->payload_len, topic_info->payload);
+            APP_PRINT("Payload: payload_len:%ld, payload:%s\r\n", topic_info->payload_len, topic_info->payload);
 
             free(ptopic);
             ptopic = NULL;
@@ -116,14 +116,14 @@ static void fibo_aliyunMQTT_sub_callback(void *pcontext, void *pclient, iotx_mqt
             memset(ptopic, 0x0, sizeof(char) * (topic_info->topic_len + 1));
             memcpy(ptopic, topic_info->ptopic, topic_info->topic_len);
             APP_PRINT("ali to device sub_callback topic: topic_len:%d, topic:%s\r\n", topic_info->topic_len, ptopic);
-            APP_PRINT("Payload: payload_len:%d\r\n", topic_info->payload_len);
+            APP_PRINT("Payload: payload_len:%ld\r\n", topic_info->payload_len);
             out_put_buffer(topic_info->payload,topic_info->payload_len);
 
             message_id =  strstr(ptopic,"request");
             if(NULL != message_id)
             {
                 //   /sys/GKq73pYy9pK/6032011300000005/rrpc/request/1339116017494043136
-                rrpc_web_at_handle(topic_info->payload_len,topic_info->payload);
+                rrpc_web_at_handle(topic_info->payload_len,(uint8_t *)topic_info->payload);
                 message_id = message_id + strlen("request/");
                 APP_PRINT("message_id = %s\r\n",message_id);
 
@@ -135,7 +135,7 @@ static void fibo_aliyunMQTT_sub_callback(void *pcontext, void *pclient, iotx_mqt
                 //APP_PRINT("rrpc_topic = %s\r\n",rrpc_topic);
 
                 memset(rrpc_response_topic,0,sizeof(rrpc_response_topic));
-                strncpy(rrpc_response_topic,rrpc_topic,RES_TOPIC_LEN);
+                strncpy((char *)rrpc_response_topic,rrpc_topic,RES_TOPIC_LEN);
                 fibo_free(rrpc_topic);
                 message_id = NULL;
             }
@@ -179,8 +179,6 @@ static void tick1s_callback(void *arg)
 
 void mqtt_conn_ali_task(void *param)
 {
-
-
     APP_PRINT("aliyun task run...\r\n");
     int ret = 0;
     bool ret_lock = false;
@@ -198,7 +196,6 @@ void mqtt_conn_ali_task(void *param)
 
     while (1)
     {
-
         fibo_queue_get(ALIYUN_TASK, (void *)&msg, 0);
         switch (msg.message)
         {

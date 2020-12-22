@@ -65,7 +65,9 @@ void ModbusDevice_init(void) {
 void ModbusDevice_clear(void) {
   list_trans(&onlineDeviceList, onlineDeviceRemove, null);
   list_delete(&onlineDeviceList);
-  memory_release(ModbusDevice.cfg);     // mike 20201120
+  if (ModbusDevice.cfg != NULL) {
+    memory_release(ModbusDevice.cfg);     // mike 20201120
+  }
 //  memory_release(MeterDevice.cfg);
 }
 
@@ -304,7 +306,7 @@ static u8_t ackProcess(Device_t *dev) {
   if (checkResult == 0) { // Device ack Data OK
     exp->tryCnt = 0;
     onlineDeviceAddr(dev);
-    return 1;   // mike 20200930
+//    return 1;   // mike 20201218  屏蔽后打开1拖多采集(同协议)
   } else if (exp->tryCnt++ > 10) {
     DeviceOnlineHead_t *head = list_find(&onlineDeviceList, onlineDeviceCmp, dev);
     if (head != null) {

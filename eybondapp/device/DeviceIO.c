@@ -343,6 +343,15 @@ static void end(DeviceAck_e e) {
 #ifdef _PLATFORM_L610_
 static ST_UARTDCB *IOCfg = null;
 static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg);
+void DevIO_halGPIO() {
+  fibo_gpio_mode_set(DEVICE_UART_TXD, 6);
+  fibo_gpio_cfg(DEVICE_UART_TXD, PINDIRECTION_OUT);
+  fibo_gpio_set(DEVICE_UART_TXD, PINLEVEL_HIGH);
+
+  fibo_gpio_mode_set(DEVICE_UART_RXD, 6);
+  fibo_gpio_cfg(DEVICE_UART_RXD, PINDIRECTION_IN);
+  fibo_gpio_set(DEVICE_UART_RXD, PINLEVEL_HIGH);
+}
 
 /*******************************************************************************
   * @brief  device
@@ -352,16 +361,16 @@ static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, v
 *******************************************************************************/
 void DevIO_stcfg(ST_UARTDCB *hardcfg) {
   INT32 ret = 0;
-  fibo_gpio_mode_set(DEVICE_UART_TXD, 6);
-  fibo_gpio_cfg(DEVICE_UART_TXD, PINDIRECTION_OUT);
-  fibo_gpio_set(DEVICE_UART_TXD, PINLEVEL_HIGH);
+//  fibo_gpio_mode_set(DEVICE_UART_TXD, 6);
+//  fibo_gpio_cfg(DEVICE_UART_TXD, PINDIRECTION_OUT);
+//  fibo_gpio_set(DEVICE_UART_TXD, PINLEVEL_HIGH);
 
-  fibo_gpio_mode_set(DEVICE_UART_RXD, 6);
-  fibo_gpio_cfg(DEVICE_UART_RXD, PINDIRECTION_IN);
-  fibo_gpio_set(DEVICE_UART_RXD, PINLEVEL_HIGH);
+//  fibo_gpio_mode_set(DEVICE_UART_RXD, 6);
+//  fibo_gpio_cfg(DEVICE_UART_RXD, PINDIRECTION_IN);
+//  fibo_gpio_set(DEVICE_UART_RXD, PINLEVEL_HIGH);
 
   hal_uart_config_t drvcfg ;
-  fibo_hal_uart_deinit(DEVICE_IO_PORT);
+//  fibo_hal_uart_deinit(DEVICE_IO_PORT);
   memset(&drvcfg, 0, sizeof(hal_uart_config_t));
   drvcfg.baud = hardcfg->baudrate;
   drvcfg.parity = hardcfg->parity;
@@ -380,16 +389,16 @@ void DevIO_stcfg(ST_UARTDCB *hardcfg) {
 *******************************************************************************/
 void DevIO_halcfg(hal_uart_config_t *hardcfg) {
   INT32 ret = 0;
-  fibo_gpio_mode_set(DEVICE_UART_TXD, 6);
-  fibo_gpio_cfg(DEVICE_UART_TXD, PINDIRECTION_OUT);
-  fibo_gpio_set(DEVICE_UART_TXD, PINLEVEL_HIGH);
+//  fibo_gpio_mode_set(DEVICE_UART_TXD, 6);
+//  fibo_gpio_cfg(DEVICE_UART_TXD, PINDIRECTION_OUT);
+//  fibo_gpio_set(DEVICE_UART_TXD, PINLEVEL_HIGH);
 
-  fibo_gpio_mode_set(DEVICE_UART_RXD, 6);
-  fibo_gpio_cfg(DEVICE_UART_RXD, PINDIRECTION_IN);
-  fibo_gpio_set(DEVICE_UART_RXD, PINLEVEL_HIGH);
+//  fibo_gpio_mode_set(DEVICE_UART_RXD, 6);
+//  fibo_gpio_cfg(DEVICE_UART_RXD, PINDIRECTION_IN);
+//  fibo_gpio_set(DEVICE_UART_RXD, PINLEVEL_HIGH);
 
   hal_uart_config_t drvcfg ;
-  fibo_hal_uart_deinit(DEVICE_IO_PORT);
+//  fibo_hal_uart_deinit(DEVICE_IO_PORT);
   memset(&drvcfg, 0, sizeof(hal_uart_config_t));
   drvcfg.baud = hardcfg->baud;
   drvcfg.parity = hardcfg->parity;
@@ -443,10 +452,11 @@ void DeviceIO_init(ST_UARTDCB *cfg) {
     }
     DevIO_stcfg(&SetCfg);
   } else if ((IOCfg == null && cfg != NULL) || r_memcmp(IOCfg, cfg, sizeof(ST_UARTDCB)) != 0) {
+    APP_DEBUG("cfg is %ld-%d-%d-%d\r\n", cfg->baudrate, cfg->dataBits, cfg->stopBits, cfg->parity);
     IOCfg = cfg;
-    //关闭串口
+    // 关闭串口
     fibo_hal_uart_deinit(DEVICE_IO_PORT);
-    //延时
+    // 延时
     fibo_taskSleep(1000);
     //串口初始化
     DevIO_stcfg(cfg);
@@ -546,14 +556,14 @@ static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, v
         return;
       }
       if (s_device == null || s_device->buf->payload == null) {
-        APP_DEBUG("Cancel MSG %s from UART port:%d!!\r\n", rcveBuf.payload, uart_port);  // 默认忽略处理没有负载时采集口上报的数据
+        APP_DEBUG("Cancel %d len MSG from UART port:%d!!\r\n", rcveBuf.lenght, uart_port);  // 默认忽略处理没有负载时采集口上报的数据
         return;
       } else {  // 有负载时将接收到的数据传递给负载设备处理
         s_device->buf->lenght = rcveBuf.lenght;
         r_memcpy(s_device->buf->payload, rcveBuf.payload, s_device->buf->lenght);
         APP_DEBUG("s_device buf len:%d size:%d!!\r\n", s_device->buf->lenght, s_device->buf->size);
         if (is_ali_conn_success) {
-          Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
+//          Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
         }
       }
     } else {  // 生产测试AT指令打开后
@@ -625,17 +635,23 @@ DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
   * @retval None
 *******************************************************************************/
 void DeviceIO_reset(void) {
-  fibo_hal_uart_deinit(DEVICE_IO_PORT);
-  s32_t ret = 0;
-  ret = fibo_timer_free(s_devtimer);  // mike 20200829
-  if (ret < 0) {
-    APP_DEBUG("Stop OVERTIME error!! ret:%ld\r\n", ret);
-  }
+//  if (s_devtimer != 0) {
+//    s32_t ret = 0;
+//    ret = fibo_timer_free(s_devtimer);  // mike 20200829
+//    if (ret < 0) {
+//      APP_DEBUG("Stop OVERTIME error!! ret:%ld\r\n", ret);
+//    }
+//    s_devtimer = 0;
+//  }
+
+//  fibo_hal_uart_deinit(DEVICE_IO_PORT);   // mike 20201218
   s_lockDevice = null;
   IOCfg = null;
-  memory_release(rcveBuf.payload);
+/*  if (rcveBuf.payload != NULL) {
+    memory_release(rcveBuf.payload);
+  }
   rcveBuf.lenght = 0;
-  rcveBuf.size = 0;
+  rcveBuf.size = 0; */
 }
 
 /*******************************************************************************
@@ -657,12 +673,14 @@ void Uart_write(u8_t *data, u16_t len) {
   * @retval None
 *******************************************************************************/
 static void end(DeviceAck_e e) {
-  s32_t ret = 0;
-  ret = fibo_timer_free(s_devtimer);  // mike 20200829
-  if (ret < 0) {
-    APP_DEBUG("Stop OVERTIME error!! ret:%ld\r\n", ret);
+  if (e != DEVICE_ACK_OVERTIME) {
+    s32_t ret = 0;
+    ret = fibo_timer_free(s_devtimer);  // mike 20200829
+    if (ret < 0) {
+      APP_DEBUG("Stop OVERTIME error!! ret:%ld\r\n", ret);
+    }
+    s_devtimer = 0;
   }
- 
   if (null != s_device && s_device->callback != null) {
 //    APP_DEBUG("end call device callback!!\r\n");
     s_device->callback(e);  // 执行设备列表中的callback函数
@@ -750,6 +768,12 @@ void Dev_Print_output(u8_t *p, u16_t len) {
 *******************************************************************************/
 static void dev_overtimeCallback(void *arg) {
   APP_DEBUG("dev_overtimeCallback ...\r\n");
+  s32_t ret = 0;
+  ret = fibo_timer_free(s_devtimer);  // mike 20200829
+  if (ret < 0) {
+    APP_DEBUG("Stop OVERTIME error!! ret:%ld\r\n", ret);
+  }
+  s_devtimer = 0;
   end(DEVICE_ACK_OVERTIME);
 }
 /*********************************FILE END*************************************/

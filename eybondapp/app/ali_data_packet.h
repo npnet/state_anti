@@ -182,7 +182,8 @@ extern Para_Table para;
 
 void load_config_para(void);
 //void set_par_lac_ci(uint32_t lac ,uint32_t ci);
-
+void rrpc_web_at_handle(uint32_t payloadlen,uint8_t *payload);
+int send_rrpc_response_packet(void *aliyun_mqtt_thread_handle,uint8_t *respon_topic);
 
 #define  HTTP_URL_LEN 200
 #define  STR_RET_SIZE 100

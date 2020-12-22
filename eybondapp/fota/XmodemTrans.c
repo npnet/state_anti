@@ -4,11 +4,12 @@
  * @Date    : 2017-12-14
  * @Brief   : 
  ******************************************************************************/
-#include "Xmodemtrans.h"
-#include "File.h"
-#include "crc.h"
-#include "memory.h"
+#include "eyblib_CRC.h"
+#include "eyblib_memory.h"
+#include "eyblib_r_stdlib.h"
+#include "eybpub_File.h"
 
+#include "XmodemTrans.h"
 
 #define START	(0x43)
 #define SOH 	(0x01)
@@ -21,8 +22,8 @@
 #define EOF 	(0x1A)
 
 static File_t *s_file = null;
-static u8 commNum;
-static u8 progress;
+static u8_t commNum;
+static u8_t progress;
 
 static void Xmodem_nextPakege(Buffer_t *sendBuf);
 static short Xmodem_crc(const unsigned char *data, int len);
@@ -55,7 +56,7 @@ void Xmodem_end(void)
  Parameter: 
  return   : 0~100; 
 *******************************************************************************/
-u8 Xmodem_progress(void)
+u8_t Xmodem_progress(void)
 {
 	return progress;
 }
@@ -69,7 +70,7 @@ int Xmodem_ack(Buffer_t *sendBuf, Buffer_t *ack)
 {
 	static u8_t cnt;
 	
-	u8 code = 0xFF;
+	u8_t code = 0xFF;
 	
 	int i;
 	
@@ -85,11 +86,11 @@ int Xmodem_ack(Buffer_t *sendBuf, Buffer_t *ack)
 	
 	switch (code)
 	{
-		case ETX: // ÖÐ¶Ï²Ù×÷
-		case CAN: // ³·Ïú´«ËÍ
+		case ETX: // ä¸­æ–­æ“ä½œ
+		case CAN: // æ’¤é”€ä¼ é€
 			i = -1;
 			break;
-		case ACK: //ÈÏ¿ÉÏìÓ¦
+		case ACK: // è®¤å¯å“åº”
 			if (progress == 99)
 			{
 				i = 1;
@@ -104,13 +105,13 @@ int Xmodem_ack(Buffer_t *sendBuf, Buffer_t *ack)
 			}
 			cnt = 0;
 			break;
-		case NAK: //²»ÈÏ¿ÉÏìÓ¦
+		case NAK: // ä¸è®¤å¯å“åº”
 			if (cnt++ > 10)
 			{
 				i = -2;
 			}
 			break;
-		case START:	  //´«ÊäµÄÆô¶¯
+		case START:	  // ä¼ è¾“çš„å¯åŠ¨
 			if (sendBuf->payload == null)
 			{
 				commNum = 0;
@@ -157,7 +158,7 @@ static void Xmodem_nextPakege(Buffer_t *sendBuf)
 	}
 	else
 	{
-		u16 crc;
+		u16_t crc;
 		r_memset(&xmodem->data[ret], EOF, sizeof(xmodem->data) - ret);;
 		crc = Xmodem_crc(xmodem->data, sizeof(xmodem->data));
 		xmodem->crcH = crc>>8;

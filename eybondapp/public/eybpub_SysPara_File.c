@@ -54,61 +54,6 @@ static u8_t Para_Init_flag = 0;
 // static char para_value[64] = {0};  // 参数值
 
 #ifdef _PLATFORM_BC25_
-/* ServerAddr_t *ServerAdrrGet(u8_t num) {
-  Buffer_t buf;
-//  Buffer_t portBuf;   // mike 20200828
-  ServerAddr_t *serverAddr = null;
-
-  r_memset(&buf, 0, sizeof(Buffer_t));
-  parametr_get(num, &buf);  // TODO获取的buf长度有问题？
-
-  if (buf.payload != null && buf.lenght > 5) {
-    ListHandler_t cmdStr;
-    int len = 0;
-
-    r_strsplit(&cmdStr, (char *) buf.payload, ':');
-
-    if (cmdStr.count > 0) {
-      len = r_strlen((char *) * (int *) cmdStr.node->payload);
-      serverAddr = memory_apply(sizeof(ServerAddr_t) + len);
-      r_strcpy(serverAddr->addr, (char *) * (int *) cmdStr.node->payload);
-      serverAddr->type = 1;
-
-      if (cmdStr.count > 1) {
-        serverAddr->port = Swap_charNum(
-                             (char *) * (int *) cmdStr.node->next->payload);
-        // TODO 有问题，一直会进入这里
-      }
-
-//      if (num == HANERGY_SERVER_ADDR) {           // mike disable Hanrgy sever 24# command for NB platform 20200827
-//        serverAddr->port = 8081;
-//      } else {
-//        serverAddr->port = 502;
-//      }
-
-      if (cmdStr.count > 2) {
-        if (r_strstr((char *) * (int *) cmdStr.node->next->next->payload, "UDP") >= 0) {
-          serverAddr->type = 0;
-        } else if (r_strstr((char *) * (int *) cmdStr.node->next->next->payload, "SSL") >= 0) {
-          serverAddr->type = 2;
-        }
-      }
-    }
-    list_delete(&cmdStr);
-  }
-
-  if (serverAddr->port == 0) {
-    memory_release(serverAddr);
-  }
-
-//  memory_release(portBuf.payload);        // mike 20200828
-  memory_release(buf.payload);
-  buf.lenght = 0;
-  buf.size = 0;
-
-  return serverAddr;
-} */
-
 void parametr_get(u32_t number, Buffer_t *databuf) {
   char *buf_value = NULL;
   u16_t len = 0;

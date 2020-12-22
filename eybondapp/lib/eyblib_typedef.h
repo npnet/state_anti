@@ -2,7 +2,7 @@
  * @File    : eyblib_typedef.h
  * @Author  : CGQ
  * @Date    : 2015-06-28
-        2016.04.10 Unarty Change User 8/32bit MCU
+              2016.04.10 Unarty Change User 8/32bit MCU
  * @Brief   :
  ******************************************************************************/
 #ifndef __EYBLIB_TYPEDEF_H_

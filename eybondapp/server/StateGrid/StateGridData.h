@@ -7,9 +7,10 @@
 
 #include "typedef.h"
 
+#define POINT_TAB_FILE_FLAG       (0xAA5500BB)
+#define POINT_TAB_FILE_NAME       "/point_tab_file.dat"          // 点表文件名
+
 #define POINT_TAB_FILE_ADDR       (0x003E0000 )
-
-
 
 typedef struct
 {

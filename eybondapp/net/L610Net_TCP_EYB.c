@@ -20,6 +20,8 @@
 #include "L610Net_TCP_EYB.h"
 #include "eybond.h"
 
+// INT8  g_socketid = -1;
+
 #define r_in_range(c, lo, up) ((u8_t)c >= lo && (u8_t)c <= up)
 #define r_isdigit(c) r_in_range(c, '0', '9')
 #define r_isxdigit(c) (r_isdigit(c) || r_in_range(c, 'a', 'f') || r_in_range(c, 'A', 'F'))
@@ -172,14 +174,14 @@ GSMState_e m_GprsActState = STATE_TOTAL_NUM;
 L610Net_t netManage[EYB_SOCKET_COUNTS];
 static s32_t L610pdpCntxtId;
 static u8_t registe = 0;
-static u8_t registe_times = 0;
+static u16_t registe_times = 0;
 static s32_t customPara = 0;
 
 // fd_set g_readfds;
 // fd_set g_errorfds;
 // fd_set g_writefds;
 u32_t g_SemFlag = 0;
-u32_t g_netmutex = 0;
+static u32_t g_netmutex = 0;
 
 /************************************************************************/
 /* Definition for GPRS PDP context                                      */
@@ -225,14 +227,18 @@ void L610Net_init(void) {
 
   INT8 strTaskname[32] = {0};
   UINT32 l610tcp_thread_id[EYB_SOCKET_COUNTS] = {0};
-  u8_t nIndex = 0;
+  u16_t nIndex = 0;
   for(nIndex = 0; nIndex < EYB_SOCKET_COUNTS; nIndex ++) {
     r_memset(strTaskname, '\0', sizeof(strTaskname));
     snprintf(strTaskname, 32, "L610 TCP rev Callback %d", nIndex);
-    fibo_thread_create_ex(L610_TCP_Callback, (INT8 *)strTaskname, 1024*8*2, (void *)&nIndex, OSI_PRIORITY_REALTIME, &l610tcp_thread_id[nIndex]);      
+    fibo_thread_create_ex(L610_TCP_Callback, (INT8 *)strTaskname, 1024*8*2, (void *)&nIndex, OSI_PRIORITY_NORMAL, &l610tcp_thread_id[nIndex]);
     fibo_taskSleep(1000);
     APP_DEBUG("L610 TCP Callback[%d] %X\r\n", nIndex, l610tcp_thread_id[nIndex]);
   }  
+/*    UINT32 l610tcp_thread_id = 0;
+    fibo_thread_create_ex(L610_TCP_Callback, "L610 TCP Callback", 1024*8*8, NULL, OSI_PRIORITY_NORMAL, &l610tcp_thread_id);
+    fibo_taskSleep(1000);
+    APP_PRINT("L610 TCP Callback %X\r\n", l610tcp_thread_id); */
 }
 
 /*******************************************************************************
@@ -279,7 +285,7 @@ u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) 
  return   :
 *******************************************************************************/
 u8_t L610Net_status(u8_t nIndex) {
-  u8_t ret = 0xff;
+  u16_t ret = 0xff;
 
   if (nIndex < sizeof(netManage) / sizeof(netManage[0])) {
     if (netManage[nIndex].flag == 1) {
@@ -358,7 +364,7 @@ int findEybondIP(int nIndex) {
  return   :
 *******************************************************************************/
 void L610Net_manage(void) {
-  APP_DEBUG("L610Net_manage is running :%ld\r\n", g_netmutex);
+//  APP_DEBUG("L610Net_manage is running :%ld\r\n", g_netmutex);
   if (g_netmutex == 1) { // lock L610Net_manage, make sure it is running one by one    
     return;
   }
@@ -399,7 +405,7 @@ void L610Net_manage(void) {
     }
     case STATE_SIM_INSERTED: {  // 查询SIM卡注网状态
       reg_info_t sim_reg_info;
-      memset(&sim_reg_info,0,sizeof(sim_reg_info));
+      r_memset(&sim_reg_info,0,sizeof(sim_reg_info));
       ret = fibo_getRegInfo(&sim_reg_info, SINGLE_SIM);  // 注册频段
       APP_DEBUG("sim getRegInfo ret:%d, reg_state = %d, curr_rat=%d\r\n", ret, sim_reg_info.nStatus ,sim_reg_info.curr_rat);
 	  if(1 == sim_reg_info.nStatus || 5 == sim_reg_info.nStatus) { // SIM卡已注册
@@ -477,8 +483,6 @@ void L610Net_manage(void) {
       ret = fibo_getHostByName(EYBOND_DEFAULT_SERVER, &addr_para, 1, SINGLE_SIM);  // 0成功 小于0失败
       if (ret == 0) {
         APP_DEBUG("%s DNS IP is:%ld:%ld:%ld:%ld\r\n", EYBOND_DEFAULT_SERVER, (addr_para.u_addr.ip4.addr >> 0) & 0x000000FF, (addr_para.u_addr.ip4.addr >> 8) & 0x000000FF, (addr_para.u_addr.ip4.addr >> 16) & 0x000000FF, (addr_para.u_addr.ip4.addr >> 24) & 0x000000FF);
-//      m_GprsActState = STATE_DNS_READY;
-//      registe = 1;
         APP_DEBUG("Try PING %s last ret = %d\r\n", NET_PING_HOSTNAME, ping_ret);
         ping_ret = fibo_mping(1, NET_PING_HOSTNAME, 4, 32, 64, 0, 4000);
         if (ping_ret == 0) {
@@ -489,7 +493,7 @@ void L610Net_manage(void) {
           registe = 1;
           m_GprsActState = STATE_DNS_READY;
         } else {
-          log_save("PING %s Fail ret = %d\r\n", NET_PING_HOSTNAME, ping_ret);
+          log_save("PING %s Fail ret = %d", NET_PING_HOSTNAME, ping_ret);
           registe = 0;
           m_GprsActState = STATE_DNS_NOT_READY;
         }
@@ -515,6 +519,7 @@ void L610Net_manage(void) {
               } else {
                   netManage[nIndex].socketID = fibo_sock_create(GAPP_IPPROTO_UDP);
               }
+              fibo_taskSleep((UINT32)1000);
               if (netManage[nIndex].socketID < 0) {
   		        netManage[nIndex].status = L610_SOCKET_FAIL;
                 APP_DEBUG("Fail to create socket, ret = %d\r\n", netManage[nIndex].socketID);
@@ -527,10 +532,16 @@ void L610Net_manage(void) {
 
               int NODELAY = 1;
               ret = fibo_sock_setOpt(netManage[nIndex].socketID, IPPROTO_TCP, TCP_NODELAY, &NODELAY, sizeof(NODELAY));
-//              ret = fibo_sock_setOpt(netManage[nIndex].socketID, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(int));              
               if (ret < 0) {
-                APP_DEBUG("fibo_sock_setOpt %d socket opt fail\r\n", nIndex);
+                APP_DEBUG("fibo_sock_setOpt %d socket %d opt fail\r\n", nIndex, netManage[nIndex].socketID);
               }
+              fibo_taskSleep((UINT32)1000);
+              int opt = 1;
+              ret = fibo_sock_setOpt(netManage[nIndex].socketID, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(int));
+              if (ret < 0) {
+                APP_DEBUG("fibo_sock_setOpt %d socket %d opt fail\r\n", nIndex, netManage[nIndex].socketID);
+              }
+              fibo_taskSleep((UINT32)1000);
 //            INT32 socket_block = fibo_sock_lwip_fcntl(netManage[nIndex].socketID, F_GETFL,0);
 	          // default block
 //		      APP_DEBUG("socket_block = %x,O_NONBLOCK=%x\n", socket_block, O_NONBLOCK);
@@ -557,12 +568,14 @@ void L610Net_manage(void) {
               if (netManage[nIndex].status == L610_IP_OK) {
                 if (netManage[nIndex].mode == 1) {
                   r_memset(&addr, 0, sizeof(GAPP_TCPIP_ADDR_T));
-                  addr.sin_port               = r_htons(netManage[nIndex].port);
+                  addr.sin_port                 = r_htons(netManage[nIndex].port);
                   addr.sin_addr.u_addr.ip4.addr = netManage[nIndex].ip;
+                  addr.sin_addr.type            = AF_INET;
 //                addr.sin_port = r_htons(502);
 //                ip4addr_aton("39.108.19.162", &addr.sin_addr.u_addr.ip4);
 //                addr.sin_addr.u_addr.ip4.addr = r_htonl(addr.sin_addr.u_addr.ip4.addr);
                   ret = fibo_sock_connect(netManage[nIndex].socketID, &addr);
+//                  fibo_taskSleep((UINT32)5000);
                   APP_DEBUG("connet %s server:IP %ld:%ld:%ld:%ld port %d(sin_port %d) ret = %d\r\n", \
                       netManage[nIndex].ipStr, \
                       (addr.sin_addr.u_addr.ip4.addr>> 0) & 0x000000FF, \
@@ -584,9 +597,9 @@ void L610Net_manage(void) {
               }
             }
           } else if (netManage[nIndex].flag == 1 && netManage[nIndex].status == L610_SUCCESS) {
-            APP_DEBUG("nIndex %d socketID %d is connected\r\n", nIndex, netManage[nIndex].socketID);
+//            APP_DEBUG("nIndex %d socketID %d is connected\r\n", nIndex, netManage[nIndex].socketID);
           } else {
-//            APP_DEBUG("nIndex %d socketID %ld is not ready\r\n", nIndex, netManage[nIndex].socketID);
+//          APP_DEBUG("nIndex %d socketID %ld is not ready\r\n", nIndex, netManage[nIndex].socketID);
           }
         }
       }
@@ -598,8 +611,7 @@ void L610Net_manage(void) {
           APP_DEBUG("sim RAT mode when DNS is ready:%d\r\n", ret);
           registe_times++;
         } else {
-          log_save("get sim ip fail, cid_status=%d\r\n", cid_status);
-          L610Net_closeAll();
+          log_save("get sim ip fail, cid_status=%d", cid_status);
           m_GprsActState = STATE_DNS_NOT_READY;
           registe_times = 0;
         }
@@ -613,10 +625,11 @@ void L610Net_manage(void) {
       break;
     }
     case STATE_DNS_NOT_READY: {
-      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_DNS_FAIL, 0, 0);
+      L610Net_closeAll();
       ret = fibo_PDPRelease(0, SINGLE_SIM);
       APP_DEBUG("fibo_PDPRelease ret = %d\r\n", ret);
       m_GprsActState = STATE_GSM_QUERY_STATE;
+      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_DNS_FAIL, 0, 0);
       break;
     }
     case STATE_TOTAL_NUM:
@@ -691,6 +704,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
        APP_DEBUG("socket[%d] %d send %d data ret %d\r\n", nIndex, netManage[nIndex].socketID, len, ret);        
     }
   }
+//  ret = fibo_sock_send(g_socketid, (u8_t *)data, len);
   return ret;
 }
 
@@ -699,24 +713,57 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
  Parameter:
  return   :
 *******************************************************************************/
-void L610_TCP_Callback(u8_t *param) {
-  s8_t ret = 0;
+/* void L610_TCP_Callback(u8_t *param) {
+  s16_t ret = 0;
+  u8_t nIndex = 0;
+  UINT8 strBuf[MAX_NET_BUFFER_LEN] = {0};
+
+  while(1) {
+    APP_DEBUG("L610_TCP_Callback task\r\n");
+    if (m_GprsActState == STATE_TOTAL_NUM) {
+      r_memset(strBuf, '\0', sizeof(strBuf));
+      ret = fibo_sock_recv(g_socketid, strBuf, MAX_NET_BUFFER_LEN);
+      if (ret > 0) {
+        APP_DEBUG("socket: %d read %d data!\r\n", g_socketid, ret);
+        Buffer_t cmdbuf;
+        cmdbuf.size = MAX_NET_BUFFER_LEN;
+        cmdbuf.lenght = 0;
+        cmdbuf.payload = memory_apply(MAX_NET_BUFFER_LEN);
+        memset(cmdbuf.payload, '\0', MAX_NET_BUFFER_LEN);
+        memcpy(cmdbuf.payload, strBuf, ret);
+        cmdbuf.lenght = ret;
+        ESP_callback(nIndex, &cmdbuf);
+      } else if (ret == 0) {
+        APP_DEBUG("socket: %d remote is closed!\r\n", g_socketid);
+      } else {
+        APP_DEBUG("socket: %d read failt!\r\n", g_socketid);
+      }
+    } else {
+      fibo_taskSleep(1000);
+    }
+  }
+  fibo_thread_delete();
+} */
+
+ void L610_TCP_Callback(u8_t *param) {
+  s16_t retlen = 0;
   u8_t nIndex = *param;
-  
+  UINT8 strBuf[MAX_NET_BUFFER_LEN] = {0};
+
   while(1) {
 //    APP_DEBUG("L610_TCP_Callback task: %d\r\n", nIndex);
-    fibo_taskSleep(1000);
-    
     if (m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
-      Buffer_t cmdbuf;
-      cmdbuf.size = MAX_NET_BUFFER_LEN;
-      cmdbuf.lenght = 0;
-      cmdbuf.payload = memory_apply(MAX_NET_BUFFER_LEN);
-      r_memset(cmdbuf.payload, '\0', MAX_NET_BUFFER_LEN); 
-      ret = fibo_sock_recv(netManage[nIndex].socketID, cmdbuf.payload, cmdbuf.size);
-      if (ret > 0) {
-        cmdbuf.lenght = ret;
-        APP_DEBUG("socket: %d read %d data!\r\n", netManage[nIndex].socketID, ret);
+      r_memset(strBuf, '\0', sizeof(strBuf));
+      retlen = fibo_sock_recv(netManage[nIndex].socketID, strBuf, MAX_NET_BUFFER_LEN);
+      if (retlen > 0) {
+        Buffer_t cmdbuf;
+        cmdbuf.size = MAX_NET_BUFFER_LEN;
+        cmdbuf.lenght = 0;
+        cmdbuf.payload = memory_apply(MAX_NET_BUFFER_LEN);
+        r_memset(cmdbuf.payload, '\0', MAX_NET_BUFFER_LEN);
+        r_memcpy(cmdbuf.payload, strBuf, retlen);
+        cmdbuf.lenght = retlen;
+        APP_DEBUG("socket: %d read %d data!\r\n", netManage[nIndex].socketID, retlen);
         if (netManage[nIndex].port == EYBOND_DEFAULT_SERVER_PORT && \
             (r_strncmp(netManage[nIndex].ipStr, EYBOND_DEFAULT_SERVER, r_strlen(EYBOND_DEFAULT_SERVER)) == 0 || \
              r_strncmp(netManage[nIndex].ipStr, EYBOND_SOLAR_SERVER, r_strlen(EYBOND_SOLAR_SERVER)) == 0)) {  // 处理eybond云下发指令
@@ -724,13 +771,14 @@ void L610_TCP_Callback(u8_t *param) {
         } else {
           memory_release(cmdbuf.payload);   // mike 20201210 可能会引起死机问题
         }
-      } else if (ret == 0) {
-        memory_release(cmdbuf.payload);
+      } else if (retlen == 0) {
         APP_DEBUG("socket: %d remote is closed!\r\n", netManage[nIndex].socketID);
+        L610Net_close(nIndex);
       } else {
-        memory_release(cmdbuf.payload);
         APP_DEBUG("socket: %d read failt!\r\n", netManage[nIndex].socketID);
       }
+    } else {
+      fibo_taskSleep(1000);
     }
   }
   fibo_thread_delete();

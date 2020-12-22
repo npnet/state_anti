@@ -21,6 +21,8 @@
 #include "Device.h"
 #include "DeviceIO.h"
 #include "eybond.h"
+#include "ESP_Update_L610.h"
+#include "UpdateTask.h"
 #include "L610_conn_ali_net.h"
 #include "http_fota.h"
 
@@ -30,6 +32,8 @@ UINT32 EYBDEVICE_TASK = 0;
 UINT32 EYBOND_TASK = 0;
 UINT32 ALIYUN_TASK = 0;
 UINT32 FOTA_TASK = 0;
+UINT32 UPDATE_TASK = 0;
+
 static void prvInvokeGlobalCtors(void) {
   extern void (*__init_array_start[])();
   extern void (*__init_array_end[])();
@@ -211,33 +215,55 @@ void * appimg_enter(void *param) {
   Beep_Init();
   Key_init();
   ADC_Init();  
-  
+  s32_t ret = 0;
+  u32_t nFreeSize = fibo_file_getFreeSize();
+  if (nFreeSize < 0x80000) {
+    APP_DEBUG("File system is full, Clean it\r\n");
+    if (fibo_file_getSize(FOTA_FILE_NAME) >= 0 || fibo_file_exist(FOTA_FILE_NAME) == 1) {
+        ret = fibo_file_delete(FOTA_FILE_NAME);
+        if (ret < 0) {
+          APP_DEBUG("Delete %s file fail\r\n", FOTA_FILE_NAME);
+        }
+    }
+    if (fibo_file_getSize(FOTA_STATUSFILE_NAME) >= 0 || fibo_file_exist(FOTA_STATUSFILE_NAME) == 1) {
+        ret = fibo_file_delete(FOTA_STATUSFILE_NAME);
+        if (ret < 0) {
+          APP_DEBUG("Delete %s file fail\r\n", FOTA_STATUSFILE_NAME);
+        }
+    }
+  }
   UINT32 net_thread_id = 0;
   UINT32 app_thread_id = 0;
   UINT32 dev_thread_id = 0;
   UINT32 eyb_thread_id = 0;
   UINT32 ali_thread_id = 0;
   UINT32 fota_thread_id = 0;
+  UINT32 upd_thread_id = 0;
+
   EYBAPP_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   EYBNET_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   EYBDEVICE_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   EYBOND_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   ALIYUN_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   FOTA_TASK = fibo_queue_create(10, sizeof(ST_MSG));
+  UPDATE_TASK = fibo_queue_create(10, sizeof(ST_MSG));
 
-  fibo_thread_create_ex(proc_app_task,    "Eybond APP TASK",    1024*8*2, NULL, OSI_PRIORITY_LOW, &app_thread_id);
+  fibo_thread_create_ex(proc_app_task,     "Eybond APP TASK",    1024*8*2,   NULL, OSI_PRIORITY_REALTIME, &app_thread_id);
   fibo_taskSleep(1000);
-  fibo_thread_create_ex(proc_net_task,    "Eybond NET TASK",    1024*8*2, NULL, OSI_PRIORITY_LOW, &net_thread_id);
+  fibo_thread_create_ex(proc_net_task,     "Eybond NET TASK",    1024*8*2,   NULL, OSI_PRIORITY_NORMAL, &net_thread_id);
   fibo_taskSleep(1000);  
-  fibo_thread_create_ex(proc_device_task, "Eybond DEVICE TASK", 1024*8*2, NULL, OSI_PRIORITY_LOW, &dev_thread_id);
+  fibo_thread_create_ex(proc_device_task,  "Eybond DEVICE TASK", 1024*8*2,   NULL, OSI_PRIORITY_LOW, &dev_thread_id);
   fibo_taskSleep(1000);
-  fibo_thread_create_ex(proc_eybond_task, "Eybond CMD TASK",    1024*8*2, NULL, OSI_PRIORITY_LOW, &eyb_thread_id);
+  fibo_thread_create_ex(proc_eybond_task,  "Eybond CMD TASK",    1024*8*2,   NULL, OSI_PRIORITY_LOW, &eyb_thread_id);
   fibo_taskSleep(1000);
-  fibo_thread_create_ex(mqtt_conn_ali_task,"MQTT CONN ALI TASK",1024*8*2, NULL, OSI_PRIORITY_LOW, &ali_thread_id);
+  fibo_thread_create_ex(mqtt_conn_ali_task,  "MQTT CONN ALI TASK", 1024*8*2, NULL, OSI_PRIORITY_LOW, &ali_thread_id);
   fibo_taskSleep(1000);  
-  fibo_thread_create_ex(proc_http_fota_task,"Http fota",1024*8*2, NULL, OSI_PRIORITY_NORMAL, &fota_thread_id);
+  fibo_thread_create_ex(proc_http_fota_task, "Http fota",          1024*8*2, NULL, OSI_PRIORITY_NORMAL, &fota_thread_id);
   fibo_taskSleep(1000);
-  APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X\r\n",net_thread_id, app_thread_id, dev_thread_id, eyb_thread_id, ali_thread_id);
+  fibo_thread_create_ex(proc_update_task,   "Eybond UPDATE TASK",  1024*8*2, NULL, OSI_PRIORITY_LOW, &upd_thread_id);
+  fibo_taskSleep(1000);
+  APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X UPd %X JLFota %X\r\n", \
+    net_thread_id, app_thread_id, dev_thread_id, eyb_thread_id, ali_thread_id, upd_thread_id, fota_thread_id);
   Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_UART_READY, 0, 0);
 
   return (void *)&user_callback;

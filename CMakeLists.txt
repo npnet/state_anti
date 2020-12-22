@@ -43,6 +43,7 @@ include_directories(eybondapp/net)
 include_directories(eybondapp/device)
 include_directories(eybondapp/device/Manufactor)
 include_directories(eybondapp/server/Eybond)
+include_directories(eybondapp/fota)
 else()
 include_directories(components/include components/newlib/include app/include)
 endif()
@@ -56,7 +57,7 @@ endfunction()
 function(add_appimg target ldscript)
     set(gen_ldscript ${target}_ldscript)
     set(target_map_file ${out_hex_dir}/${target}.map)
-    set(target_img_file ${out_hex_dir}/${target}.img)
+    set(target_img_file ${out_hex_dir}/${target}.bin)
     cpp_only(${gen_ldscript} ${ldscript})
     add_executable(${target} ${ARGN} ${core_stub_o})
     set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${out_hex_dir})
@@ -138,6 +139,7 @@ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
     file(GLOB DEVICES_FILES eybondapp/device/*.c)
     file(GLOB DEVICES_MANUFACTOR_FILES eybondapp/device/Manufactor/*.c)
     file(GLOB SERVER_EYBOND_FILES eybondapp/server/Eybond/*.c)
+    file(GLOB FOTA_FILES eybondapp/fota/*.c)
     file(GLOB LIB_FILES eybondapp/lib/*.c)
     file(GLOB PUB_FILES eybondapp/public/*.c)
     add_appimg(${target} ${flash_ldscript}
@@ -147,6 +149,7 @@ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
     ${DEVICES_FILES}
     ${DEVICES_MANUFACTOR_FILES}
     ${SERVER_EYBOND_FILES}
+    ${FOTA_FILES}
     ${LIB_FILES}
     ${PUB_FILES}
     )
@@ -184,7 +187,7 @@ endif()
     target_link_libraries(${target} PRIVATE ${libc_file_name} ${libm_file_name} ${libgcc_file_name})
 
     set(pac_file ${out_hex_dir}/${target}.pac)
-    set(target_img_file ${out_hex_dir}/${target}.img)
+    set(target_img_file ${out_hex_dir}/${target}.bin)
     pac_init_fdl(init_fdl)
     add_custom_command(OUTPUT ${pac_file}
         COMMAND python3 ${pacgen_py} ${init_fdl}

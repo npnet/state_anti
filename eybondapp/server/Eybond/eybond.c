@@ -12,7 +12,7 @@
 #ifdef _PLATFORM_L610_
 #include "fibo_opencpu.h"
 #include "4G_net.h"
-// #include "ESP_Update.h"
+#include "ESP_Update_L610.h"
 #endif
 
 #include "eyblib_list.h"
@@ -94,16 +94,16 @@ const funcationTab_t funTab[] = {
 //  {EYBOND_GET_DEVICE_HISTORY, historyData},
     {EYBOND_REPORT_SPECIAL,     specialData_receive},
     {EYBOND_GET_COMMUNICATION,  commnuicationData},
-//  {EYBOND_FILE_UPDATE,        Update_file},
-//  {EYBOND_SOFT_UPDATE,        Update_soft},
-//  {EYBOND_DEVICE_UPDATE,      Update_device},
-//  {EYBOND_DEVICE_UPDATE_STATE,  Update_deviceState},
-//  {EYBOND_DEVICE_UPDATE_CANCEL, Update_deviceCancel},
-//  {EYBOND_UPDATE_INFO, Update_info},
-//  {EYBOND_UPDATE_DATA_SEND,   Update_dataRcve},
-//  {EYBOND_UPDATE_DATA_STATE,  Update_rcveState},
-//  {EYBOND_UPDATE_DATA_CHECK,  Update_dataCheck},
-//  {EYBOND_UPDATE_EXIT,        Update_exit},
+    {EYBOND_FILE_UPDATE,        Update_file},
+    {EYBOND_SOFT_UPDATE,        Update_soft},
+    {EYBOND_DEVICE_UPDATE,      Update_device},
+    {EYBOND_DEVICE_UPDATE_STATE,  Update_deviceState},
+    {EYBOND_DEVICE_UPDATE_CANCEL, Update_deviceCancel},
+    {EYBOND_UPDATE_INFO,        Update_info},
+    {EYBOND_UPDATE_DATA_SEND,   Update_dataRcve},
+    {EYBOND_UPDATE_DATA_STATE,  Update_rcveState},
+    {EYBOND_UPDATE_DATA_CHECK,  Update_dataCheck},
+    {EYBOND_UPDATE_EXIT,        Update_exit},
 };
 #endif
 
@@ -312,7 +312,6 @@ u8_t ESP_check(Buffer_t *buf) {
 
   return 0;
 }
-
 
 /*******************************************************************************
   * @brief
@@ -1090,7 +1089,7 @@ void proc_eybond_task(s32_t taskId) {
 	    sPort = 0xff;
       case APP_MSG_DEVTIMER_ID: {
         ret = Net_status(sPort);
-        APP_DEBUG("socket[%d] status %d overtime_ESP %d\r\n", sPort, ret, overtime_ESP);
+//        APP_DEBUG("socket[%d] status %d overtime_ESP %d\r\n", sPort, ret, overtime_ESP);
         if (ret == 0xFF) {
           APP_DEBUG("Eybond start relink socket: %d times\r\n", relinkCnt);
           ServerAddr_t *eybondServer = ServerAdrrGet(EYBOND_SERVER_ADDR);
@@ -1115,7 +1114,7 @@ void proc_eybond_task(s32_t taskId) {
           sPort = 0xFF;
         }
         if (relinkCnt > 10) {
-          APP_DEBUG(" relinkCont over and reboot!!!!!!!!!!!!!!!!\r\n");
+          log_save("relinkCont over and reboot!!!!!!!!!!!!!!!!\r\n");
           Watchdog_stop();
           relinkCnt = 0;
         }
@@ -1124,7 +1123,7 @@ void proc_eybond_task(s32_t taskId) {
 //      }
       } 
       case EYBOND_DATA_PROCESS:
-        APP_DEBUG("Get EYBOND_DATA_PROCESS!!\r\n");
+//        APP_DEBUG("Get EYBOND_DATA_PROCESS!!\r\n");
         ESP_process();
         break;
       case EYBOND_CMD_REPORT:

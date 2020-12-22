@@ -32,18 +32,20 @@
 #endif
 #ifdef _PLATFORM_L610_
 #include "4G_net.h"
+// #include "ali_data_packet.h"
 #endif
 
 #include "Device.h"
 #include "DeviceIO.h"
 #include "Protocol.h"
+
+#include "DeviceUpdate.h"
 // #include "selfUpdate.h"
-// #include "deviceUpdate.h"
 // #include "UpdateTask.h"
 #include "Sineng.h"
 // #include "CommonServer.h"     //mike 20200804
 #include "eybpub_Debug.h"
-#include "ali_data_packet.h"
+
 #define DEVICE_LOCK     (0x5A)
 #define DEVICE_UNLOCK   (0x00)
 
@@ -216,17 +218,23 @@ void Device_clear(void) {
 *******************************************************************************/
 static u8_t deviceCmdClear(void *payload, void *point) {
   DeviceCmd_t *cmd = (DeviceCmd_t *)payload;
-//  APP_DEBUG("deviceCmdClear\r\n");
-  memory_release(cmd->ack.payload);
-  memory_release(cmd->cmd.payload);
+  APP_DEBUG("deviceCmdClear\r\n");
+  if (cmd->ack.payload != NULL) {
+    memory_release(cmd->ack.payload);
+  }
+  if (cmd->cmd.payload != NULL) {
+    memory_release(cmd->cmd.payload);
+  }
   return 1;
 }
 
 void DeviceCmd_clear(Device_t *dev) {
-//  APP_DEBUG("DeviceCmd_clear\r\n");
+  APP_DEBUG("DeviceCmd_clear\r\n");
   list_trans(&dev->cmdList, deviceCmdClear, null);
   list_delete(&dev->cmdList);
-//  memory_release(dev->explain);       // mike 20200828
+//  if (dev->explain != NULL) {
+//    memory_release(dev->explain);       // mike 20201218
+//  }
   currentStep = 0;
 }
 
@@ -315,7 +323,7 @@ static void deviceCmdSend(void) {
 //  static DeviceInfo_t deviceInfo;
   static Device_t *currentDevice;     //
 
-//  APP_DEBUG("Device Step %d waitTime is %04X!!\r\n", currentStep, watiTime);
+  APP_DEBUG("Device Step %d waitTime is %04X!!\r\n", currentStep, watiTime);
   switch (currentStep) {
     case 0:
       currentDevice = null;
@@ -325,8 +333,9 @@ static void deviceCmdSend(void) {
       currentDevice = list_nextData(&DeviceList, currentDevice);    // 定时获取列表中需要执行指令的设备节点
       if (currentDevice == null || currentDevice->lock == DEVICE_LOCK) {
         if (++DeviceOvertime >= 300) {
-          APP_DEBUG("Device no command in 5 min, reset!!\r\n");
-          log_save("Device no command in 5 min, reset!!");
+//        if (++DeviceOvertime >= 60) {
+          APP_DEBUG("Device no command in %d sec(DeviceOvertime), reset!!\r\n", DeviceOvertime);
+          log_save("Device no command in %d sec, reset!!", DeviceOvertime);
 #ifdef _PLATFORM_BC25_
           Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
@@ -334,7 +343,7 @@ static void deviceCmdSend(void) {
           Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
         }
-        APP_DEBUG("currentDevice is null or DEVICE_LOCK %d!!\r\n", DeviceOvertime);
+        APP_DEBUG("currentDevice is null or DEVICE_LOCK %d DeviceOvertime!!\r\n", DeviceOvertime);
         watiTime = 1;
       } else if (DeviceIO_lockState() == null) {
         APP_DEBUG("DeviceIO_lockState is null!!\r\n");
@@ -394,7 +403,6 @@ static void deviceCmdSend(void) {
 //        DeviceIO_init(null);//测试 下发指令前重新配置串口，接收完数据后关闭串口
         e = DeviceIO_write(&deviceInfo, currentCmd->cmd.payload, currentCmd->cmd.lenght);   // 把指令写到串口
 //        APP_PRINT("currentCmd->cmd:");
-       
 //	    out_put_buffer(currentCmd->cmd.payload,currentCmd->cmd.lenght);	
 //		APP_PRINT("currentCmd->cmd len: %d\r\n",currentCmd->cmd.lenght);
         watiTime = 10;
@@ -461,6 +469,7 @@ static void device_callback(DeviceAck_e ack) {
       currentStep--;
     }
   } else {
+    APP_DEBUG("ack %04X not overtime: %d DeviceOvertime\r\n", ack, DeviceOvertime);
     currentStep--;
     DeviceOvertime = 0;
     deviceLEDOn();
@@ -482,8 +491,7 @@ void proc_device_task (s32_t taskId) {
   ST_MSG msg;
   int deviceResetCnt = 0;
   APP_PRINT("Devce task run...\r\n");
-// DeviceIO_STinit(NULL);//设备口初始化
-//  DevAPP_PRINT("DevAPP_PRINT running");
+  DevIO_halGPIO();  // INIT set URAT GPIO
   r_memset(&msg, 0, sizeof(ST_MSG));
   deviceResetCnt = 0;
   currentStep = 0;
@@ -544,11 +552,12 @@ void proc_device_task (s32_t taskId) {
         }
         if (msg.param1 == DEVICE_MONITOR_NUM || msg.param1 == DEVICE_PROTOCOL
           || msg.param1 == DEVICE_UART_SETTING || msg.param1 == DEVICE_SYSTEM) {
-          DeviceIO_reset();
-          Protocol_clean();
-          Device_clear();
-          Protocol_init();
-          deviceLEDOff();
+            APP_DEBUG("Reset device!!\r\n");
+            DeviceIO_reset();   // save
+            Protocol_clean();   // save
+            Device_clear();
+            Protocol_init();    // save
+            deviceLEDOff();     // save
         }
         watiTime = 10;
         break;
@@ -558,10 +567,11 @@ void proc_device_task (s32_t taskId) {
           u32_t heepsize = 0, heep_avail = 0, heep_maxblock =0;
           fibo_get_heapinfo(&heepsize, &heep_avail, &heep_maxblock);
           u32_t uTick = fibo_getSysTick();
-          APP_DEBUG("Device task SysTick:%ld heep size:%ld avail:%ld maxblock:%ld!!\r\n", uTick/16384, heepsize, heep_avail, heep_maxblock);
+          u32_t freesize = fibo_file_getFreeSize();
+          APP_DEBUG("SysTick:%ld ROM free size:%ld heep size:%ld avail:%ld maxblock:%ld!!\r\n", uTick/16384, freesize, heepsize, heep_avail, heep_maxblock);
           m_timeCheck_DEV = 0;
         }
-//        APP_DEBUG("Get APP_MSG_DEVTIMER_ID MSG,watiTime:%04X step:%d\r\n", watiTime, currentStep);
+        APP_DEBUG("Get APP_MSG_DEVTIMER_ID MSG,waitTime:%04X step:%d\r\n", watiTime, currentStep);
         if ((watiTime & 0x8000) == 0x8000 || --watiTime > 0) {
           break;
         }
@@ -570,9 +580,9 @@ void proc_device_task (s32_t taskId) {
         watiTime = 0x8000;
         deviceCmdSend();
         break;
-//    case DEVICE_UPDATE_READY_ID: //Device update    //mike 20200804
-//      Update_ready();
-//      break;
+      case DEVICE_UPDATE_READY_ID: //Device update    //mike 20200804
+        Update_ready();
+        break;
       case DEVICE_PV_SCAN_ID:    //Device PV scan
 //        PV_Scan();
         break;

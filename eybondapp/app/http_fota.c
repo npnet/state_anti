@@ -19,7 +19,7 @@
 #include "eybpub_Debug.h"
 #include "L610_conn_ali_net.h"
 #include "ali_data_packet.h"
-#include "../net/src/restart_net.h"
+// #include "../net/src/restart_net.h"
 #include "eybpub_utility.h"
 #include "eybapp_appTask.h"
 
@@ -65,7 +65,7 @@ void app_download_test()
     APP_PRINT("app_download_test start \r\n");
     APP_PRINT("app update url = %s \r\n",url);
 
-    ret = fibo_app_dl(0, url, NULL, NULL, NULL);
+    ret = fibo_app_dl(0, (UINT8 *)url, NULL, NULL, NULL);
     if(ret < 0)
     {
         APP_PRINT("fibo_app_dl fail.\r\n");
@@ -95,7 +95,7 @@ void firmware_download_test()
     int ret;
     char *url = "http://xatest.fibocom.com:8000/httpfota/test1/lobin/fota.bin";
 
-    ret = fibo_firmware_dl(0, url, NULL, NULL, NULL);
+    ret = fibo_firmware_dl(0, (UINT8 *)url, NULL, NULL, NULL);
     if(ret < 0)
     {
         APP_PRINT("fibo_firmware_dl fail.");

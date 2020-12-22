@@ -51,7 +51,7 @@ void Clock_init(void)
     clock.secs = 0;
     week();
     Clock_save();
-    log_save("System clock init...\r\n");
+    log_save("System clock init...");
   }*/
 
   ST_Time time;
@@ -239,6 +239,8 @@ void Clock_init(void) {
 
   week();
   Clock_save();
+  APP_DEBUG("System clock init(%d.%02d.%02d %02d:%02d:%02d week:%02d)\r\n",
+    local_clock.year, local_clock.month, local_clock.day, local_clock.hour, local_clock.min, local_clock.secs, local_clock.week);
   log_save("System clock init...");
 }
 
@@ -300,6 +302,7 @@ void Clock_Set(Clock_t *clk)
     }
     //FlashEquilibria_write(&clockHead, &clock);    // mike 20200805
     r_memcpy(&local_clock, clk, sizeof(Clock_t));
+    week();
 
     hal_rtc_time_t current = {
 		.year 		= clk->year,
@@ -320,8 +323,9 @@ void Clock_Set(Clock_t *clk)
     buf.size = 64;
     buf.lenght = r_strlen(current_char);
     buf.payload = (u8_t *)current_char;
-    parametr_set(LOCAL_TIME, &buf);
-    week();
+    parametr_set(LOCAL_TIME, &buf);    
+    APP_DEBUG("Clock_Sett(%d.%02d.%02d %02d:%02d:%02d week:%02d)\r\n",
+      local_clock.year, local_clock.month, local_clock.day, local_clock.hour, local_clock.min, local_clock.secs, local_clock.week);
 }
 #endif
 

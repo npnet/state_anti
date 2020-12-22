@@ -53,6 +53,7 @@ ST_UARTDCB *DeviceIO_cfgGet(void);
 
 void DeviceIO_init(ST_UARTDCB *cfg);
 
+void DevIO_halGPIO();
 void DevIO_stcfg(ST_UARTDCB* hardcfg); 
 void DevIO_halcfg(hal_uart_config_t* hardcfg);
 /*******************************************************************************

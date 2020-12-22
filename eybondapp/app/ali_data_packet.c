@@ -311,18 +311,18 @@ void set_inverter_packet_data(GinlongMonitor__MInverter1  *ginlongmonitor__minve
 
     ginlongmonitor__minverter1->current_state                       =H8_Swap_L8(inverter_data4->current_state);
     ginlongmonitor__minverter1->inverter_software_version           =data32_calc(inverter_data1->tft_software_version,inverter_data1->dsp_software_version);//tft version  in front
-    APP_PRINT("ginlongmonitor__minverter1->inverter_software_version = %X\r\n ",ginlongmonitor__minverter1->inverter_software_version);
+    APP_PRINT("ginlongmonitor__minverter1->inverter_software_version = %lX\r\n ",ginlongmonitor__minverter1->inverter_software_version);
     ginlongmonitor__minverter1->pac                                 =data32_calc(inverter_data1->pac_h,inverter_data1->pac_l);
     ginlongmonitor__minverter1->e_month                             =data32_calc(inverter_data1->e_month_h,inverter_data1->e_month_l);
     ginlongmonitor__minverter1->e_year                              =data32_calc(inverter_data2->e_year_h,inverter_data2->e_year_l);
     ginlongmonitor__minverter1->e_total                             =data32_calc(inverter_data1->e_total_h,inverter_data1->e_total_l);
 
-    APP_PRINT("ginlongmonitor__minverter1->e_today = %X\r\n ",ginlongmonitor__minverter1->e_today);
-    APP_PRINT("ginlongmonitor__minverter1->e_month = %X\r\n ",ginlongmonitor__minverter1->e_month);
-    APP_PRINT("ginlongmonitor__minverter1->e_year = %X\r\n ",ginlongmonitor__minverter1->e_year);
-    APP_PRINT("ginlongmonitor__minverter1->e_total = %X\r\n ",ginlongmonitor__minverter1->e_total);
+    APP_PRINT("ginlongmonitor__minverter1->e_today = %lX\r\n ",ginlongmonitor__minverter1->e_today);
+    APP_PRINT("ginlongmonitor__minverter1->e_month = %llX\r\n ",ginlongmonitor__minverter1->e_month);
+    APP_PRINT("ginlongmonitor__minverter1->e_year = %llX\r\n ",ginlongmonitor__minverter1->e_year);
+    APP_PRINT("ginlongmonitor__minverter1->e_total = %llX\r\n ",ginlongmonitor__minverter1->e_total);
 
-	APP_PRINT("ginlongmonitor__minverter1->e_today = %lld\r\n ",ginlongmonitor__minverter1->e_today);
+	APP_PRINT("ginlongmonitor__minverter1->e_today = %ld\r\n ",ginlongmonitor__minverter1->e_today);
     APP_PRINT("ginlongmonitor__minverter1->e_month = %lld\r\n ",ginlongmonitor__minverter1->e_month);
     APP_PRINT("ginlongmonitor__minverter1->e_year = %lld\r\n ",ginlongmonitor__minverter1->e_year);
     APP_PRINT("ginlongmonitor__minverter1->e_total = %lld\r\n ",ginlongmonitor__minverter1->e_total);
@@ -332,10 +332,10 @@ void set_transmission_ack_packet(GinlongMonitor__MTransmissionAck * transmission
 {
     if(NULL == transmission_ack)
         return;
-    transmission_ack->send.len =strlen(send_packet) ;
+    transmission_ack->send.len =strlen((char *)send_packet) ;
     transmission_ack->send.data = send_packet;
 
-    transmission_ack->recv.len = strlen(recv_packet) ;
+    transmission_ack->recv.len = strlen((char *)recv_packet) ;
     transmission_ack->recv.data = recv_packet;
 }
 
@@ -486,7 +486,7 @@ void load_config_para(void)
     } else {
       para.factory_time = get_tick("2020-12-10 20:40:00");
     }
-    APP_PRINT("factory_time = %lld\r\n",para.factory_time );
+    APP_PRINT("factory_time = %ld\r\n",para.factory_time );
 
     databuf.lenght = 0;
     databuf.size = 0;
@@ -597,8 +597,8 @@ u8_t invertor_data_ack(Device_t *dev)
 	//out_put_buffer(cmd->ack.payload,cmd->ack.lenght);
 	
 	memset(send_packet,0,STR_RET_SIZE); 
-    len = snprintf(send_packet, STR_RET_SIZE, "%s","+GIN485:OK ");
-	Swap_hex_Char(send_packet+len,cmd->ack.payload,cmd->ack.lenght,' ');
+    len = snprintf((char *)send_packet, STR_RET_SIZE, "%s","+GIN485:OK ");
+	Swap_hex_Char((char *)send_packet+len,(char *)cmd->ack.payload,cmd->ack.lenght,' ');
 	APP_PRINT("web up:%s\r\n",send_packet);
 	send_rrpc_response_packet(aliyun_mqtt_thread_handle,rrpc_response_topic);
     Device_remove(dev);
@@ -629,7 +629,7 @@ u8_t invertor_data_trans(uint8_t *data_ptr ,uint8_t data_len)
     r_memcpy(cmd->cmd.payload, data_ptr, cmd->cmd.size);
 
     APP_PRINT("cmd.payload:");
-    out_put_buffer(cmd->cmd.payload,cmd->cmd.size);
+    out_put_buffer((char *)cmd->cmd.payload,cmd->cmd.size);
     APP_PRINT("\r\n");
 
     dev->cfg = null;  // 配置一个执行该指令的设备
@@ -673,7 +673,7 @@ void web_transparent(char *parm_ptr)
 
 
 //解析web下发的AT指令
-char* web_atcmd_parse(char* parm_ptr)
+void web_atcmd_parse(char* parm_ptr)
 {
     uint8_t len = 0;
     if(memcmp((const char*)parm_ptr,(const char*)UPDATE_FIRMWARE,strlen(UPDATE_FIRMWARE))==0)           /* 升级采集器固件*/
@@ -690,7 +690,7 @@ char* web_atcmd_parse(char* parm_ptr)
 		
 
         memset(send_packet,0,STR_RET_SIZE); 
-        snprintf(send_packet, STR_RET_SIZE, "%s","+GINFTPC:OK");
+        snprintf((char *)send_packet, STR_RET_SIZE, "%s","+GINFTPC:OK");
 		
 		send_rrpc_response_packet(aliyun_mqtt_thread_handle,rrpc_response_topic);
         Eybpub_UT_SendMessage(FOTA_TASK, FIRMWARE_UPDATE, 0, 0);
@@ -730,7 +730,8 @@ void rrpc_web_at_handle(uint32_t payloadlen,uint8_t *payload)
             memcpy(parm_ptr,request_package->transmission->send.data,request_package->transmission->send.len) ;
             parm_ptr[request_package->transmission->send.len] = '\0' ;
             APP_PRINT("parm_ptr = %s \r\n",parm_ptr);
-            ret_ptr =web_atcmd_parse((char *)parm_ptr+strlen(CLOUD_TEST_STR)) ;// 去除 AT+TEST=
+//          ret_ptr =web_atcmd_parse((char *)parm_ptr+strlen(CLOUD_TEST_STR)) ;// 去除 AT+TEST=
+            web_atcmd_parse((char *)parm_ptr+strlen(CLOUD_TEST_STR)) ;// 去除 AT+TEST=
 
             fibo_free(parm_ptr) ;
         }
@@ -746,7 +747,7 @@ int send_rrpc_response_packet(void *aliyun_mqtt_thread_handle,uint8_t *respon_to
     uint16_t rrpc_pack_len  = 0;
 
     if(NULL == respon_topic)
-        return;
+        return ret;
     APP_PRINT("respon_topic = %s\r\n",respon_topic);
     ginlong_monitor__packet__init(&respone_package);
     ginlong_monitor__m__transmission__ack__init(&transmission_ack);
@@ -761,13 +762,13 @@ int send_rrpc_response_packet(void *aliyun_mqtt_thread_handle,uint8_t *respon_to
     if(!rrpc_pack_buff)
     {
         APP_PRINT("rrpc_pack_buff malloc failure \r\n");
-        return;
+        return ret;
     }
     else
     {
         memset(rrpc_pack_buff,0,rrpc_pack_len) ;
         ginlong_monitor__packet__pack(&respone_package,rrpc_pack_buff) ;
-        ret = fibo_aliyunMQTT_cloudPub_FixedLen(aliyun_mqtt_thread_handle,respon_topic,0,rrpc_pack_buff,rrpc_pack_len) ;
+        ret = fibo_aliyunMQTT_cloudPub_FixedLen(aliyun_mqtt_thread_handle,(char *)respon_topic,0,rrpc_pack_buff,rrpc_pack_len) ;
         if (!ret)
         {
             APP_PRINT("rrpc_response failed\r\n");
@@ -778,6 +779,7 @@ int send_rrpc_response_packet(void *aliyun_mqtt_thread_handle,uint8_t *respon_to
         }
         fibo_free(rrpc_pack_buff) ;
     }
+    return ret;
 }
 
 void set_par_lac_ci(uint32_t lac ,uint32_t ci)//设置参数lac ci

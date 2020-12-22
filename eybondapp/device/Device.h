@@ -14,14 +14,23 @@
 #include "eyblib_list.h"
 #include "DeviceIO.h"
 
-#define DEVICE_ACK_SIZE     (0x400)     // device default data ack data rcveice buffer size
-#define DEVICE_CMD_ID       (0x0F8000)  //
-#define DEVICE_RESTART_ID   (0x0F8010)
-#define DEVICE_PV_SCAN_ID   (0x0F80F0)
-#define DEVICE_PV_GET_ID    (DEVICE_PV_SCAN_ID + 1)
+#define DEVICE_ACK_SIZE     (0x400)         // device default data ack data rcveice buffer size
 
 #ifdef _PLATFORM_BC25_
 #define EYBDEVICE_TASK      subtask2_id
+
+#define DEVICE_CMD_ID       (0x0F8000)      //
+#define DEVICE_RESTART_ID   (0x0F8010)
+#define DEVICE_PV_SCAN_ID   (0x0F80F0)
+#define DEVICE_PV_GET_ID    (DEVICE_PV_SCAN_ID + 1)
+#endif
+
+#ifdef _PLATFORM_L610_
+#define MSG_ID_USER_DEVICE_START    0x6000
+#define DEVICE_CMD_ID       (MSG_ID_USER_DEVICE_START + 0xF10)      //
+#define DEVICE_RESTART_ID   (MSG_ID_USER_DEVICE_START + 0xF20)
+#define DEVICE_PV_SCAN_ID   (MSG_ID_USER_DEVICE_START + 0xFF0)
+#define DEVICE_PV_GET_ID    (DEVICE_PV_SCAN_ID + 1)
 #endif
 
 typedef void (*DeviceCallBack)(ListHandler_t *cmdList);

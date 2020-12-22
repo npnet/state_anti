@@ -390,16 +390,28 @@ int log_init(void) {
     ret = fibo_file_seek(iFd_run_log_a, 0, FS_SEEK_SET);
     if (ret < 0) {
       APP_DEBUG("log file create seek error\r\n");
+      ret = fibo_file_close(iFd_run_log_a);
+      if (ret < 0) {
+        APP_DEBUG("log file create close error\r\n");
+      }
       return log_size_a;
     }
     ret = fibo_file_write(iFd_run_log_a, (u8_t *)log_head_buf, sizeof(log_head_buf));
     if (ret < 0) {
       APP_DEBUG("log file create write head error\r\n");
+      ret = fibo_file_close(iFd_run_log_a);
+      if (ret < 0) {
+        APP_DEBUG("log file create close error\r\n");
+      }
       return log_size_a;
     }
     ret = fibo_file_fsync(iFd_run_log_a);
     if (ret < 0) {
       APP_DEBUG("log file create sync error\r\n");
+      ret = fibo_file_close(iFd_run_log_a);
+      if (ret < 0) {
+        APP_DEBUG("log file create close error\r\n");
+      }
       return log_size_a;
     }
     ret = fibo_file_close(iFd_run_log_a);
@@ -443,8 +455,8 @@ void log_save(char *str, ...) {
 
   s8_t ntimezone = fibo_getRTC_timezone();
     
-  APP_DEBUG("fibo_getRTC(20%02d-%02d-%02d %02d:%02d:%02d week=%d timezone=%02d)=%ld\r\n",
-             time.year, time.month, time.day, time.hour, time.min, time.sec, time.wDay, ntimezone, ret);
+//  APP_DEBUG("fibo_getRTC(20%02d-%02d-%02d %02d:%02d:%02d week=%d timezone=%02d)=%ld\r\n",
+//             time.year, time.month, time.day, time.hour, time.min, time.sec, time.wDay, ntimezone, ret);
 
 //  fibo_vsnprintf();
   snprintf(time_stamp, sizeof(time_stamp), "20%02d-%02d-%02d %02d:%02d:%02d ", time.year, time.month,
@@ -461,11 +473,11 @@ void log_save(char *str, ...) {
     
   len = r_strlen((char *)run_log_buf);
     
-  APP_DEBUG("%s len %d\r\n", run_log_buf, len);
+//  APP_DEBUG("%s len %d\r\n", run_log_buf, len);
     
   if ((len + r_strlen(time_stamp) + 2) < (log_line_len - 1)) {
     r_strcpy(temp_buf, time_stamp);
-    len = strlen((char *)temp_buf);
+    len = r_strlen((char *)temp_buf);
     r_strcpy(&temp_buf[len], (char *)run_log_buf);
     len = r_strlen((char *)temp_buf);
     APP_DEBUG("%s len %d\r\n", temp_buf, len);
@@ -494,9 +506,12 @@ void log_save(char *str, ...) {
     
   ret = fibo_file_seek(iFd_run_log_a, log_head->file_logw_pointer * log_line_len + log_headoffset_len, FS_SEEK_SET);
   writenLen = fibo_file_write(iFd_run_log_a, (u8_t *)temp_buf, log_line_len);
+  if (writenLen != log_line_len) {
+    APP_DEBUG("Write log %s fail len: %ld!\r\n", temp_buf, writenLen);
+  }
   ret = fibo_file_fsync(iFd_run_log_a);
   ret = fibo_file_close(iFd_run_log_a);
-    
+
   // 写指针加1
   log_head->file_logw_pointer = (log_head->file_logw_pointer + 1) % log_pointer_size;
   // 更新日志文件句柄
@@ -528,11 +543,12 @@ u16_t log_get(Buffer_t *buf) {
   }
 
   iFd_run_log_a = fibo_file_open(run_log_a, FS_O_RDONLY);
-  r_memset(temp_buf, 0, sizeof(temp_buf)); 
+  r_memset(temp_buf, 0, sizeof(temp_buf));
 //  APP_DEBUG("file_logw_pointer: %d sw_loghead_rp: %d\r\n", log_head->file_logw_pointer, sw_loghead_rp);
   if (log_head->file_logw_pointer != sw_loghead_rp) {  // 写的节点和读的节点不同才读
     ret = fibo_file_seek(iFd_run_log_a, sw_loghead_rp * log_line_len + log_headoffset_len, FS_SEEK_SET);
     readenLen = fibo_file_read(iFd_run_log_a, (u8_t *)temp_buf, log_line_len);
+//  APP_DEBUG("log %s\r\n", temp_buf);
     if (readenLen > 0) {
       r_strcpy((char *)buf->payload, "LOG:");
       r_strcpy((char *)(buf->payload + r_strlen((char *)buf->payload)), temp_buf);

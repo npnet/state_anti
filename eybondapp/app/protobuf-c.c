@@ -444,7 +444,11 @@ required_field_get_packed_size(const ProtobufCFieldDescriptor *field,
 		return rv + 8;
 	case PROTOBUF_C_TYPE_STRING: {
 		const char *str = *(char * const *) member;
-		size_t len = str ? strlen((const int8_t*)str) : 0;
+#ifdef _PLATFORM_L610_
+		size_t len = str ? strlen((const char*)str) : 0;
+#else
+        size_t len = str ? strlen((const int8_t*)str) : 0;
+#endif
 		return rv + uint32_size(len) + len;
 	}
 	case PROTOBUF_C_TYPE_BYTES: {
@@ -660,7 +664,11 @@ repeated_field_get_packed_size(const ProtobufCFieldDescriptor *field,
 		break;
 	case PROTOBUF_C_TYPE_STRING:
 		for (i = 0; i < count; i++) {
-			size_t len = strlen((const int8_t*)(((char **) array)[i]));
+#ifdef _PLATFORM_L610_
+		    size_t len = strlen((const char*)(((char **) array)[i]));
+#else
+            size_t len = strlen((const int8_t*)(((char **) array)[i]));
+#endif
 			rv += uint32_size(len) + len;
 		}
 		break;
@@ -997,7 +1005,11 @@ string_pack(const char *str, uint8_t *out)
 		out[0] = 0;
 		return 1;
 	} else {
-		size_t len = strlen((const int8_t*)str);
+#ifdef _PLATFORM_L610_
+        size_t len = strlen((const char*)str);
+#else
+        size_t len = strlen((const int8_t*)str);
+#endif
 		size_t rv = uint32_pack(len, out);
 		memcpy(out + rv, str, len);
 		return rv + len;
@@ -1601,7 +1613,11 @@ required_field_pack_to_buffer(const ProtobufCFieldDescriptor *field,
 		break;
 	case PROTOBUF_C_TYPE_STRING: {
 		const char *str = *(char *const *) member;
-		size_t sublen = str ? strlen((const int8_t*)str) : 0;
+#ifdef _PLATFORM_L610_
+        size_t sublen = str ? strlen((const char*)str) : 0;
+#else
+        size_t sublen = str ? strlen((const int8_t*)str) : 0;
+#endif
 
 		scratch[0] |= PROTOBUF_C_WIRE_TYPE_LENGTH_PREFIXED;
 		rv += uint32_pack(sublen, scratch + rv);
@@ -3541,7 +3557,11 @@ protobuf_c_enum_descriptor_get_value_by_name(const ProtobufCEnumDescriptor *desc
 
 	while (count > 1) {
 		unsigned mid = start + count / 2;
-		int rv = strcmp((const int8_t*)(desc->values_by_name[mid].name), (const int8_t*)name);
+#ifdef _PLATFORM_L610_
+        int rv = strcmp((const char*)(desc->values_by_name[mid].name), (const char*)name);
+#else
+        int rv = strcmp((const int8_t*)(desc->values_by_name[mid].name), (const int8_t*)name);
+#endif
 		if (rv == 0)
 			return desc->values + desc->values_by_name[mid].index;
 		else if (rv < 0) {
@@ -3552,7 +3572,11 @@ protobuf_c_enum_descriptor_get_value_by_name(const ProtobufCEnumDescriptor *desc
 	}
 	if (count == 0)
 		return NULL;
-	if (strcmp((const int8_t*)(desc->values_by_name[start].name),(const int8_t*) name) == 0)
+#ifdef _PLATFORM_L610_
+    if (strcmp((const char*)(desc->values_by_name[start].name),(const char*) name) == 0)
+#else
+    if (strcmp((const int8_t*)(desc->values_by_name[start].name),(const int8_t*) name) == 0)
+#endif
 		return desc->values + desc->values_by_name[start].index;
 	return NULL;
 }
@@ -3584,7 +3608,11 @@ protobuf_c_message_descriptor_get_field_by_name(const ProtobufCMessageDescriptor
 		unsigned mid = start + count / 2;
 		int rv;
 		field = desc->fields + desc->fields_sorted_by_name[mid];
-		rv = strcmp((const int8_t*)(field->name),(const int8_t*) name);
+#ifdef _PLATFORM_L610_
+        rv = strcmp((const char*)(field->name),(const char*) name);
+#else
+        rv = strcmp((const int8_t*)(field->name),(const int8_t*) name);
+#endif
 		if (rv == 0)
 			return field;
 		else if (rv < 0) {
@@ -3596,7 +3624,11 @@ protobuf_c_message_descriptor_get_field_by_name(const ProtobufCMessageDescriptor
 	if (count == 0)
 		return NULL;
 	field = desc->fields + desc->fields_sorted_by_name[start];
-	if (strcmp((const int8_t*)(field->name),(const int8_t*) name) == 0)
+#ifdef _PLATFORM_L610_
+    if (strcmp((const char*)(field->name),(const char*) name) == 0)
+#else
+    if (strcmp((const int8_t*)(field->name),(const int8_t*) name) == 0)
+#endif
 		return field;
 	return NULL;
 }
@@ -3627,8 +3659,11 @@ protobuf_c_service_descriptor_get_method_by_name(const ProtobufCServiceDescripto
 		unsigned mid = start + count / 2;
 		unsigned mid_index = desc->method_indices_by_name[mid];
 		const char *mid_name = desc->methods[mid_index].name;
-		int rv = strcmp((const int8_t*)mid_name,(const int8_t*) name);
-
+#ifdef _PLATFORM_L610_
+        int rv = strcmp((const char*)mid_name,(const char*) name);
+#else
+        int rv = strcmp((const int8_t*)mid_name,(const int8_t*) name);
+#endif
 		if (rv == 0)
 			return desc->methods + desc->method_indices_by_name[mid];
 		if (rv < 0) {
@@ -3640,7 +3675,11 @@ protobuf_c_service_descriptor_get_method_by_name(const ProtobufCServiceDescripto
 	}
 	if (count == 0)
 		return NULL;
-	if (strcmp((const int8_t*)(desc->methods[desc->method_indices_by_name[start]].name), (const int8_t*)name) == 0)
+#ifdef _PLATFORM_L610_
+    if (strcmp((const char*)(desc->methods[desc->method_indices_by_name[start]].name), (const char*)name) == 0)
+#else
+    if (strcmp((const int8_t*)(desc->methods[desc->method_indices_by_name[start]].name), (const int8_t*)name) == 0)
+#endif
 		return desc->methods + desc->method_indices_by_name[start];
 	return NULL;
 }

@@ -367,7 +367,9 @@ void Protocol_init(void) {
   Buffer_t buf;
 
   ModbusDevice.head     = null;
-  memory_release(ModbusDevice.cfg);  
+  if (ModbusDevice.cfg != NULL) {
+    memory_release(ModbusDevice.cfg);
+  }
   ModbusDevice.addrTab  = addrTab;
 
 /*  MeterDevice.startAddr   = 0;

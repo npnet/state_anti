@@ -538,7 +538,7 @@ static u8_t deviceDataAck(HSP_t *hsp)
     historySaveTime = 60*5 + 15;
     /*if (pAck->state == 0x01)
     {
-         log_save("Hanergy data parsing error!!!\r\n");
+         log_save("Hanergy data parsing error!!!");
     }//*/
 
     return 0;

@@ -4,22 +4,35 @@
  * @Date    : 2017-12-14
  * @Brief   : 
  ******************************************************************************/
-#include "UpdateTask.h"
-#include "Debug.h"
+#ifdef _PLATFORM_M26_
 #include "ql_system.h"
-#include "selfUpdate.h"
-#include "typedef.h"
-#include "deviceUpdate.h"
-#include "log.h"
+#endif
+
+#ifdef _PLATFORM_L610_
+#include "fibo_opencpu.h"
+#endif
+
+#include "eyblib_typedef.h"
+#include "eyblib_r_stdlib.h"
+
+#include "eybpub_utility.h"
+#include "eybpub_File.h"
+#include "eybpub_run_log.h"
+#include "eybpub_Debug.h"
+
+#include "UpdateTask.h"
+#include "SelfUpdate.h"
+
+#include "DeviceUpdate.h"
 #include "Device.h"
 
-
+#ifdef _PLATFORM_M26_
 /*******************************************************************************
  Brief    : void
  Parameter: 
  return   : 
 *******************************************************************************/
-void proc_update_task(s32 taskId)
+void proc_update_task(s32_t taskId)
 {
 	int ret;
 	ST_MSG msg;
@@ -62,6 +75,50 @@ void proc_update_task(s32 taskId)
 		}
 	}
 }
+#endif
 
+#ifdef _PLATFORM_L610_
+/*******************************************************************************
+ Brief    : void
+ Parameter:
+ return   :
+*******************************************************************************/
+void proc_update_task(s32_t taskId) {
+  APP_DEBUG("Update task run...\r\n");
+  int ret = 0;
+  ST_MSG msg;
+  r_memset(&msg, 0, sizeof(ST_MSG));
+
+  while (1) {
+    fibo_queue_get(UPDATE_TASK, (void *)&msg, 0);
+    switch(msg.message) {
+      case SELF_UPDATE_ID:
+        fibo_taskSleep(3000);
+		log_save("App start update");
+		ret = Update_Self((File_t*)msg.param1);
+		if (ret != 0) {
+          log_save("L610 app update fail: %d", ret);
+        }
+        break;
+      case DEVICE_UPDATE_ID:
+        ret = Update_startDevice((File_t*)msg.param1, (DeviceType_t*)msg.param2);
+        if (ret != 0) {
+          log_save("Device update fail: %d", ret);
+          break;
+        }
+      case DEVICE_UPDATE_READY_ID:
+        log_save("Device update ready");
+        fibo_taskSleep(2000);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_UPDATE_READY_ID, 0, 0);
+        break;
+      case DEVICE_UPDATE_END_ID:
+        Update_end();
+        break;//
+      default:
+        break;
+    }
+  }
+}
+#endif
 /*********************************FILE END*************************************/
 

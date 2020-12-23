@@ -172,9 +172,6 @@ static void tick1s_callback(void *arg)
         parametr_set(97, &data);
     }
 
-//    APP_PRINT("ysx ysx ysx ...\r\n");
-//    APP_PRINT("fuck you ...\r\n");//升级带fuck
-//    APP_PRINT("ha ha ha ...\r\n");//升级带ha ha ha
 }
 
 void mqtt_conn_ali_task(void *param)
@@ -193,7 +190,7 @@ void mqtt_conn_ali_task(void *param)
     static Device_t *currentDevice = NULL;
     static DeviceCmd_t *currentCmd = NULL;
     r_memset(&msg, 0, sizeof(ST_MSG));
-
+    reg_info_t sim_reg_info = {0};
     while (1)
     {
         fibo_queue_get(ALIYUN_TASK, (void *)&msg, 0);
@@ -212,6 +209,13 @@ void mqtt_conn_ali_task(void *param)
             case NET_MSG_DNS_READY: // get PDP active message
                 APP_DEBUG("aliyun mqttapi get network\r\n");
                 APP_DEBUG("mqtt connect ali start ...\r\n");
+			
+			  	fibo_getRegInfo(&sim_reg_info, 0);
+				APP_PRINT("sim_reg_info.gsm_scell_info.lac = %ld\r\n",sim_reg_info.gsm_scell_info.lac);
+				APP_PRINT("sim_reg_info.gsm_scell_info.cell_id = %ld\r\n",sim_reg_info.gsm_scell_info.cell_id);
+				APP_PRINT("sim_reg_info.lte_scell_info.tac = %ld\r\n",sim_reg_info.lte_scell_info.tac);
+				APP_PRINT("sim_reg_info.lte_scell_info.cell_id = %ld\r\n",sim_reg_info.lte_scell_info.cell_id);
+				set_par_lac_ci(sim_reg_info.lte_scell_info.tac,sim_reg_info.lte_scell_info.cell_id);
 
                 aliyun_mqtt_thread_handle = fibo_aliyunMQTT_cloudConn(80,0,4,(iotx_mqtt_event_handle_func_fpt)fibo_aliyunMQTT_connect_callback);
                 if (aliyun_mqtt_thread_handle == NULL)

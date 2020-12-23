@@ -710,7 +710,6 @@ void rrpc_web_at_handle(uint32_t payloadlen,uint8_t *payload)
 {
     GinlongMonitor__Packet *request_package = NULL ;
     char*  parm_ptr = NULL ;
-    char*  ret_ptr = NULL ;
 
     request_package = ginlong_monitor__packet__unpack(NULL,payloadlen,payload) ; //解包
 
@@ -730,7 +729,7 @@ void rrpc_web_at_handle(uint32_t payloadlen,uint8_t *payload)
             memcpy(parm_ptr,request_package->transmission->send.data,request_package->transmission->send.len) ;
             parm_ptr[request_package->transmission->send.len] = '\0' ;
             APP_PRINT("parm_ptr = %s \r\n",parm_ptr);
-//          ret_ptr =web_atcmd_parse((char *)parm_ptr+strlen(CLOUD_TEST_STR)) ;// 去除 AT+TEST=
+
             web_atcmd_parse((char *)parm_ptr+strlen(CLOUD_TEST_STR)) ;// 去除 AT+TEST=
 
             fibo_free(parm_ptr) ;

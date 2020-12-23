@@ -662,6 +662,7 @@ static u8_t getCollectorVersion(struct _ParamDescripTable_t *element, void *buf,
   return 0;
 }
 
+#define JIN_LANG_COLL_VER  "3A010000"  //锦浪采集器版本
 const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽略
   {0,   "",                       },
   // 出厂属性
@@ -719,7 +720,7 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
   {95,  ""                        },         /*pub_topic*/
   {96,  ""                        },         /*sub_topic*/
   {97,  "0"                       },         /*total_working_time 累计工作时间*/
-  {98,  ""                        },         /*采集器版本*/
+  {98,  JIN_LANG_COLL_VER                      },         /*锦浪采集器版本*/
 };
 
 /* 数采器参数读写接口 */

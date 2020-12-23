@@ -524,7 +524,7 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
       r_memset(buf_value, 0, sizeof(char) * 64);
       if (number == 5 || number == 6 || number == 11 || number == 16\
           || number == 49 || number == 50 || number == 51 || number == 52\
-          || number == 55 || number == 56 || number == 58 ||  number == 54) {
+          || number == 55 || number == 56 || number == 58 ||  number == 54 || number == 98) {
         switch (number) {
           case 5:  // 软件版本号
             r_strcpy(buf_value, defaultPara[j].para);
@@ -578,6 +578,11 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             fibo_get_imei((u8_t *)buf_value, 0);
             r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             len = r_strlen(buf_value);
+            PDT[j].wFunc(&PDT[j], buf_value, &len);
+            break;
+		  case 98:  // 锦浪版本号
+            r_strcpy(buf_value, defaultPara[j].para);
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
             break;
           default:
@@ -799,7 +804,7 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
     r_memset(buf_value, 0, sizeof(char) * 64);
     number = PDT[j].num;
     if (number == 5 || number == 6 || number == 11 || number == 49 || number == 50 \
-        || number == 51 || number == 52 || number == 55 || number == 56 || number == 58) {
+        || number == 51 || number == 52 || number == 55 || number == 56 || number == 58 || number == 98 ) {
       switch (number) {
         case 5:  // 软件版本号
           r_strcpy(buf_value, defaultPara[j].para);
@@ -863,6 +868,13 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
           r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
           len = r_strlen(buf_value);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
+          break;
+	    case 98:  // 锦浪软件版本号
+          r_strcpy(buf_value, defaultPara[j].para);
+          r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+          len = r_strlen(buf_value);
+          PDT[j].wFunc(&PDT[j], buf_value, &len);
+		  APP_PRINT("default 98 write %s = /r/n",buf_value);
           break;
         default:
           break;

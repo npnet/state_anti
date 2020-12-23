@@ -563,7 +563,7 @@ static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, v
         r_memcpy(s_device->buf->payload, rcveBuf.payload, s_device->buf->lenght);
         APP_DEBUG("s_device buf len:%d size:%d!!\r\n", s_device->buf->lenght, s_device->buf->size);
         if (is_ali_conn_success) {
-//          Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
+          Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
         }
       }
     } else {  // 生产测试AT指令打开后

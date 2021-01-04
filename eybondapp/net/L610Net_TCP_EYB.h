@@ -73,6 +73,8 @@ void L610Net_manage(void);
 u8_t L610Net_status(u8_t nIndex);
 void L610Net_ready(void);
 L610Net_t *L610Socket(s8_t socketid, u8_t *offset);
+int netInTest(Buffer_t *buf);
+//int netInTest(Buffer_t *buf, void_fun_bufp output);
 
 #endif  // __L610_NET_TCP_EYB_H_
 /******************************************************************************/

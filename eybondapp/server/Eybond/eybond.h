@@ -13,6 +13,7 @@
 #ifdef _PLATFORM_L610_
 #define EYBOND_DEFAULT_SERVER        "www.shinemonitor.com"
 #define EYBOND_SOLAR_SERVER          "solar.eybond.com"
+#define EYBOND_TEST_SERVER           "tool.eybond.com"
 #define EYBOND_DEFAULT_SERVER_PORT   502
 #endif
 #include "eyblib_typedef.h"
@@ -83,6 +84,7 @@ typedef struct {
 void proc_eybond_task(s32_t taskId);
 u8_t ESP_cmd(Buffer_t *buf, AckCh ch);
 void ESP_callback(u8_t nIndex, Buffer_t *buf);
+void TEST_esp_callback(u8_t nIndex, Buffer_t *buf);
 u8_t ESP_check(Buffer_t *buf);
 void HistoryDataClean(void);
 void specialData_send(void);

@@ -1,4 +1,4 @@
-/**************Copyright(C)，2015-2026，Shenzhen Eybond Co., Ltd.***************
+/**************Copyright(C)锛�2015-2026锛孲henzhen Eybond Co., Ltd.***************
   *@brief   : Common.c
   *@notes   : 2017.12.26 CGQ   
 *******************************************************************************/
@@ -882,7 +882,7 @@ const ModbusDeviceHead_t _0B01Device = {
     null,
 };
 
-static const ModbusGetCmd_t _0407[] = {         // mike 数据越界了
+static const ModbusGetCmd_t _0407[] = {         // mike 鏁版嵁瓒婄晫浜�
     {04,   40021,  40022},
     {04,   40029,  40030},
 //	{04,   463745,  463746},    // mike 修正越界问题 20201222
@@ -2282,7 +2282,7 @@ const ModbusDeviceHead_t KelongDevice = {
 	null,
 	null,
 }; 
-//���ʵ���-MODBUͨѶ��Э��
+//锟斤拷锟绞碉拷锟斤拷-MODBU通讯锟斤拷协锟斤拷
 static const ModbusGetCmd_t _090F[] = {
 	{0x04,   1,   69},
     {0x04,  1001,  1036},

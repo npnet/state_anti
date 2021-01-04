@@ -1,6 +1,6 @@
-/**************Copyright(C)��2015-2026��Shenzhen Eybond Co., Ltd.***************
+/**************Copyright(C)锟斤拷2015-2026锟斤拷Shenzhen Eybond Co., Ltd.***************
   *@brief   : CommonServer.c 
-  *@notes   : 2018.10.23 CGQ ���� 
+  *@notes   : 2018.10.23 CGQ 锟斤拷锟斤拷 
 *******************************************************************************/
 #include "CommonServer.h"
 #include "net.h"

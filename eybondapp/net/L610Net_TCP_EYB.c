@@ -16,17 +16,30 @@
 #include "eybpub_run_log.h"
 #include "eybpub_Status.h"
 #include "eybpub_utility.h"
+#include "eybpub_parameter_number_and_value.h"
 
 #include "L610Net_TCP_EYB.h"
 #include "eybond.h"
 
+
 // INT8  g_socketid = -1;
+
+#include "oc_uart.h"
+#include "DeviceIO.h"
+
 
 #define r_in_range(c, lo, up) ((u8_t)c >= lo && (u8_t)c <= up)
 #define r_isdigit(c) r_in_range(c, '0', '9')
 #define r_isxdigit(c) (r_isdigit(c) || r_in_range(c, 'a', 'f') || r_in_range(c, 'A', 'F'))
 #define r_islower(c) r_in_range(c, 'a', 'z')
 #define r_isspace(c) (c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v')
+
+static char testIP[64] = {0};
+//static u16_t testPort = 0;
+u16_t testPort = 0;
+static char produc_flag = 0;
+extern char produc_save_flag;
+
 
 int ip4addr_aton(const char *cp, ip4_addr_t *addr)
 {
@@ -172,6 +185,7 @@ GSMState_e m_GprsActState = STATE_TOTAL_NUM;
 
 #define EYB_SOCKET_COUNTS 6
 L610Net_t netManage[EYB_SOCKET_COUNTS];
+
 static s32_t L610pdpCntxtId;
 static u8_t registe = 0;
 static u16_t registe_times = 0;
@@ -261,6 +275,7 @@ u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) 
         netManage[i].ipStr, netManage[i].ip, netManage[i].port);
       break;
     } else if (netManage[i].flag == 0) {
+      
       netManage[i].flag = 1;
       netManage[i].mode = mode;
       netManage[i].port = port;
@@ -526,6 +541,7 @@ void L610Net_manage(void) {
 //              Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_RESTART_ID, 0, 1);   // mike需要修改逻辑?
                 g_netmutex = 0;
 		        return;
+
               }
 
               APP_DEBUG("nIndex %d socketID %d mode %d\r\n", nIndex, netManage[nIndex].socketID, netManage[nIndex].mode);
@@ -701,7 +717,8 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
 //      ret = SSL_Send(netManage[nIndex].socketID, (u8_t *)data, len);
     } else {
        ret = fibo_sock_send(netManage[nIndex].socketID, (u8_t *)data, len);       
-       APP_DEBUG("socket[%d] %d send %d data ret %d\r\n", nIndex, netManage[nIndex].socketID, len, ret);        
+      //  APP_DEBUG("socket[%d] %d send %d data ret %d\r\n", nIndex, netManage[nIndex].socketID, len, ret);  
+        APP_DEBUG("ip: %s port:%d socket send OK!\r\n", netManage[nIndex].ipStr, netManage[nIndex].port);        
     }
   }
 //  ret = fibo_sock_send(g_socketid, (u8_t *)data, len);
@@ -748,11 +765,14 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
  void L610_TCP_Callback(u8_t *param) {
   s16_t retlen = 0;
   u8_t nIndex = *param;
+  int ret = 0;
   UINT8 strBuf[MAX_NET_BUFFER_LEN] = {0};
 
   while(1) {
 //    APP_DEBUG("L610_TCP_Callback task: %d\r\n", nIndex);
     if (m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
+
+	#if 0
       r_memset(strBuf, '\0', sizeof(strBuf));
       retlen = fibo_sock_recv(netManage[nIndex].socketID, strBuf, MAX_NET_BUFFER_LEN);
       if (retlen > 0) {
@@ -764,10 +784,33 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
         r_memcpy(cmdbuf.payload, strBuf, retlen);
         cmdbuf.lenght = retlen;
         APP_DEBUG("socket: %d read %d data!\r\n", netManage[nIndex].socketID, retlen);
+	#endif
+
+      Buffer_t cmdbuf;
+      cmdbuf.size = MAX_NET_BUFFER_LEN;
+      cmdbuf.lenght = 0;
+      cmdbuf.payload = memory_apply(MAX_NET_BUFFER_LEN);
+      r_memset(cmdbuf.payload, '\0', MAX_NET_BUFFER_LEN);  
+      ret = fibo_sock_recv(netManage[nIndex].socketID, cmdbuf.payload, cmdbuf.size);
+      if (ret > 0) {
+        cmdbuf.lenght = ret;
+        APP_DEBUG("IP: %s socket: %d read %d data!\r\n", netManage[nIndex].ipStr,netManage[nIndex].socketID, ret);
+
         if (netManage[nIndex].port == EYBOND_DEFAULT_SERVER_PORT && \
             (r_strncmp(netManage[nIndex].ipStr, EYBOND_DEFAULT_SERVER, r_strlen(EYBOND_DEFAULT_SERVER)) == 0 || \
+             r_strncmp(netManage[nIndex].ipStr, EYBOND_TEST_SERVER, r_strlen(EYBOND_TEST_SERVER)) == 0 || \
              r_strncmp(netManage[nIndex].ipStr, EYBOND_SOLAR_SERVER, r_strlen(EYBOND_SOLAR_SERVER)) == 0)) {  // 处理eybond云下发指令
-          ESP_callback(nIndex, &cmdbuf);
+          if(r_strncmp(netManage[nIndex].ipStr, EYBOND_TEST_SERVER, r_strlen(EYBOND_TEST_SERVER)) == 0){
+              /*XXX*/ 
+              /*生产调用同一接口会有问题*/
+              APP_PRINT("receive test test data\r\n");
+              TEST_esp_callback(nIndex, &cmdbuf);
+          }else{
+
+            ESP_callback(nIndex, &cmdbuf);
+          }
+
+          
         } else {
           memory_release(cmdbuf.payload);   // mike 20201210 可能会引起死机问题
         }
@@ -857,6 +900,87 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
   }
   fibo_thread_delete();
 }*/
+
+/*******************************************************************************
+  * @brief  AT+TEST=tool.eybond.com,502\r\n 
+  * @param  None
+  * @retval None
+*******************************************************************************/
+int netInTest(Buffer_t *buf)
+//int netInTest(Buffer_t *buf, void_fun_bufp output)
+{
+	int ret = -1;
+	Buffer_t ackBuf;
+  
+	 if (buf != null && buf->payload != null && buf->lenght > 20)	   
+	 {		
+	 	const char AT_TEST[] = "AT+TEST=";		  
+	 	const char AT_ACK[] = "+OK\r\n";			
+	 	int i = r_strfind(AT_TEST, (const char *)buf->payload); 				   
+       
+	 	if ( i >= 0) 		 
+	 	{	
+           		
+	 		int port;
+            APP_DEBUG("manufac produc_flag  = %d\r\n",produc_flag);
+            if( 0 == produc_flag ){
+
+                produc_flag = 1;
+
+                produc_save_flag = 1;
+
+
+                /*删除备份文件*/
+                s32_t file_c_size = fibo_file_getSize(g_backup_parameter_c);    
+
+                if (file_c_size >= 0) {
+                    int delete = fibo_file_delete(g_backup_parameter_c);
+                    APP_DEBUG("delete c is %d\r\n", delete);
+                }
+                int g_iFd_backup_c = fibo_file_open(g_backup_parameter_c, FS_O_RDWR | FS_O_CREAT | FS_O_TRUNC);
+                if(g_iFd_backup_c < 0){
+               
+                    APP_PRINT("creat backup_c file  failed\r\n");
+
+                }else{
+                    APP_PRINT("creat backup_c file  succeed\r\n");
+                    fibo_file_close(g_iFd_backup_c);
+                }
+            }
+            
+
+            			   
+	 		char *p = (char*)&buf->payload[i];			   
+	 		i = r_strfind(",", p);			   
+	 		port = Swap_charNum((char*)(p+i+1)); 			 
+	 		if ((i > 0)&&(i < 40) && port < 65535) 			 
+	 		{				  
+	 			p[i] = '\0';
+	 			APP_PRINT("In test-\r\n");
+                APP_DEBUG("%s\r\n",(char*)buf->payload);
+	 			if (r_strlen(testIP) == 0 || 0 != r_strcmp( p + r_strlen(AT_TEST), testIP)) 			   
+				{		
+	 				testPort = port;
+	 				r_strcpy(testIP, p + r_strlen(AT_TEST));
+                    L610Net_closeAll();
+	 			}
+                  	  
+             
+                Net_connect(1, testIP, port, TEST_esp_callback);
+				ackBuf.lenght = sizeof(AT_ACK);
+				ackBuf.payload = (u8_t*)AT_ACK;
+                Uart_write((UINT8 *)ackBuf.payload,ackBuf.lenght);
+				ret = 0;
+                
+	 		}		   
+		}	  
+	 }
+	return ret;
+}
+
+          
+            
+
 #endif
 /*********************************FILE END*************************************/
 

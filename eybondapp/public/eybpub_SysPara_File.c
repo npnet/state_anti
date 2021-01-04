@@ -43,6 +43,7 @@
 #include "Protocol.h"
 #include "eybond.h"
 
+
 #ifdef _PLATFORM_BC25_
 #include "NB_net.h"
 #endif
@@ -51,7 +52,9 @@
 #endif
 
 static u8_t Para_Init_flag = 0;
+char produc_save_flag = 0;
 // static char para_value[64] = {0};  // 参数值
+
 
 #ifdef _PLATFORM_BC25_
 void parametr_get(u32_t number, Buffer_t *databuf) {
@@ -184,8 +187,8 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
           }
           break;
           case 56:  // 通信卡CCID
-            // cm_get_iccid(para_value);
-            RIL_SIM_GetCCID(buf_value);
+          //   cm_get_iccid(para_value);
+             RIL_SIM_GetCCID(buf_value); 
             r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
             PDT[j].wFunc(&PDT[j], buf_value, &len);
             break;
@@ -481,6 +484,7 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
         case 56:  //通信卡CCID
           // cm_get_iccid(para_value);  //mike 20200824
           RIL_SIM_GetCCID((char *)buf_value);
+        
           r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
           len = r_strlen(buf_value);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
@@ -677,6 +681,12 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
               log_save("System Hardware Reset!");
               Watchdog_stop();
               break;
+            #if 0
+            case '4':  // 删除a文件测试
+              log_save("delete a file success!");
+              rm_file_A ();
+              break;
+            #endif
             default:
               break;
           }
@@ -777,6 +787,14 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
   if (ret == 0x00 && number != LOCAL_TIME) {  // mike 心跳时间不存到参数系统
     parameter_a_module();
     a_copy_to_b();
+    /*将生产参数存进c文件*/
+
+     if( 1 == produc_save_flag){
+        
+           APP_PRINT("begin to backup parameter\r\n");
+           a_copy_to_c();
+   
+     }
     parameter_init();  // 保持统一
     if (number == DEVICE_MONITOR_NUM || number == DEVICE_PROTOCOL || number == DEVICE_UART_SETTING) {
       Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, 0, 0);
@@ -953,12 +971,28 @@ ServerAddr_t *ServerAdrrGet(u8_t num) {
   return serverAddr;
 }
 
-void SysPara_init(void) {
-  APP_DEBUG("SysPara_init\r\n");
-  Para_Init_flag = 0;
-  live_a_and_b();
-  main_parametr_update();  //
+// void SysPara_init(void) {
+//   APP_DEBUG("SysPara_init\r\n");
+//   Para_Init_flag = 0;
+//   live_a_and_b();
+//   main_parametr_update();  //
+// }
+
+int SysPara_init(void)
+{
+     Para_Init_flag = 0;
+    /* 参数初始化失败 */
+    if(live_a_and_b())
+    {
+        log_save("sys para init fail.");
+        return -1;
+    }
+	main_parametr_update();  
+    return 0;
 }
+      
+  
+
 
 u8_t SysPara_Get_State(void) {
   return Para_Init_flag;
@@ -966,6 +1000,7 @@ u8_t SysPara_Get_State(void) {
 
 void parametr_default(void) {   // mike 依据default配置重新生成PDT表
   APP_DEBUG("parametr_default\r\n");
+
   u16_t len = 0;
   int i = 0;
   for (i = 0; i < number_of_array_elements; i++) {
@@ -979,6 +1014,8 @@ void parametr_default(void) {   // mike 依据default配置重新生成PDT表
   parameter_a_module();
   a_copy_to_b();
   parameter_init();  // 保持统一
+  
+
 }
 
 void GET_ALL_data(void) {

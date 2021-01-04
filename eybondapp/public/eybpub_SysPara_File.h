@@ -99,7 +99,9 @@ typedef struct {
 // void SysPara_printf(void_fun_bufp output);       // mike 20200825
 // void SysPara_Get(u8_t num, Buffer_t *buf);       // mike 20200825
 // int  SysPara_Set(u8_t num, Buffer_t *buf);       // mike 20200825
-void SysPara_init(void);
+//void SysPara_init(void);
+int SysPara_init(void);
+
 void Get_Data(Buffer_t *buf); //test
 u8_t SysPara_Get_State(void);
 

@@ -26,6 +26,7 @@
 #include "eybpub_struct_type.h"
 #include "eybpub_Debug.h"
 #include "eybpub_SysPara_File.h"
+#include "eybpub_run_log.h"
 
 #ifndef __TEST_FOR_UFS__
 #define __TEST_FOR_UFS__
@@ -47,6 +48,7 @@
 #ifdef _PLATFORM_L610_
 #define g_recName_parameter_a  "/paraconfig_file_a.ini"  // 文件名
 #define g_recName_parameter_b  "/paraconfig_file_b.ini"  // 文件名
+
 #endif
 static int    g_iFd_parameter_a = -1;  // 文件描述符
 static u8_t     *parameter_a_md5        = NULL;
@@ -59,7 +61,11 @@ static u16_t    parameter_a_len         = 64;
 static int    g_iFd_parameter_b = -1;  // 文件描述符
 static u8_t     *parameter_b_md5        = NULL;
 static u8_t     *parameter_b_md5_s      = NULL;
-static char     *parameter_b_value_buf  = NULL;
+static char     *parameter_b_value_buf  = NULL; // 尽量避免用静态指针，如果指向的空间反复释放的话会崩溃
+int            g_iFd_backup_parameter_c = 0;
+
+static int    g_iFd_parameter_c = -1;  // 文件描述符
+char*         parameter_c_value_buf  = NULL;
 
 // 生成MD5值
 static u32_t parameter_a_MD5Verify_Func(u8_t bHash[], u32_t Verify_Len, u32_t DataBlock_Len);
@@ -709,7 +715,12 @@ static u32_t parameter_b_MD5Verify_Func(u8_t bHash[], u32_t Verify_Len, u32_t Da
   return 0;
 }
 
-void parameter_init(void) { // 依据参数文件A初始化PDT表
+/*************************************
+ 
+依据参数文件A/C初始化PDT表
+
+*************************************/
+void parameter_init(void) { 
   char n_buf[sizeof(char) * 3] = {0};
   u8_t number = 0;
   char number_char[4] = {0};
@@ -724,11 +735,24 @@ void parameter_init(void) { // 依据参数文件A初始化PDT表
   s32_t ret = 0;
   u32_t readenLen = 0;
   int j = 0;
-
+  
+  char* para_file_point = null;
   s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a);
+  s32_t file_c_size = fibo_file_getSize(g_backup_parameter_c);
+//  APP_DEBUG("file a size is %d\r\n",file_a_size);
+//  APP_DEBUG("file C size is %d\r\n",file_c_size); 
+  if(file_a_size < 32 && file_c_size > 32){
+      para_file_point = g_backup_parameter_c;
+      APP_PRINT("current file point is  to C file\r\n");
+
+  }else{
+      para_file_point = g_recName_parameter_a;
+      APP_PRINT("current file point is  to A file\r\n");
+  }
+ 
 
   while (dwOff < (file_a_size - 32)) {
-    g_iFd_parameter_a = fibo_file_open(g_recName_parameter_a, FS_O_RDONLY);  // 按字节读文件A
+    g_iFd_parameter_a = fibo_file_open(para_file_point, FS_O_RDONLY);  // 按字节读文件A
     ret = fibo_file_seek(g_iFd_parameter_a, dwOff, FS_SEEK_SET);
 //    APP_DEBUG("Seek to site %d ret: %d\r\n", dwOff, ret);
     readenLen = fibo_file_read(g_iFd_parameter_a, &temporary_char, 1);
@@ -737,7 +761,7 @@ void parameter_init(void) { // 依据参数文件A初始化PDT表
 
     if ('=' == temporary_char) {    // 读到等于号时，读取等号前三位数据，获取参数编号
       equalPlace = dwOff;
-      g_iFd_parameter_a = fibo_file_open(g_recName_parameter_a, FS_O_RDONLY);
+      g_iFd_parameter_a = fibo_file_open(para_file_point, FS_O_RDONLY);
       ret = fibo_file_seek(g_iFd_parameter_a, equalPlace - 3, FS_SEEK_SET);
 //      APP_DEBUG("Seek to site %d ret: %d\r\n", dwOff, ret);
       r_memset(number_char_buff, 0, sizeof(char) * 3);
@@ -753,7 +777,7 @@ void parameter_init(void) { // 依据参数文件A初始化PDT表
 
     if ('\r' == temporary_char) {   // 读到回车符号时，读取等号后到回车符前的数据，获取参数信息
       newlinePlace = dwOff;
-      g_iFd_parameter_a = fibo_file_open(g_recName_parameter_a, FS_O_RDONLY);
+      g_iFd_parameter_a = fibo_file_open(para_file_point, FS_O_RDONLY);
       ret = fibo_file_seek(g_iFd_parameter_a, equalPlace + 1, FS_SEEK_SET);    // 返回等号后一位
 //      APP_DEBUG("Seek to site %d ret: %d\r\n", dwOff, ret);
       if (parameter_value != NULL) {
@@ -794,7 +818,10 @@ void parameter_init(void) { // 依据参数文件A初始化PDT表
   APP_DEBUG("Parameter init OK!!\r\n");
 }
 
+
+/*******************************************************
 // 比较两个参数文件
+*******************************************************/
 void a_compare_b(void) {
   s32_t ret = 0;
   u32_t readenLen = 0;
@@ -980,43 +1007,206 @@ void b_copy_to_a(void) {
   memory_release(parameter_b_value_buf);
 }
 
-#endif
+/******************************************
+把A文件拷贝到备份C文件
+g_backup_parameter_c
+*******************************************/
+// 把文件A拷贝到文件C
+void a_copy_to_c(void) {
+  s32_t ret = 0;
+  u32_t readenLen = 0, writenLen = 0;
+  s32_t file_c_size  = 0 ;
 
-void live_a_and_b(void) {   // 同步两个配置文件
-#ifdef _PLATFORM_BC25_
-  s32_t file_a_size = Ql_FS_GetSize(g_recName_parameter_a);  
-  s32_t file_b_size = Ql_FS_GetSize(g_recName_parameter_b);
-  APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
-  APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
-#endif
-#ifdef _PLATFORM_L610_
-  s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a);  
-  s32_t file_b_size = fibo_file_getSize(g_recName_parameter_b);
-  APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
-  APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
-#endif
-
-  if ((file_a_size > 32) && (file_b_size > 32)) {   // 这个文件都存在
-    APP_DEBUG("a b are all live\r\n");
-    a_compare_b();    // 比较两个参数文件
-    parameter_init();
+  file_c_size = fibo_file_getSize(g_backup_parameter_c); // 删除C
+//  APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
+  if (file_c_size >= 0) {
+    int delete = fibo_file_delete(g_backup_parameter_c);
+    APP_DEBUG("delete c is %d\r\n", delete);
   }
 
-  if ((!(file_a_size > 32)) && (!(file_b_size > 32))) { // 两个文件都不存在
-    APP_DEBUG("a b are all not live\r\n");
-    parametr_default();     // 依据default生成PDT表, 生成配置a、b文件
+  s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a);
+  g_iFd_parameter_c = fibo_file_open(g_backup_parameter_c, FS_O_RDWR | FS_O_CREAT | FS_O_TRUNC);   // 建立C，并拷贝A的内容
+  if (g_iFd_parameter_c < 0) {
+    APP_DEBUG("Create parameter_configuration_file_c failed\r\n");
+  }
+  ret = fibo_file_fsync(g_iFd_parameter_c);
+  ret = fibo_file_close(g_iFd_parameter_c);
+  g_iFd_parameter_c = fibo_file_open(g_backup_parameter_c, FS_O_RDWR);
+  if (g_iFd_parameter_c < 0) {
+    APP_DEBUG("Open parameter_configuration_file_b failed\r\n");
   }
 
-  if ((file_a_size > 32) && (!(file_b_size > 32))) {  // a存在b不存在
-    APP_DEBUG("a is live b is not live\r\n");
-    a_copy_to_b();
-    parameter_init();
-  }
+  g_iFd_parameter_a = fibo_file_open(g_recName_parameter_a, FS_O_RDONLY);
+  parameter_c_value_buf = memory_apply(sizeof(char) * file_a_size);
+  r_memset(parameter_c_value_buf, 0, sizeof(char)*file_a_size);
+  readenLen = fibo_file_read(g_iFd_parameter_a, (u8_t *)parameter_c_value_buf, file_a_size);
+//  APP_DEBUG("Read data from a len: %ld\r\n",readenLen);
+  ret = fibo_file_close(g_iFd_parameter_a);
 
-  if ((!(file_a_size > 32)) && (file_b_size > 32)) {  // b存在a不存在
-    APP_DEBUG("a is not live b is live\r\n");
-    b_copy_to_a();
-    parameter_init();
-  }
+  ret = fibo_file_seek(g_iFd_parameter_c, 0, FS_SEEK_END);
+//  APP_DEBUG("Seek to file b end ret: %ld\r\n", ret);
+  writenLen = fibo_file_write(g_iFd_parameter_c, (u8_t *)parameter_c_value_buf, file_a_size);
+//  APP_DEBUG("Write data to b len: %ld\r\n", writenLen);
+  ret = fibo_file_fsync(g_iFd_parameter_c);
+  ret = fibo_file_close(g_iFd_parameter_c);
+
+  file_c_size =  fibo_file_getSize(g_backup_parameter_c);
+//  APP_DEBUG("a_copy_to_b ok file_b_size is %ld\r\n", file_b_size);
+
+  memory_release(parameter_c_value_buf);
+
 }
 
+#endif
+
+// void live_a_and_b(void) {   // 同步两个配置文件
+// #ifdef _PLATFORM_BC25_
+//   s32_t file_a_size = Ql_FS_GetSize(g_recName_parameter_a);  
+//   s32_t file_b_size = Ql_FS_GetSize(g_recName_parameter_b);
+//   APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
+//   APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
+// #endif
+// #ifdef _PLATFORM_L610_
+//   s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a);  
+//   s32_t file_b_size = fibo_file_getSize(g_recName_parameter_b);
+//   APP_DEBUG("file_a_size is %ld\r\n", file_a_size);
+//   APP_DEBUG("file_b_size is %ld\r\n", file_b_size);
+// #endif
+
+//   if ((file_a_size > 32) && (file_b_size > 32)) {   // 这个文件都存在
+//     APP_DEBUG("a b are all live\r\n");
+//     a_compare_b();    // 比较两个参数文件
+//     parameter_init();
+//   }
+
+//   if ((!(file_a_size > 32)) && (!(file_b_size > 32))) { // 两个文件都不存在
+//     APP_DEBUG("a b are all not live\r\n");
+//     parametr_default();     // 依据default生成PDT表, 生成配置a、b文件
+//   }
+
+//   if ((file_a_size > 32) && (!(file_b_size > 32))) {  // a存在b不存在
+//     APP_DEBUG("a is live b is not live\r\n");
+//     a_copy_to_b();
+//     parameter_init();
+//   }
+
+//   if ((!(file_a_size > 32)) && (file_b_size > 32)) {  // b存在a不存在
+//     APP_DEBUG("a is not live b is live\r\n");
+//     b_copy_to_a();
+//     parameter_init();
+//   }
+// }
+
+
+/*******************************************************************************
+ * @name:   live_a_and_b
+ * @Author: liu ying long 
+ * @msg:    
+ * @param : 
+ * @return: 
+*******************************************************************************/     
+int live_a_and_b(void)
+{
+
+     INT32  live_a =  fibo_file_exist (g_recName_parameter_a);
+     INT32  live_b =  fibo_file_exist (g_recName_parameter_b);
+     s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a);  
+     s32_t file_b_size = fibo_file_getSize(g_recName_parameter_b);
+     
+    
+    /* a b success */
+    if(1 == live_a && 1 == live_b) 
+    {
+        /* a b > 32 a = b */
+        if(file_a_size > 32 && file_b_size > 32 && \
+            file_a_size == file_b_size)
+        {
+            log_save("Para File A > 32 B > 32");
+            a_compare_b();
+        }
+        /* a b > 32 a > b */
+        /* 防止文件拷贝过程中断电 */
+        else if(file_a_size > 32 && file_b_size > 32 && \
+                file_a_size > file_b_size)
+        {
+            log_save("Para File Size A > Size B");
+            a_copy_to_b();
+        }
+        /* a b > 32 a < b */
+        else if(file_a_size > 32 && file_b_size > 32 && \
+                file_a_size < file_b_size)
+        {
+            log_save("Para File Size A < Size B");
+            b_copy_to_a();
+        }
+        /* a <= 32 b <= 32 */
+        else if(!(file_a_size > 32) && !(file_b_size > 32))
+        {
+            
+            log_save("Para File A and B Para Is Missing!");
+            /*从c文件更新数据到PDT*/
+            parameter_init();
+            /*系统参数从PDT拷贝到a文件*/
+            parameter_a_module();
+            /*参数系统从a文件拷贝到b文件*/
+            a_copy_to_b();
+
+           
+        }
+        /* a > 32 b <= 32 */
+        else if(file_a_size > 32 && !(file_b_size > 32))
+        {
+            log_save("Para File A > 32 B <= 32");
+            a_copy_to_b();
+        }
+        /* a <= 32 b > 32 */
+        else
+        {
+            log_save("Para File A <= 32 B > 32");
+            b_copy_to_a(); 
+           
+        }
+    }
+    
+    /* a b = null */
+    else if(live_a < 0 && live_b < 0)
+    {
+        APP_PRINT("a b are all not live\r\n");
+        parametr_default();     // 依据default生成PDT表, 生成配置a、b文件
+    }
+        
+    /* a success b null */
+    else if(1 == live_a && live_b < 0)
+    {
+        log_save("Para File A success B null");
+        a_copy_to_b();
+    }
+
+    /* a null b success */
+    else
+    {
+        log_save("Para File A null B success");
+        b_copy_to_a();
+    }
+    /*将文件a||c更新到PDT*/
+    parameter_init();
+
+    file_a_size = fibo_file_getSize(g_recName_parameter_a);
+
+    if(file_a_size <= 32 )
+     
+    {
+        return -1;
+    }
+    return 0;
+}
+
+/*
+   test file C function
+*/
+void rm_file_A (void)
+{
+    fibo_file_delete(g_recName_parameter_a);
+    fibo_file_delete(g_recName_parameter_b);
+    APP_PRINT("delete file a b success!\r\n");
+}

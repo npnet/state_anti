@@ -215,6 +215,7 @@ void * appimg_enter(void *param) {
   Beep_Init();
   Key_init();
   ADC_Init();  
+
   s32_t ret = 0;
   u32_t nFreeSize = fibo_file_getFreeSize();
   if (nFreeSize < 0x80000) {
@@ -232,6 +233,12 @@ void * appimg_enter(void *param) {
         }
     }
   }
+
+
+  Watchdog_feed();
+  fibo_taskSleep(500);
+  
+
   UINT32 net_thread_id = 0;
   UINT32 app_thread_id = 0;
   UINT32 dev_thread_id = 0;
@@ -247,6 +254,9 @@ void * appimg_enter(void *param) {
   ALIYUN_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   FOTA_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   UPDATE_TASK = fibo_queue_create(10, sizeof(ST_MSG));
+
+  Watchdog_feed();
+  fibo_taskSleep(500);
 
   fibo_thread_create_ex(proc_app_task,     "Eybond APP TASK",    1024*8*2,   NULL, OSI_PRIORITY_REALTIME, &app_thread_id);
   fibo_taskSleep(1000);

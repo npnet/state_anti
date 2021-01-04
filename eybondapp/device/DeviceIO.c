@@ -556,7 +556,14 @@ static void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, v
         return;
       }
       if (s_device == null || s_device->buf->payload == null) {
-        APP_DEBUG("Cancel %d len MSG from UART port:%d!!\r\n", rcveBuf.lenght, uart_port);  // 默认忽略处理没有负载时采集口上报的数据
+
+        APP_DEBUG("Cancel MSG %s from UART port:%d!!\r\n", rcveBuf.payload, uart_port);  // 默认忽略处理没有负载时采集口上报的数据
+         if(0 != netInTest(&rcveBuf)){
+      
+             /*TODO*/
+             /*接收设备口发过来的其它AT命令*/
+         }
+
         return;
       } else {  // 有负载时将接收到的数据传递给负载设备处理
         s_device->buf->lenght = rcveBuf.lenght;
@@ -608,7 +615,6 @@ DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
         s_device = hard;
         s_device->buf->lenght = 0;
         s_devtimer = fibo_timer_new((u32_t)hard->waitTime, dev_overtimeCallback, NULL);
-
         if (s_devtimer == 0) {
           log_save("Start DEVICE_OVERTIME_ID timer failed, g_test_timer = %d", s_devtimer);
         }

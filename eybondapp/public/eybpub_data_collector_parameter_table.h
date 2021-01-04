@@ -11,4 +11,5 @@
 extern int number_of_array_elements;
 extern  struct _ParamDescripTable_t PDT[];
 extern const DefaultPara_List_t defaultPara[];
+
 #endif // __EYBPUB_DATA_COLLECTOR_PARAMETER_TABLE_H__

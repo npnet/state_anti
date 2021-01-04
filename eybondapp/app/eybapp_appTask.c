@@ -381,6 +381,7 @@ void proc_app_task(s32_t taskId) {
   outputFun = null;
   logGetFlag = 0;
   deviceLockTime = 0;
+  int err = 0;
 
   // Disable sleep mode.
   fibo_setSleepMode(0);
@@ -419,7 +420,27 @@ void proc_app_task(s32_t taskId) {
 #endif
   log_init();
   Clock_init();
-  SysPara_init();  // mike 重点死机问题函数, RIL库完成加载后初始化所有现场参数
+ // SysPara_init();  // mike 重点死机问题函数, RIL库完成加载后初始化所有现场参数
+
+   /* 系统参数初始化 */
+    if(SysPara_init())
+    {
+        /* 参数初始化失败 */
+        Watchdog_stop();
+        while(1)
+        {
+            if(++err > 40)
+            {
+                 fibo_softReset();
+                 err = 0;
+            }
+            fibo_taskSleep(1000);
+           
+        }
+    } 
+
+  Watchdog_feed();
+  fibo_taskSleep(500);
 
   WDG_timer = fibo_timer_period_new(WDG_time_Interval, UserTimerWDGcallback, NULL);  // 注册外部看门狗Timer
   if (WDG_timer == 0) {

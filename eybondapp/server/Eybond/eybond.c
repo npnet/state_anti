@@ -57,6 +57,7 @@ static u8_t sPort;  // index of scocket
 static u16_t overtime_ESP;  // mike 20200918
 static u16_t relinkCnt;
 static u32_t m_timeCheck_EYB = 0;
+extern u16_t testPort;
 
 // #define HISTORY_SPACE_ADDR   (FLASH_EYBOND_HISTORY_ADDR)
 // #define HISTORY_SPACE_SIZE   (4096)
@@ -69,7 +70,9 @@ static u32_t m_timeCheck_EYB = 0;
 // static FlashEquilibria_t saveSpace;
 
 static void NetMsgAck_Eybond(Buffer_t *buf);
+static void Test_NetMsgAck_Eybond(Buffer_t *buf);
 static void output(Buffer_t *buf);
+
 static void onlineReport(void);
 
 static void ESP_process(void);
@@ -201,6 +204,23 @@ void ESP_callback(u8_t nIndex, Buffer_t *buf) { // 网络数据解析
   memory_release(buf->payload);  // 释放申请的输入指令内存
 }
 
+/*******************************************************************************
+  * @brief
+  * @note   None
+  * @param  None
+*******************************************************************************/
+void TEST_esp_callback(u8_t nIndex, Buffer_t *buf) { // 生产网络数据解析
+
+  testPort = nIndex;
+  ESP_cmd(buf, Test_NetMsgAck_Eybond);
+  memory_release(buf->payload);  // 释放申请的输入指令内存
+}
+
+/*******************************************************************************
+  * @brief
+  * @note   None
+  * @param  None
+*******************************************************************************/
 static void NetMsgAck_Eybond(Buffer_t *buf) { // 网络数据解析返回结果函数
   if (buf != null && buf->payload != null && buf->lenght > 0) {
     APP_DEBUG("NetMsgAck_Eybond\r\n");
@@ -208,10 +228,29 @@ static void NetMsgAck_Eybond(Buffer_t *buf) { // 网络数据解析返回结果�
       APP_DEBUG("Buffer length is bigger than %d \r\n", MAX_NET_BUFFER_LEN);
       return;
     }
-    output(buf);
+   output(buf);
+
     Net_send(sPort, buf->payload, buf->lenght);
   }
 }
+
+/*******************************************************************************
+  * @brief
+  * @note   None
+  * @param  None
+*******************************************************************************/
+static void Test_NetMsgAck_Eybond(Buffer_t *buf) { // 生产网络数据解析返回结果函数
+  if (buf != null && buf->payload != null && buf->lenght > 0) {
+    APP_DEBUG("Test_NetMsgAck_Eybond\r\n");
+    if (buf->lenght >= MAX_NET_BUFFER_LEN) {
+      APP_DEBUG("Buffer length is bigger than %d \r\n", MAX_NET_BUFFER_LEN);
+      return;
+    }
+    output(buf);
+    Net_send(testPort, buf->payload, buf->lenght);
+  }
+}
+
 
 /*******************************************************************************
   * @brief
@@ -225,9 +264,11 @@ static void output(Buffer_t *buf) {
     u8_t *str = memory_apply(buf->lenght * 3 + 8);
     r_memset(str, 0, buf->lenght * 3 + 8);
     if (str != null) {
-//      int l = Swap_hexChar((char *)str, buf->payload, buf->lenght, ' ');  // mike 重点检测函数
-      hextostr(buf->payload, str, buf->lenght);   // 和Swap_hexChar是反的
-      int l = r_strlen((char *)str);
+    //  int l = Swap_hexChar((char *)str, buf->payload, buf->lenght, ' ');  // mike 重点检测函数
+    Swap_hexChar((char *)str, buf->payload, buf->lenght, ' ');
+    //  hextostr(buf->payload, str, buf->lenght);   // 和Swap_hexChar是反的
+    int l = r_strlen((char *)str);
+   
       while (l) {
         if (l >= 16 * 3) {
           Debug_output(str + displayNum, 16 * 3);
@@ -239,15 +280,19 @@ static void output(Buffer_t *buf) {
 //          Print_output(str + displayNum, l);
           l = 0;
         }
-        Debug_output((u8_t *)"\r\n", 2);
+      
+       Debug_output((u8_t *)"\r\n", 2);
 //        Print_output((u8_t *)"\r\n", 2);
       }
 //      Debug_output(str, l);
-//      APP_DEBUG("\r\n");
-      memory_release(str);
+       APP_DEBUG("\r\n");
+       memory_release(str);
     }
   }
 }
+        
+   
+
 
 /*******************************************************************************
   * @brief
@@ -265,8 +310,10 @@ void ESP_close(void) {
 *******************************************************************************/
 u8_t ESP_cmd(Buffer_t *buf, AckCh ch) {
   u8_t e = 0;
-  APP_DEBUG("ESP_cmd\r\n");
+
   output(buf);
+
+
   if (buf == null || buf->payload == null || ch == null) {
     e = 1;
   } else if (buf->lenght < sizeof(EybondHeader_t)) {
@@ -330,6 +377,7 @@ static void ESP_process(void) {
   ESP_t *esp = (ESP_t *)list_nextData(&rcveList, null); // 查找列表中的指令节点
 
   if (null == esp) {
+
     return;
   }
 
@@ -441,35 +489,35 @@ static u8_t paraSet(ESP_t *esp) {
 
   EybondHeader_t *ackHead;
   u8_t *para = esp->PDU;
+#if 1
+    APP_DEBUG("ESP=pdu len:%04X, waitCnt:%04X\r\n", esp->PDULen, esp->waitCnt);
+    APP_DEBUG("ESP=head serail:%04X, code:%04X\r\n", esp->head.serial, esp->head.code);
+    APP_DEBUG("ESP=head msg len:%04X, addr:%02X func:%02X\r\n", esp->head.msgLen, esp->head.addr, esp->head.func);
 
-  APP_DEBUG("ESP=pdu len:%04X, waitCnt:%04X\r\n", esp->PDULen, esp->waitCnt);
-  APP_DEBUG("ESP=head serail:%04X, code:%04X\r\n", esp->head.serial, esp->head.code);
-  APP_DEBUG("ESP=head msg len:%04X, addr:%02X func:%02X\r\n", esp->head.msgLen, esp->head.addr, esp->head.func);
+    buf.lenght = ENDIAN_BIG_LITTLE_16(esp->head.msgLen) - 3;
+    for (i = 0; i < (buf.lenght + 1); i++) {
+        APP_DEBUG("ESP=PDU %02X\r\n", esp->PDU[i]);
+    }
 
-  buf.lenght = ENDIAN_BIG_LITTLE_16(esp->head.msgLen) - 3;
-  for (i = 0; i < (buf.lenght + 1); i++) {
-    APP_DEBUG("ESP=PDU %02X\r\n", esp->PDU[i]);
-  }
+    buf.payload = memory_apply(buf.lenght + 1);
+    buf.size = buf.lenght + 1;
+    r_memcpy(buf.payload, para + 1, buf.lenght);
+    buf.payload[buf.lenght] = '\0';
+    //  buf.payload = para + 1;
+    APP_DEBUG("Set para: %d %s\r\n", *para, buf.payload);
+    ret = parametr_set(*para, &buf);  // 设置参数
 
-  buf.payload = memory_apply(buf.lenght + 1);
-  buf.size = buf.lenght + 1;
-  r_memcpy(buf.payload, para + 1, buf.lenght);
-  buf.payload[buf.lenght] = '\0';
-//  buf.payload = para + 1;
-  APP_DEBUG("Set para: %d %s\r\n", *para, buf.payload);
-  ret = parametr_set(*para, &buf);  // 设置参数
+    memory_release(buf.payload);  // free old buf
+#endif
+    ackHead = &esp->head;
+    ackHead->msgLen = ENDIAN_BIG_LITTLE_16(4);
+    para[1] = para[0];
+    para[0] = ret;
 
-  memory_release(buf.payload);  // free old buf
-
-  ackHead = &esp->head;
-  ackHead->msgLen = ENDIAN_BIG_LITTLE_16(4);
-  para[1] = para[0];
-  para[0] = ret;
-
-  buf.lenght = sizeof(EybondHeader_t) + 2;
-  buf.payload = memory_apply(buf.lenght + 1);
-  //  buf.payload = (u8_t *)ackHead;
-  r_memcpy(buf.payload, (u8_t *)ackHead, buf.lenght);
+    buf.lenght = sizeof(EybondHeader_t) + 2;
+    buf.payload = memory_apply(buf.lenght + 1);
+    //  buf.payload = (u8_t *)ackHead;
+    r_memcpy(buf.payload, (u8_t *)ackHead, buf.lenght);
   esp->ack(&buf);   // 设置指令成功、失败返回
   APP_DEBUG("Set para callback %d %s\r\n", buf.lenght, buf.payload);
   memory_release(buf.payload);
@@ -504,6 +552,7 @@ static u8_t devtrans(ESP_t *esp) {
   r_memcpy(cmd->cmd.payload, esp->PDU, cmd->cmd.size);
 
   output(&cmd->cmd);
+  
 
   dev->cfg = null;  // 配置一个执行该指令的设备
   dev->callBack = devtransAck;  // 设置透传设备需要的返回函数
@@ -998,11 +1047,12 @@ static void onlineReport(void) {
           r_memcpy(&buf.payload[nIndex], cmd->buf.payload, cmd->buf.lenght);
           nIndex += cmd->buf.lenght;
           buf.lenght = nIndex;
-//          output(&buf);
+          output(&buf);
         } while (node != head->cmdList.node && head->cmdList.node != null);
         r_memcpy(&buf.payload[0], &ackHead, sizeof(EybondHeader_t));
         buf.lenght = nIndex;
         output(&buf);
+     
         Net_send(sPort, buf.payload, buf.lenght);
         nIndex_MSG++;
         r_memset(&ackHead, 0, sizeof(EybondHeader_t));
@@ -1053,6 +1103,7 @@ void specialData_send(void) {
   buf.payload = (u8_t *)&rpt;
 
   output((Buffer_t *)&buf);
+
   Net_send(sPort, (u8_t *)&rpt, 9);
 }
 

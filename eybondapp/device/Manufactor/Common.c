@@ -58,7 +58,7 @@ const ModbusDeviceHead_t _0205Device = {
     null,
 };
 
-/* static const ModbusGetCmd_t _0206[] = {
+static const ModbusGetCmd_t _0206[] = {
     {04,   2999, 3077},
 };
 static const ModbusGetCmdTab_t _0206Protocol = PROTOCOL_TABER(_0206, 0, 0x0206);
@@ -68,9 +68,9 @@ const ModbusDeviceHead_t _0206Device = {
     &_0206Protocol,
     null,
     null,
-}; */
+};
 
-static const ModbusGetCmd_t _0206[] = {
+/* static const ModbusGetCmd_t _0206[] = {
     {04,   2999, 3012},
     {04,   3013, 3025},
     {04,   3026, 3038},
@@ -86,7 +86,7 @@ const ModbusDeviceHead_t _0206Device = {
     &_0206Protocol,
     null,
     null,
-};
+}; */
 
 static const ModbusGetCmd_t _0214[] = {
     {04,   30000,  30040},

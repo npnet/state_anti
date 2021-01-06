@@ -16,10 +16,10 @@
 #define DEVICE_TAB_ADDR         (0x0800A000)
 
 typedef struct {
-  u8_t addr;  //device addr
-  u8_t tryCnt;   //error try count
+  u8_t addr;   // device addr
+  u8_t tryCnt; // error try count
   u8_t flag;
-  u16_t code; //device ocde
+  u16_t code;  // device ocde
   ModbusDeviceHead_t *head;
 } DeviceExplain_t;
 

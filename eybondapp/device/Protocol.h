@@ -1,6 +1,6 @@
-/**********************    COPYRIGHT 2014-2015, EYBOND    ************************ 
+/**********************    COPYRIGHT 2014-2015, EYBOND    ************************
   *@brief   : ModbusDevice.h  MOSOEC Modbus
-  *@notes   : 2017.08.04 CGQ   
+  *@notes   : 2017.08.04 CGQ
 **********************************************************************************/
 #ifndef __DEVICE_RPOTOCOL_H
 #define __DEVICE_RPOTOCOL_H
@@ -22,50 +22,46 @@
 
 typedef u8_t (*cmdProtocol)(void *cmd, void *cmdTab);
 
-typedef struct
-{
-	u8_t count;
-	u8_t flag;	// bit 7: 1(must merg type) bit2~bit5(reg spilt)  reg merge flag, bit0: 0(yes),1(No) 
-	u16_t code;
-    ModbusGetCmd_t *cmdTab;
-}ModbusGetCmdTab_t;
+typedef struct {
+  u8_t count;
+  u8_t flag;  // bit 7: 1(must merg type) bit2~bit5(reg spilt)  reg merge flag, bit0: 0(yes),1(No)
+  u16_t code;
+  ModbusGetCmd_t *cmdTab;
+} ModbusGetCmdTab_t;
 
-typedef struct
-{   
-    const ST_UARTDCB 		  *hardCfg;
-    const ModbusGetCmd_t    *findCmd;       	//Find Cmd; 
-    const ModbusGetCmdTab_t *procmd;    	//protocol find command
-    const cmdProtocol       devicePro;     
-    const cmdProtocol       ackDataPro;  	//Onceage process device command ack data return 0: data is OK ,other device ack abnormal
-}ModbusDeviceHead_t;
+typedef struct {
+  const ST_UARTDCB        *hardCfg;
+  const ModbusGetCmd_t    *findCmd;     // Find Cmd;
+  const ModbusGetCmdTab_t *procmd;      // protocol find command
+  const cmdProtocol       devicePro;
+  const cmdProtocol       ackDataPro;   // Onceage process device command ack data
+                                        // return 0: data is OK ,other device ack abnormal
+} ModbusDeviceHead_t;
 
-typedef struct
-{ 
-    u8_t startAddr;
-    u8_t endAddr;
-    ST_UARTDCB *cfg;
-    const ModbusDeviceHead_t *head;
-}ADDDevice_t;
+typedef struct {
+  u8_t startAddr;
+  u8_t endAddr;
+  ST_UARTDCB *cfg;
+  const ModbusDeviceHead_t *head;
+} ADDDevice_t;
 
-typedef struct
-{
-	const u8_t *addrTab;
-    ST_UARTDCB *cfg;
-    const ModbusDeviceHead_t *head;
-    const int monitorCount;
-}ModbusDevice_t;
+typedef struct {
+  const u8_t *addrTab;
+  ST_UARTDCB *cfg;
+  const ModbusDeviceHead_t *head;
+  const int monitorCount;
+} ModbusDevice_t;
 
-typedef struct
-{
-	u16_t code;
-	u8_t startAddr;
-	u8_t endAddr;
-//	ST_UARTDCB *cfg;    // mike 20200924
-    ST_UARTDCB cfg;
-}ProtocolAttr_t;
+typedef struct {
+  u16_t code;
+  u8_t startAddr;
+  u8_t endAddr;
+//  ST_UARTDCB *cfg;    // mike 20200924
+  ST_UARTDCB cfg;
+} ProtocolAttr_t;
 
 extern ModbusDevice_t ModbusDevice;
-// extern ADDDevice_t MeterDevice;  // mike 20201028 屏蔽电表查询
+extern ADDDevice_t MeterDevice;
 extern const ST_UARTDCB UART_2400_N1;
 extern const ST_UARTDCB UART_4800_N1;
 extern const ST_UARTDCB UART_9600_N1;

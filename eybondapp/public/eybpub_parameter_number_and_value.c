@@ -1105,100 +1105,59 @@ void a_copy_to_c(void) {
  * @param : 
  * @return: 
 *******************************************************************************/     
-int live_a_and_b(void)
-{
-
-     INT32  live_a =  fibo_file_exist (g_recName_parameter_a);
-     INT32  live_b =  fibo_file_exist (g_recName_parameter_b);
-     s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a);  
-     s32_t file_b_size = fibo_file_getSize(g_recName_parameter_b);
-     
-    
-    /* a b success */
-    if(1 == live_a && 1 == live_b) 
-    {
-        /* a b > 32 a = b */
-        if(file_a_size > 32 && file_b_size > 32 && \
-            file_a_size == file_b_size)
-        {
-            log_save("Para File A > 32 B > 32");
-            a_compare_b();
-        }
-        /* a b > 32 a > b */
-        /* 防止文件拷贝过程中断电 */
-        else if(file_a_size > 32 && file_b_size > 32 && \
-                file_a_size > file_b_size)
-        {
-            log_save("Para File Size A > Size B");
-            a_copy_to_b();
-        }
-        /* a b > 32 a < b */
-        else if(file_a_size > 32 && file_b_size > 32 && \
-                file_a_size < file_b_size)
-        {
-            log_save("Para File Size A < Size B");
-            b_copy_to_a();
-        }
-        /* a <= 32 b <= 32 */
-        else if(!(file_a_size > 32) && !(file_b_size > 32))
-        {
-            
-            log_save("Para File A and B Para Is Missing!");
-            /*从c文件更新数据到PDT*/
-            parameter_init();
-            /*系统参数从PDT拷贝到a文件*/
-            parameter_a_module();
-            /*参数系统从a文件拷贝到b文件*/
-            a_copy_to_b();
-
-           
-        }
-        /* a > 32 b <= 32 */
-        else if(file_a_size > 32 && !(file_b_size > 32))
-        {
-            log_save("Para File A > 32 B <= 32");
-            a_copy_to_b();
-        }
-        /* a <= 32 b > 32 */
-        else
-        {
-            log_save("Para File A <= 32 B > 32");
-            b_copy_to_a(); 
-           
-        }
+int live_a_and_b(void) {
+  INT32  live_a =  fibo_file_exist (g_recName_parameter_a);
+  INT32  live_b =  fibo_file_exist (g_recName_parameter_b);
+  s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a);
+  s32_t file_b_size = fibo_file_getSize(g_recName_parameter_b);
+  /* a b success */
+  if (1 == live_a && 1 == live_b) {
+    /* a b > 32 a = b */
+    if (file_a_size > 32 && file_b_size > 32 && \
+      file_a_size == file_b_size) {
+      log_save("Para File A > 32 B > 32");
+      a_compare_b();
+    } else if (file_a_size > 32 && file_b_size > 32 && \
+             file_a_size > file_b_size) {  /* a b > 32 a > b */ /* 防止文件拷贝过程中断电 */
+      log_save("Para File Size A > Size B");
+      a_copy_to_b();
+    } else if (file_a_size > 32 && file_b_size > 32 && \
+             file_a_size < file_b_size) { /* a b > 32 a < b */
+      log_save("Para File Size A < Size B");
+      b_copy_to_a();
+    } else if (!(file_a_size > 32) && !(file_b_size > 32)) {  /* a <= 32 b <= 32 */
+      log_save("Para File A and B Para Is Missing!");
+      /*从c文件更新数据到PDT*/
+      parameter_init();
+      /*系统参数从PDT拷贝到a文件*/
+      parameter_a_module();
+      /*参数系统从a文件拷贝到b文件*/
+      a_copy_to_b();
+    } else if(file_a_size > 32 && !(file_b_size > 32)) {  /* a > 32 b <= 32 */
+      log_save("Para File A > 32 B <= 32");
+      a_copy_to_b();
+    } else {  /* a <= 32 b > 32 */
+      log_save("Para File A <= 32 B > 32");
+      b_copy_to_a();
     }
-    
-    /* a b = null */
-    else if(live_a < 0 && live_b < 0)
-    {
-        APP_PRINT("a b are all not live\r\n");
-        parametr_default();     // 依据default生成PDT表, 生成配置a、b文件
-    }
-        
-    /* a success b null */
-    else if(1 == live_a && live_b < 0)
-    {
-        log_save("Para File A success B null");
-        a_copy_to_b();
-    }
+  } else if (live_a < 0 && live_b < 0) {  /* a b = null */
+    APP_PRINT("a b are all not live\r\n");
+    parametr_default();     // 依据default生成PDT表, 生成配置a、b文件
+  } else if (1 == live_a && live_b < 0) { /* a success b null */
+    log_save("Para File A success B null");
+    a_copy_to_b();
+  } else { /* a null b success */
+    log_save("Para File A null B success");
+    b_copy_to_a();
+  }
+  /*将文件a||c更新到PDT*/
+  parameter_init();
+  file_a_size = fibo_file_getSize(g_recName_parameter_a);
 
-    /* a null b success */
-    else
-    {
-        log_save("Para File A null B success");
-        b_copy_to_a();
-    }
-    /*将文件a||c更新到PDT*/
-    parameter_init();
-
-    file_a_size = fibo_file_getSize(g_recName_parameter_a);
-
-    if(file_a_size <= 32 )
-     
-    {
-        return -1;
-    }
-    return 0;
+  if(file_a_size <= 32 ) {
+    return -1;
+  }
+  return 0;
 }
 
 /*

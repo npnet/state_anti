@@ -50,9 +50,7 @@ static u8_t onlineCmdTabPrintf(void *load, void *changeData);    // mike 2020082
 *******************************************************************************/
 void ModbusDevice_init(void) {
   list_init(&onlineDeviceList);
-
-//  if (ModbusDevice.head != null || MeterDevice.head != null) {    // mike 20201018
-  if (ModbusDevice.head != null) {
+  if (ModbusDevice.head != null || MeterDevice.head != null) {
     addrFind();
   }
 }
@@ -63,12 +61,9 @@ void ModbusDevice_init(void) {
   * @retval None
 *******************************************************************************/
 void ModbusDevice_clear(void) {
+  APP_DEBUG("ModbusDevice_clear\r\n");
   list_trans(&onlineDeviceList, onlineDeviceRemove, null);
   list_delete(&onlineDeviceList);
-  if (ModbusDevice.cfg != NULL) {
-    memory_release(ModbusDevice.cfg);     // mike 20201120
-  }
-//  memory_release(MeterDevice.cfg);
 }
 
 /*******************************************************************************
@@ -110,7 +105,7 @@ static void addrFind(void) {
     if (addrTab[i] != 0xFF) {
       ModbusGetCmd_t *cmd = null;
       exp = memory_apply(sizeof(DeviceExplain_t));
-/*      if (MeterDevice.head != null && addrTab[i] >= MeterDevice.startAddr && addrTab[i] <= MeterDevice.endAddr) {
+      if (MeterDevice.head != null && addrTab[i] >= MeterDevice.startAddr && addrTab[i] <= MeterDevice.endAddr) {
         dev = list_nodeApply(sizeof(Device_t));
         cmd = (ModbusGetCmd_t *)MeterDevice.head->findCmd;
         exp->head = (ModbusDeviceHead_t *)MeterDevice.head;
@@ -120,8 +115,7 @@ static void addrFind(void) {
           dev->cfg = (ST_UARTDCB *)MeterDevice.head->hardCfg;
         }
         APP_DEBUG("add meter \r\n");
-      } else if (ModbusDevice.head != null) { */    // mike 20201028
-      if (ModbusDevice.head != null) {
+      } else if (ModbusDevice.head != null) {
         dev = list_nodeApply(sizeof(Device_t));
         cmd = (ModbusGetCmd_t *)ModbusDevice.head->findCmd;
         exp->head = (ModbusDeviceHead_t *)ModbusDevice.head;
@@ -140,8 +134,7 @@ static void addrFind(void) {
         list_init(&dev->cmdList);
 
         APP_DEBUG("add cmd %02X, %04X, %04X \r\n", cmd->fun, cmd->start, cmd->end);
-
-        /* 为底层命令对列只添加了对应的一条命令，原因是长度为sizeof(ModbusGetCMD_t)这里的限制*/
+        /* 为底层命令对列只添加了对应的一条命令，原因是长度为sizeof(ModbusGetCMD_t)这里的限制 */
         Modbus_GetCmdAdd(&dev->cmdList, addrTab[i], cmd, sizeof(ModbusGetCmd_t));  // mike 添加第一条查询指令到 dev cmd list中
         Device_add(dev);
       }
@@ -182,7 +175,7 @@ static void protocolFind(Device_t *dev) {
   DeviceExplain_t *exp = (DeviceExplain_t *)(dev->explain);
 
   if (exp->head->procmd != null && exp->head->procmd->code == 0) {
-    APP_DEBUG("Add the protocol adapjust!!!!!!!!!!!!!!!!!!\r\n");
+    APP_DEBUG("Add the protocol adjust!!!!!!!!!!!!!!!!!!\r\n");
     dev->explain = null;
     DeviceCmd_clear(dev);
 
@@ -221,10 +214,7 @@ static u8_t protocolFindProcess(Device_t *dev) {
     Device_remove(dev);
     addrFind();
   } else if (ModbusDevice.monitorCount > onlineDeviceList.count) {
-//    DeviceExplain_t *exp; // mike 20200914
-
     ret = 1;
-//    exp = (DeviceExplain_t *)(dev->explain);      // mike 20200928
     dev->explain = null;
     DeviceCmd_clear(dev);
     dev->callBack = ackProcess;
@@ -306,17 +296,14 @@ static u8_t ackProcess(Device_t *dev) {
   if (checkResult == 0) { // Device ack Data OK
     exp->tryCnt = 0;
     onlineDeviceAddr(dev);
-//    return 1;   // mike 20201218  屏蔽后打开1拖多采集(同协议)
   } else if (exp->tryCnt++ > 10) {
     DeviceOnlineHead_t *head = list_find(&onlineDeviceList, onlineDeviceCmp, dev);
     if (head != null) {
-    // log_saveAbnormal("Device unline: ", exp->addr);     // mike 20200824
       APP_DEBUG("Device unline: %d\r\n", exp->addr);
       log_save("Device unline: %d", exp->addr);
       onlineDeviceRemove(head, null);
       list_nodeDelete(&onlineDeviceList, head);
     }
-    // log_saveAbnormal("Device remove: ", exp->addr);     // mike 20200824
     APP_DEBUG("Device remove: %d\r\n", exp->addr);
     log_save("Device remove: %d", exp->addr);
     Device_remove(dev);
@@ -365,7 +352,7 @@ static void onlineDeviceAddr(Device_t *dev) {
   APP_DEBUG("onlineDeviceAddr!!\r\n");
   DeviceOnlineHead_t *head = list_find(&onlineDeviceList, onlineDeviceCmp, dev);
 
-  //memoryLog();
+  // memoryLog();
   if (head == null) {
     if (ModbusDevice.monitorCount > onlineDeviceList.count) {
       DeviceExplain_t *exp = dev->explain;
@@ -375,7 +362,6 @@ static void onlineDeviceAddr(Device_t *dev) {
       head->flag = exp->flag;
       head->code = exp->code;
       list_init(&head->cmdList);
-//      log_saveAbnormal("Device online: ", exp->addr);     //mike 20200824
       APP_DEBUG("Device online: %d\r\n", exp->addr);
       log_save("Device online: %d", exp->addr);
 #ifdef _PLATFORM_BC25_
@@ -416,7 +402,7 @@ static u8_t onlineDeviceRemove(void *dev, void *point) {
   * @retval None
 *******************************************************************************/
 static u8_t onlineDeviceCmdAdd(void *load, void *changePoint) {
-//  APP_DEBUG("onlineDeviceCmdAdd!!\r\n");
+  APP_DEBUG("onlineDeviceCmdAdd!!\r\n");
   u16_t crc;
   ListHandler_t *head = changePoint;
   DeviceCmd_t *cmd = (DeviceCmd_t *)load;
@@ -425,7 +411,6 @@ static u8_t onlineDeviceCmdAdd(void *load, void *changePoint) {
   r_memcpy(&crc, &cmd->ack.payload[cmd->ack.lenght - 2], 2);
 
   if (cmdBuf == null) {
-
     cmdBuf = list_nodeApply(sizeof(CmdBuf_t));
     list_bottomInsert(head, cmdBuf);
     cmdBuf->state = 0;
@@ -465,8 +450,10 @@ static u8_t onlineDeviceCmdAdd(void *load, void *changePoint) {
   * @retval None
 *******************************************************************************/
 static u8_t onlineDeviceCmdRemove(void *load, void *changePoint) {
-  CmdBuf_t *cmdBuf = load;   
-  memory_release(cmdBuf->buf.payload);
+  CmdBuf_t *cmdBuf = load;
+  if (cmdBuf->buf.payload != NULL) {
+    memory_release(cmdBuf->buf.payload);
+  }
   return 1;
 }
 

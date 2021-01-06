@@ -484,7 +484,6 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
         case 56:  //通信卡CCID
           // cm_get_iccid(para_value);  //mike 20200824
           RIL_SIM_GetCCID((char *)buf_value);
-        
           r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
           len = r_strlen(buf_value);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
@@ -631,7 +630,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
   for (j = 0; j < number_of_array_elements; j++) {
     if (number == PDT[j].num) {
       APP_DEBUG("para[%d] number is %ld Old value is %s\r\n", j, number, PDT[j].a);
-      APP_DEBUG("para[%d] number is %ld New value will be %s\r\n", j, number, data->payload);
+//    APP_DEBUG("para[%d] number is %ld New value will be %s\r\n", j, number, data->payload);
       str = memory_apply(sizeof(char) * 64);
       if (str == NULL) {
         APP_DEBUG("MEM Alloc Error\r\n");
@@ -675,7 +674,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
             case '2':  // 恢复出厂设置 -- 指示按defult参数表恢复，生产时写的数据如果改了就恢复不了了
               log_save("System Para Reset!");
               parametr_default();
-              Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, 0, 0);
+              Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0);
               break;
             case '3':  // 看门狗停狗重启
               log_save("System Hardware Reset!");
@@ -787,17 +786,14 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
   if (ret == 0x00 && number != LOCAL_TIME) {  // mike 心跳时间不存到参数系统
     parameter_a_module();
     a_copy_to_b();
-    /*将生产参数存进c文件*/
-
-     if( 1 == produc_save_flag){
-        
-           APP_PRINT("begin to backup parameter\r\n");
-           a_copy_to_c();
-   
-     }
+    // 将生产参数存进c文件
+    if (1 == produc_save_flag) {
+      APP_DEBUG("begin to backup parameter\r\n");
+      a_copy_to_c();
+    }
     parameter_init();  // 保持统一
     if (number == DEVICE_MONITOR_NUM || number == DEVICE_PROTOCOL || number == DEVICE_UART_SETTING) {
-      Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, 0, 0);
+      Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0);
     } else if (number == DEVICE_PNID || number == EYBOND_SERVER_ADDR) {
       Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_RESTART_ID, 0, 0);    // 或者NET_CMD_RESTART_ID
     }
@@ -892,7 +888,7 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
           r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
           len = r_strlen(buf_value);
           PDT[j].wFunc(&PDT[j], buf_value, &len);
-		  APP_PRINT("default 98 write %s = /r/n",buf_value);
+		  APP_DEBUG("default 98 write = %s\r\n",buf_value);
           break;
         default:
           break;
@@ -978,21 +974,17 @@ ServerAddr_t *ServerAdrrGet(u8_t num) {
 //   main_parametr_update();  //
 // }
 
-int SysPara_init(void)
-{
-     Para_Init_flag = 0;
-    /* 参数初始化失败 */
-    if(live_a_and_b())
-    {
-        log_save("sys para init fail.");
-        return -1;
-    }
-	main_parametr_update();  
-    return 0;
+int SysPara_init(void) {
+  APP_DEBUG("SysPara_init\r\n");
+  Para_Init_flag = 0;
+  // 参数初始化失败
+  if(live_a_and_b()) {
+    log_save("sys para init fail.");
+    return -1;
+  }
+  main_parametr_update();
+  return 0;
 }
-      
-  
-
 
 u8_t SysPara_Get_State(void) {
   return Para_Init_flag;
@@ -1014,8 +1006,6 @@ void parametr_default(void) {   // mike 依据default配置重新生成PDT表
   parameter_a_module();
   a_copy_to_b();
   parameter_init();  // 保持统一
-  
-
 }
 
 void GET_ALL_data(void) {

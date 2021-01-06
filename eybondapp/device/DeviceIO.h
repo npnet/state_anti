@@ -49,27 +49,10 @@ ST_UARTDCB *DeviceIO_cfgGet(void);
 #ifdef _PLATFORM_L610_
 #include "L610_UARTConfig.h"
 #include "oc_uart.h"
-//#define MYAPP_PRINT(FORMAT,...)
 
 void DeviceIO_init(ST_UARTDCB *cfg);
-
 void DevIO_halGPIO();
-void DevIO_stcfg(ST_UARTDCB* hardcfg); 
-void DevIO_halcfg(hal_uart_config_t* hardcfg);
-/*******************************************************************************
-  * @brief  设备口打印函数
-  * @note   None
-  * @param  None
-  * @retval None
-*******************************************************************************/
-char DevBuffer[1024];
-void Dev_Print_output(u8_t *p, u16_t len);
-
- #define DevAPP_PRINT(FORMAT,...) {\
-    memset(DevBuffer, 0, 1024);\
-    snprintf(DevBuffer, 1024, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
-    Dev_Print_output((u8_t*)DevBuffer, strlen(DevBuffer));\
-}
+void DevIO_stcfg(ST_UARTDCB* hardcfg);
 #endif
 
 void DeviceIO_reset(void);

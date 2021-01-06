@@ -349,7 +349,7 @@ static const char trans_mode[]  = "1";
 static const char modbus_mode[] = "0";
 static const char noFind[] = "\0";
 
-// ADDDevice_t MeterDevice;     // mike 20201028 屏蔽电表查询
+ADDDevice_t MeterDevice;
 ModbusDevice_t ModbusDevice;
 
 static int monitorCountGet(int *num);
@@ -366,19 +366,14 @@ void Protocol_init(void) {
   u8_t *p;
   Buffer_t buf;
 
-  ModbusDevice.head     = null;
-  if (ModbusDevice.cfg != NULL) {
-    memory_release(ModbusDevice.cfg);
-  }
+  ModbusDevice.head = null;
+  ModbusDevice.cfg = NULL;  // 已在Protocol_clean中释放
   ModbusDevice.addrTab  = addrTab;
 
-/*  MeterDevice.startAddr   = 0;
+  MeterDevice.startAddr   = 0;
   MeterDevice.endAddr   = 0;
-  if (MeterDevice.cfg != NULL) {
-    Ql_MEM_Free(MeterDevice.cfg);
-    MeterDevice.cfg     = null;
-  }
-  MeterDevice.head    = null; */    // mike 20201028
+  MeterDevice.cfg     = null;   // 已在Protocol_clean中释放
+  MeterDevice.head    = null;
   r_memset(addrTab, 0, sizeof(addrTab));
   p = addrTab;
 
@@ -390,14 +385,14 @@ void Protocol_init(void) {
   APP_DEBUG("ModbusDevice count %d\r\n", ModbusDevice.monitorCount);
   r_memset(&attr, 0, sizeof(ProtocolAttr_t));
   /* 电表相关操作 */
-/*  if (protocolAttrGet(METER_PROTOCOL, &attr) == 0) {
+  if (protocolAttrGet(METER_PROTOCOL, &attr) == 0) {
     pro = (DeviceProtocol_t *)ALG_binaryFind(attr.code, BINARY_FIND(protocolTab));
 
     if (pro != null) {
       APP_DEBUG("Meter protocol code %x, %d. \r\n", pro->code, attr.startAddr);
       MeterDevice.startAddr = attr.startAddr;
       MeterDevice.endAddr = attr.endAddr;
-      MeterDevice.cfg = Ql_MEM_Alloc(sizeof(ST_UARTDCB));
+      MeterDevice.cfg = memory_apply(sizeof(ST_UARTDCB));
 //      MeterDevice.cfg = attr.cfg;
       if (attr.cfg.baudrate == 0) {
         APP_DEBUG("Meter Device UART setting config is null\r\n");
@@ -419,7 +414,7 @@ void Protocol_init(void) {
         *p = *(p - 1) + 1;
       }
     }
-  } */  // mike 20201028
+  }
 
  // r_memset(&attr, 0, sizeof(ProtocolAttr_t));
   if (protocolAttrGet(DEVICE_PROTOCOL, &attr) != 0) {
@@ -434,7 +429,7 @@ void Protocol_init(void) {
   buf.lenght = 2;
   buf.payload = (u8_t *)noFind;
   if (pro != null) {
-    i = MAX(attr.endAddr - attr.startAddr, ModbusDevice.monitorCount - 1); //如果为监控1台，此值为0
+    i = MAX(attr.endAddr - attr.startAddr, ModbusDevice.monitorCount - 1);  // 如果为监控1台，此值为0
     APP_DEBUG("Device protocol code %x, %d - %d. \r\n", attr.code, attr.startAddr, i + 1);
     APP_DEBUG("protocol code %04x, type %04x\r\n", pro->code, pro->type);
 
@@ -443,9 +438,9 @@ void Protocol_init(void) {
       *p = *(p - 1) + 1;
     }
 
-/*    if (MeterDevice.head != null) {
+    if (MeterDevice.head != null) {
       *(int *)&ModbusDevice.monitorCount += 1;
-    }   */  // mike 20201028
+    }
 
     buf.lenght = 2;
     if (pro->type == DEVICE_MOBUS) {
@@ -454,7 +449,6 @@ void Protocol_init(void) {
       if (attr.cfg.baudrate == 0) {
         APP_DEBUG("ModbusDevice UART setting config is null\r\n");
         ModbusDevice.cfg->baudrate = UART_9600_N1.baudrate;
-        APP_DEBUG("ModbusDevice UART baudrate = %ld\r\n",UART_9600_N1.baudrate);
         ModbusDevice.cfg->dataBits = UART_9600_N1.dataBits;
         ModbusDevice.cfg->stopBits = UART_9600_N1.stopBits;
         ModbusDevice.cfg->parity = UART_9600_N1.parity;
@@ -462,37 +456,38 @@ void Protocol_init(void) {
       } else {
         APP_DEBUG("ModbusDevice UART setting config is not null\r\n");
         ModbusDevice.cfg->baudrate = attr.cfg.baudrate;
-        APP_DEBUG("ModbusDevice UART baudrate = %ld\r\n",attr.cfg.baudrate);
         ModbusDevice.cfg->dataBits = attr.cfg.dataBits;
         ModbusDevice.cfg->stopBits = attr.cfg.stopBits;
         ModbusDevice.cfg->parity = attr.cfg.parity;
         ModbusDevice.cfg->flowCtrl = attr.cfg.flowCtrl;
       }
+      APP_DEBUG("ModbusDevice UART baudrate = %ld\r\n", ModbusDevice.cfg->baudrate);
       buf.payload = (u8_t *)modbus_mode;
     } else if (pro->type == DEVICE_TRANS) {
       parametr_get(DEVICE_VENDER, &buf);
       ST_UARTDCB *Transdev_uartcfg = memory_apply(sizeof(ST_UARTDCB));
       if (attr.cfg.baudrate == 0) {
-        APP_DEBUG("ModbusDevice UART setting config is null\r\n");
+        APP_DEBUG("TransDevice UART setting config is null\r\n");
         Transdev_uartcfg->baudrate = UART_9600_N1.baudrate;
         Transdev_uartcfg->dataBits = UART_9600_N1.dataBits;
         Transdev_uartcfg->stopBits = UART_9600_N1.stopBits;
         Transdev_uartcfg->parity = UART_9600_N1.parity;
         Transdev_uartcfg->flowCtrl = UART_9600_N1.flowCtrl;
       } else {
+        APP_DEBUG("TransDevice UART setting config is not null\r\n");
         Transdev_uartcfg->baudrate = attr.cfg.baudrate;
         Transdev_uartcfg->dataBits = attr.cfg.dataBits;
         Transdev_uartcfg->stopBits = attr.cfg.stopBits;
         Transdev_uartcfg->parity = attr.cfg.parity;
         Transdev_uartcfg->flowCtrl = attr.cfg.flowCtrl;
       }
-      TransDevice_init((char *)buf.payload, Transdev_uartcfg);  // mike 20200924
+      APP_DEBUG("TransDevice UART baudrate = %ld\r\n", Transdev_uartcfg->baudrate);
+      TransDevice_init((char *)buf.payload, Transdev_uartcfg);
       memory_release(buf.payload);
       buf.payload = (u8_t *)trans_mode;
     }
   }
 
-//  SysPara_Set(32, &buf);
   parametr_set(32, &buf);
 END:
   ModbusDevice_init();
@@ -514,6 +509,7 @@ int protocolAttrGet(u8_t num, ProtocolAttr_t *attr) {
     str = memory_apply(sizeof(char) * 64);
     if (str == NULL) {
       APP_DEBUG("MEM Alloc Error\r\n");
+      memory_release(buf.payload);
       return ret;
     }
     r_memset(str, 0, sizeof(str));
@@ -613,8 +609,6 @@ static int monitorCountGet(int *num) {
 
   *num = 0;
 //  r_memset(&buf, 0, sizeof(Buffer_t));   // mike 20200828
-
-//  SysPara_Get(DEVICE_MONITOR_NUM, &buf);
   parametr_get(DEVICE_MONITOR_NUM, &buf);
   if (buf.payload != null && buf.lenght > 0) {
     *num = Swap_charNum((char *)buf.payload);
@@ -636,6 +630,12 @@ static int monitorCountGet(int *num) {
 void Protocol_clean(void) {
   ModbusDevice_clear();
   TransDevice_clear();
+  if (ModbusDevice.cfg != NULL) {   // mike 20201228
+    memory_release(ModbusDevice.cfg);
+  }
+  if (MeterDevice.cfg != NULL) {
+    memory_release(MeterDevice.cfg);
+  }
 }
 
 /******************************************************************************/

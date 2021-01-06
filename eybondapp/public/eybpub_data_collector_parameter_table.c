@@ -662,7 +662,7 @@ static u8_t getCollectorVersion(struct _ParamDescripTable_t *element, void *buf,
   return 0;
 }
 
-#define JIN_LANG_COLL_VER  "3A010000"  //锦浪采集器版本
+#define JIN_LANG_COLL_VER  "3A010000"  // 锦浪采集器版本
 const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽略
   {0,   "",                       },
   // 出厂属性
@@ -720,7 +720,7 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
   {95,  ""                        },         /*pub_topic*/
   {96,  ""                        },         /*sub_topic*/
   {97,  "0"                       },         /*total_working_time 累计工作时间*/
-  {98,  JIN_LANG_COLL_VER                      },         /*锦浪采集器版本*/
+  {98,  JIN_LANG_COLL_VER         },         /*锦浪采集器版本*/
 };
 
 /* 数采器参数读写接口 */
@@ -735,7 +735,7 @@ struct _ParamDescripTable_t PDT[] = {
   {6,   "6.0.0.0",                 setHardwareVer,             getHardwareVer},          /* 硬件版本 */
   {7,   "0000-00-00 00:00:00",     setFactoryTime,             getFactoryTime},          /* 出厂时间 */
   // 业务属性
-  {8,   "0",                      setApplication_Agreement,   getApplication_Agreement},/* 应用协议 */
+  {8,   "0",                       setApplication_Agreement,   getApplication_Agreement},/* 应用协议 */
   // 9 保留
   // 10保留
   {11,  "1",                       setDevicesOnline,           getDevicesOnline},        /* 在线设备数 */
@@ -781,7 +781,7 @@ struct _ParamDescripTable_t PDT[] = {
   {95,  "0",                       setPubTopic,                getPubTopic   },         /*pub_topic*/
   {96,  "0",                       setSubTopic,                getSubTopic   },         /*sub_topic*/
   {97,  "0",                       setTotoalWorkTime,          getTotoalWorkTime },     /*total_working_time 累计工作时间*/
-  {98,  "00000000",                setCollectorVersion,         getCollectorVersion},    /*采集器版本*/
+  {98,  "00000000",                setCollectorVersion,        getCollectorVersion},    /*采集器版本*/
 };
 /*----------------------------------------------------------------------------*
 **                             Global Vars                                    *

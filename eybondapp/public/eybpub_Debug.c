@@ -289,8 +289,9 @@ void Debug_init(void) {
   fibo_gpio_cfg(DEBUG_UART_RXD,PINDIRECTION_IN);
   fibo_gpio_set(DEBUG_UART_RXD,PINLEVEL_HIGH);
   
-  hal_uart_config_t drvcfg ;
-// fibo_hal_uart_deinit(DEBUG_PORT);    // mike 20201218
+  hal_uart_config_t drvcfg;
+  fibo_hal_uart_deinit(DEBUG_PORT);
+  fibo_taskSleep(1000);
   memset(&drvcfg,0,sizeof(hal_uart_config_t));
   drvcfg.baud = DEBUG_PORT_BITRATE;
   drvcfg.parity = HAL_UART_NO_PARITY;
@@ -298,6 +299,9 @@ void Debug_init(void) {
   drvcfg.stop_bits = HAL_UART_STOP_BITS_1;
   drvcfg.rx_buf_size = UART_RX_BUF_SIZE;
   drvcfg.tx_buf_size = UART_TX_BUF_SIZE;
+//  drvcfg.cts_enable = false;
+//  drvcfg.rts_enable = false;
+  drvcfg.recv_timeout = 500;
   fibo_hal_uart_init(DEBUG_PORT, &drvcfg, UARTDEBUG_CallBack, NULL);
 
 #ifdef  EYBOND_DEBUG_ENABLE

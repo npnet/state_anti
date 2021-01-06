@@ -233,12 +233,7 @@ void * appimg_enter(void *param) {
         }
     }
   }
-
-
-  Watchdog_feed();
-  fibo_taskSleep(500);
   
-
   UINT32 net_thread_id = 0;
   UINT32 app_thread_id = 0;
   UINT32 dev_thread_id = 0;
@@ -255,22 +250,19 @@ void * appimg_enter(void *param) {
   FOTA_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   UPDATE_TASK = fibo_queue_create(10, sizeof(ST_MSG));
 
-  Watchdog_feed();
-  fibo_taskSleep(500);
-
-  fibo_thread_create_ex(proc_app_task,     "Eybond APP TASK",    1024*8*2,   NULL, OSI_PRIORITY_REALTIME, &app_thread_id);
+  fibo_thread_create_ex(proc_app_task,       "Eybond APP TASK",     1024*8*2, NULL, OSI_PRIORITY_REALTIME, &app_thread_id);
   fibo_taskSleep(1000);
-  fibo_thread_create_ex(proc_net_task,     "Eybond NET TASK",    1024*8*2,   NULL, OSI_PRIORITY_NORMAL, &net_thread_id);
+  fibo_thread_create_ex(proc_net_task,       "Eybond NET TASK",     1024*8*4, NULL, OSI_PRIORITY_NORMAL, &net_thread_id);
   fibo_taskSleep(1000);  
-  fibo_thread_create_ex(proc_device_task,  "Eybond DEVICE TASK", 1024*8*2,   NULL, OSI_PRIORITY_LOW, &dev_thread_id);
+  fibo_thread_create_ex(proc_device_task,    "Eybond DEVICE TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW, &dev_thread_id);
   fibo_taskSleep(1000);
-  fibo_thread_create_ex(proc_eybond_task,  "Eybond CMD TASK",    1024*8*2,   NULL, OSI_PRIORITY_LOW, &eyb_thread_id);
+  fibo_thread_create_ex(proc_eybond_task,    "Eybond CMD TASK",     1024*8*4, NULL, OSI_PRIORITY_LOW, &eyb_thread_id);
   fibo_taskSleep(1000);
-  fibo_thread_create_ex(mqtt_conn_ali_task,  "MQTT CONN ALI TASK", 1024*8*2, NULL, OSI_PRIORITY_LOW, &ali_thread_id);
+  fibo_thread_create_ex(mqtt_conn_ali_task,  "MQTT CONN ALI TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW, &ali_thread_id);
   fibo_taskSleep(1000);  
-  fibo_thread_create_ex(proc_http_fota_task, "Http fota",          1024*8*2, NULL, OSI_PRIORITY_NORMAL, &fota_thread_id);
+  fibo_thread_create_ex(proc_http_fota_task, "Http fota",           1024*8*2, NULL, OSI_PRIORITY_NORMAL, &fota_thread_id);
   fibo_taskSleep(1000);
-  fibo_thread_create_ex(proc_update_task,   "Eybond UPDATE TASK",  1024*8*2, NULL, OSI_PRIORITY_LOW, &upd_thread_id);
+  fibo_thread_create_ex(proc_update_task,    "Eybond UPDATE TASK",  1024*8*2, NULL, OSI_PRIORITY_NORMAL, &upd_thread_id);
   fibo_taskSleep(1000);
   APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X UPd %X JLFota %X\r\n", \
     net_thread_id, app_thread_id, dev_thread_id, eyb_thread_id, ali_thread_id, upd_thread_id, fota_thread_id);

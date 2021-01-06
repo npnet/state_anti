@@ -1,18 +1,17 @@
 #include "fibo_opencpu.h"
 #include "L610_conn_ali_net.h"
 #include "ginlong_monitor.pb-c.h"
-#include "eybpub_Debug.h"
-
-#include "eybpub_SysPara_File.h"
 #include "ali_data_packet.h"
+
+#include "eybpub_Debug.h"
+#include "eybpub_SysPara_File.h"
 #include "eybpub_utility.h"
+#include "eybpub_Status.h"
+
 #include "eybapp_appTask.h"
 #include "Device.h"
 #include "L610Net_TCP_EYB.h"
-// #include "../net/src/restart_net.h"
-#include "eybpub_Status.h"
 #include "4G_net.h"
-
 
 UINT32 g_lock = 0;
 static u32_t send_timer = 0;
@@ -187,8 +186,8 @@ void mqtt_conn_ali_task(void *param)
     CFW_SIM_ID sim_id = CFW_SIM_0;
     g_lock = fibo_sem_new(1);
     ST_MSG msg;
-    static Device_t *currentDevice = NULL;
-    static DeviceCmd_t *currentCmd = NULL;
+    static Device_t *p_currentDevice = NULL;
+    static DeviceCmd_t *p_currentCmd = NULL;
     r_memset(&msg, 0, sizeof(ST_MSG));
     reg_info_t sim_reg_info = {0};
     while (1)
@@ -253,77 +252,78 @@ void mqtt_conn_ali_task(void *param)
 
                 break;
             case MODBUS_DATA_GET:
-                currentDevice = list_nextData(&DeviceList, currentDevice);    // 定时获取列表中需要执行指令的设备节点
-                if(NULL != currentDevice)
+                APP_DEBUG("MODBUS_DATA_GET\r\n");
+                p_currentDevice = list_nextData(&DeviceList, p_currentDevice);    // 定时获取列表中需要执行指令的设备节点
+                if(NULL != p_currentDevice)
                 {
-                    currentCmd = list_nextData(&currentDevice->cmdList, currentCmd);  // 找到当前执行设备需要执行的指令
-                    if(NULL != currentCmd)
+                    p_currentCmd = list_nextData(&p_currentDevice->cmdList, p_currentCmd);  // 找到当前执行设备需要执行的指令
+                    if(NULL != p_currentCmd)
                     {
                         APP_DEBUG("data cmd success\r\n");
-                        out_put_buffer((char *)currentCmd->cmd.payload,currentCmd->cmd.lenght);
-                        if(currentCmd->cmd.payload[2] == 0x0B)
+                        out_put_buffer((char *)p_currentCmd->cmd.payload, p_currentCmd->cmd.lenght);
+                        if(p_currentCmd->cmd.payload[2] == 0x0B)
                         {
-                            if(currentCmd->cmd.payload[3] == 0xB7)   // address 2999 28个字节
+                            if(p_currentCmd->cmd.payload[3] == 0xB7)   // address 2999 28个字节
                             {
-                                if(currentCmd->ack.payload != NULL)
+                                if(p_currentCmd->ack.payload != NULL)
                                 {
-                                    inverter_data1 = (Inverter_Packet1 *)((u8_t *)currentCmd->ack.payload+3);
+                                    inverter_data1 = (Inverter_Packet1 *)((u8_t *)p_currentCmd->ack.payload+3);
                                 }
                                 else
                                 {
                                     inverter_data1 = &packet1;
                                 }
                             }
-                            else if(currentCmd->cmd.payload[3] == 0xC5)
+                            else if(p_currentCmd->cmd.payload[3] == 0xC5)
                             {
-                                if(currentCmd->ack.payload != NULL)
+                                if(p_currentCmd->ack.payload != NULL)
                                 {
-                                    inverter_data2 = (Inverter_Packet2 *)((u8_t *)currentCmd->ack.payload+3);
+                                    inverter_data2 = (Inverter_Packet2 *)((u8_t *)p_currentCmd->ack.payload+3);
                                 }
                                 else
                                 {
                                     inverter_data2 = &packet2;
                                 }
                             }
-                            else if(currentCmd->cmd.payload[3] == 0xD2)
+                            else if(p_currentCmd->cmd.payload[3] == 0xD2)
                             {
-                                if(currentCmd->ack.payload != NULL)
+                                if(p_currentCmd->ack.payload != NULL)
                                 {
 
-                                    inverter_data3= (Inverter_Packet3 *)((u8_t *)currentCmd->ack.payload+3);
+                                    inverter_data3= (Inverter_Packet3 *)((u8_t *)p_currentCmd->ack.payload+3);
                                 }
                                 else
                                 {
                                     inverter_data3 = &packet3;
                                 }
                             }
-                            else if(currentCmd->cmd.payload[3] == 0xDF)
+                            else if(p_currentCmd->cmd.payload[3] == 0xDF)
                             {
-                                if(currentCmd->ack.payload != NULL)
+                                if(p_currentCmd->ack.payload != NULL)
                                 {
-                                    inverter_data4= (Inverter_Packet4 *)((u8_t *)currentCmd->ack.payload+3);
+                                    inverter_data4= (Inverter_Packet4 *)((u8_t *)p_currentCmd->ack.payload+3);
                                 }
                                 else
                                 {
                                     inverter_data4 = &packet4;
                                 }
                             }
-                            else if(currentCmd->cmd.payload[3] == 0xEC)
+                            else if(p_currentCmd->cmd.payload[3] == 0xEC)
                             {
-                                if(currentCmd->ack.payload != NULL)
+                                if(p_currentCmd->ack.payload != NULL)
                                 {
-                                    inverter_data5= (Inverter_Packet5 *)((u8_t *)currentCmd->ack.payload+3);
+                                    inverter_data5= (Inverter_Packet5 *)((u8_t *)p_currentCmd->ack.payload+3);
                                 }
                                 else
                                 {
                                     inverter_data5 = &packet5;
                                 }
                             }
-                            else if(currentCmd->cmd.payload[3] == 0xF9)
+                            else if(p_currentCmd->cmd.payload[3] == 0xF9)
                             {
-                                if(currentCmd->ack.payload != NULL)
+                                if(p_currentCmd->ack.payload != NULL)
                                 {
-                                    inverter_data6= (Inverter_Packet6 *)((u8_t *)currentCmd->ack.payload+3);
+                                    inverter_data6= (Inverter_Packet6 *)((u8_t *)p_currentCmd->ack.payload+3);
                                 }
                                 else
                                 {
@@ -334,7 +334,7 @@ void mqtt_conn_ali_task(void *param)
                             }
                         }
                         APP_DEBUG("data ack success\r\n");
-                        out_put_buffer((char *)currentCmd->ack.payload,currentCmd->ack.lenght);
+                        out_put_buffer((char *)p_currentCmd->ack.payload,p_currentCmd->ack.lenght);
                         APP_DEBUG("\r\n");
                     }
                     else
@@ -347,7 +347,8 @@ void mqtt_conn_ali_task(void *param)
                     APP_DEBUG("can not find device\r\n");
                 }
                 break;
-
+            case APP_MSG_TIMER_ID:
+                break;
             default:
                 break;
         }

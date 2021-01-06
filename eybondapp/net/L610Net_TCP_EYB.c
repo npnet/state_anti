@@ -379,7 +379,7 @@ int findEybondIP(int nIndex) {
  return   :
 *******************************************************************************/
 void L610Net_manage(void) {
-//  APP_DEBUG("L610Net_manage is running :%ld\r\n", g_netmutex);
+  APP_DEBUG("L610Net_manage is running :%ld\r\n", g_netmutex);
   if (g_netmutex == 1) { // lock L610Net_manage, make sure it is running one by one    
     return;
   }
@@ -422,7 +422,7 @@ void L610Net_manage(void) {
       reg_info_t sim_reg_info;
       r_memset(&sim_reg_info,0,sizeof(sim_reg_info));
       ret = fibo_getRegInfo(&sim_reg_info, SINGLE_SIM);  // 注册频段
-      APP_DEBUG("sim getRegInfo ret:%d, reg_state = %d, curr_rat=%d\r\n", ret, sim_reg_info.nStatus ,sim_reg_info.curr_rat);
+//      APP_DEBUG("sim getRegInfo ret:%d, reg_state = %d, curr_rat=%d\r\n", ret, sim_reg_info.nStatus ,sim_reg_info.curr_rat);
 	  if(1 == sim_reg_info.nStatus || 5 == sim_reg_info.nStatus) { // SIM卡已注册
         APP_DEBUG("sim regitster success\r\n");
         if(sim_reg_info.curr_rat == 4 || sim_reg_info.curr_rat ==7) {

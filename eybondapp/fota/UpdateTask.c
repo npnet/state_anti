@@ -20,6 +20,7 @@
 #include "eybpub_run_log.h"
 #include "eybpub_Debug.h"
 
+#include "eybapp_appTask.h"
 #include "UpdateTask.h"
 #include "SelfUpdate.h"
 
@@ -113,7 +114,9 @@ void proc_update_task(s32_t taskId) {
         break;
       case DEVICE_UPDATE_END_ID:
         Update_end();
-        break;//
+        break;
+      case APP_MSG_TIMER_ID:
+        break;
       default:
         break;
     }

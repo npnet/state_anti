@@ -69,7 +69,7 @@ int Modbus_CmdCheck(Buffer_t *send, Buffer_t *ack) {
       ret = -4;
     }
   }
-
+  APP_DEBUG("Modbus_CmdCheck ret :%d\r\n", ret);
   return ret;
 }
 
@@ -86,6 +86,7 @@ void ModbusCmd_0102(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t
   u16_t ackSize = (num >> 3) + (num & 0x07 ? 1 : 0) ; //
   u16_t startReg = MIN(start, end);
 
+  APP_DEBUG("num:%d ackSize:%d\r\n", num, ackSize);
   cmd = list_nodeApply(sizeof(DeviceCmd_t));
   pLoad = memory_apply(sizeof(ModbusFC0102_t));
   ackBuf = memory_apply(ackSize + 5);
@@ -96,6 +97,7 @@ void ModbusCmd_0102(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t
     cmd->ack.size = ackSize + 5;
     cmd->ack.payload = ackBuf;
     cmd->ack.lenght = 0;
+//    cmd->cmd.size = MODEBUS_MAX_LOAD;
     cmd->cmd.lenght = sizeof(ModbusFC0304_t);
     cmd->cmd.payload = (u8_t *)pLoad;
 
@@ -122,10 +124,10 @@ void ModbusCmd_0304(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t
   u8_t *ackBuf;
   ModbusFC0304_t *pLoad;
   DeviceCmd_t *cmd;
-  u16_t cmdSize = (ABS(start, end) + 1) << 1;  //n*2
+  u16_t cmdSize = (ABS(start, end) + 1) << 1;  // n*2
   u16_t startReg = MIN(start, end);
 
-  APP_DEBUG("cmdSize:%d \r\n", cmdSize);
+  APP_DEBUG("cmdSize:%d\r\n", cmdSize);
   while (cmdSize > 0) {
     len = cmdSize > MODEBUS_MAX_LOAD ? MODEBUS_MAX_LOAD : cmdSize;
     cmd = list_nodeApply(sizeof(DeviceCmd_t));
@@ -138,6 +140,7 @@ void ModbusCmd_0304(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t
       cmd->ack.size = len + 5;
       cmd->ack.payload = ackBuf;
       cmd->ack.lenght = 0;
+//    cmd->cmd.size = MODEBUS_MAX_LOAD;
       cmd->cmd.lenght = sizeof(ModbusFC0304_t);
       cmd->cmd.payload = (u8_t *)pLoad;
 

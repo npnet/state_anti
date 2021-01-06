@@ -243,7 +243,7 @@ void Beep_Init(void) {
   fibo_gpio_set(BEEP_PORT,PINLEVEL_HIGH);
   UINT8 nBeep_Level = 0;
   ret = fibo_gpio_get(BEEP_PORT, &nBeep_Level);
-  APP_DEBUG("BEEP PORT GPIO Init ret:%ld direction: %d\r\n", ret, nBeep_Level);
+//  APP_DEBUG("BEEP PORT GPIO Init ret:%ld direction: %d\r\n", ret, nBeep_Level);
   Beep_On(1);
 }
 

@@ -19,10 +19,9 @@
 #include "eybpub_Debug.h"
 #include "L610_conn_ali_net.h"
 #include "ali_data_packet.h"
-// #include "../net/src/restart_net.h"
+
 #include "eybpub_utility.h"
 #include "eybapp_appTask.h"
-
 
 /*
   * set the value to execute different process
@@ -197,15 +196,15 @@ void proc_http_fota_task(void *param)
 
     INT8            cid = 1;
     CFW_SIM_ID      sim_id = CFW_SIM_0;
+    APP_PRINT("http fota task run...\r\n");
 
     memset(&ip, 0, sizeof(ip));
     memset(&g_pdp_handle, 0, sizeof(g_pdp_handle));
     memset(&otaData, 0, sizeof(otaData));
-
+    ST_MSG msg;
+    r_memset(&msg, 0, sizeof(ST_MSG));
     while (1)
     {
-        ST_MSG msg;
-        r_memset(&msg, 0, sizeof(ST_MSG));
         fibo_queue_get(FOTA_TASK, (void *)&msg, 0);
         switch (msg.message)
         {
@@ -222,58 +221,15 @@ void proc_http_fota_task(void *param)
                     APP_PRINT("http pdp active is not");
                     fibo_taskSleep(2000);
                 }
-
                 APP_PRINT("http pdp active while is ok");
-
                 app_download_test();
-
                 break;
-
+            case APP_MSG_TIMER_ID:
+                break;
             default :
                 break;
         }
     }
+    fibo_thread_delete();
 }
-
-static void sig_res_callback(GAPP_SIGNAL_ID_T sig, va_list arg)
-{
-    switch (sig)
-    {
-            //fibo_PDPActive /fibo_asyn_PDPActive  pdp active status report
-        case GAPP_SIG_PDP_ACTIVE_IND:
-        {
-            g_pdp_handle.success = 1;
-            fibo_sem_signal(g_pdp_handle.sem);
-            OSI_PRINTFI("pdp active is OK.");
-        }
-        break;
-
-        //GAPP_SIG_PDP_ACTIVE_OR_DEACTIVE_FAIL_IND
-        case GAPP_SIG_PDP_ACTIVE_OR_DEACTIVE_FAIL_IND:
-        {
-            g_pdp_handle.success = 0;
-            fibo_sem_signal(g_pdp_handle.sem);
-            OSI_PRINTFI("pdp active is fail.");
-        }
-
-        //PDP in active state, deactive indicator received from modem
-        case GAPP_SIG_PDP_DEACTIVE_ABNORMALLY_IND:
-        {
-
-        }
-
-        //fibo_PDPRelease /fibo_asyn_PDPRelease pdp deactive status report
-        case GAPP_SIG_PDP_RELEASE_IND:
-        {
-
-        }
-        break;
-
-        default:
-        {
-            break;
-        }
-    }
-}
-
 

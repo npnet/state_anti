@@ -45,7 +45,7 @@
 
 #define DEVICE_MONITOR_NUM      (12)
 #define DEVICE_PROTOCOL         (14)
-// #define METER_PROTOCOL		(15)
+#define METER_PROTOCOL		    (15)    // 电表协议
 #define DEVICE_UART_SETTING     (34)    // 采集串口参数
 
 #define DEVICE_VENDER           (8)

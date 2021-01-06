@@ -422,25 +422,17 @@ void proc_app_task(s32_t taskId) {
   Clock_init();
  // SysPara_init();  // mike 重点死机问题函数, RIL库完成加载后初始化所有现场参数
 
-   /* 系统参数初始化 */
-    if(SysPara_init())
-    {
-        /* 参数初始化失败 */
-        Watchdog_stop();
-        while(1)
-        {
-            if(++err > 40)
-            {
-                 fibo_softReset();
-                 err = 0;
-            }
-            fibo_taskSleep(1000);
-           
-        }
-    } 
-
-  Watchdog_feed();
-  fibo_taskSleep(500);
+ // 系统参数初始化
+  if(SysPara_init() != 0) {
+    // 参数初始化失败
+    while(1) {
+      if (++err > 10) {
+        fibo_softReset();
+        err = 0;
+      }
+      fibo_taskSleep(1000);
+    }
+  }
 
   WDG_timer = fibo_timer_period_new(WDG_time_Interval, UserTimerWDGcallback, NULL);  // 注册外部看门狗Timer
   if (WDG_timer == 0) {
@@ -456,7 +448,6 @@ void proc_app_task(s32_t taskId) {
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_UART_READY, 0, 0);
         Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_UART_READY, 0, 0);
         Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_UART_READY, 0, 0);
-        fibo_taskSleep(5000);
         APP_timer = fibo_timer_period_new(APP_time_Interval, UserTimerAPPscallback, &m_timeCnt);    // 注册APPTimer
         if (APP_timer == 0) {
           log_save("Register app timer(%d) fail", APP_timer);
@@ -598,8 +589,13 @@ void proc_app_task(s32_t taskId) {
 *******************************************************************************/
 static void UserTimerAPPscallback(void *param) {
   if (*((s32_t *)param) == 0) {
-    Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
-    Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
+    if (m_wdgCnt > 3) {
+      Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
+      Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
+      Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
+      Eybpub_UT_SendMessage(FOTA_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
+      Eybpub_UT_SendMessage(UPDATE_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
+    }
     *((s32_t *)param) += 1;
   } else {
     Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_TIMER_ID, 0, 0);

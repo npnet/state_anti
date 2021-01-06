@@ -265,34 +265,28 @@ static void output(Buffer_t *buf) {
     r_memset(str, 0, buf->lenght * 3 + 8);
     if (str != null) {
     //  int l = Swap_hexChar((char *)str, buf->payload, buf->lenght, ' ');  // mike 重点检测函数
-    Swap_hexChar((char *)str, buf->payload, buf->lenght, ' ');
-    //  hextostr(buf->payload, str, buf->lenght);   // 和Swap_hexChar是反的
-    int l = r_strlen((char *)str);
-   
+      hextostr(buf->payload, str, buf->lenght);   // 和Swap_hexChar是反的
+      int l = r_strlen((char *)str);
       while (l) {
         if (l >= 16 * 3) {
           Debug_output(str + displayNum, 16 * 3);
-//          Print_output(str + displayNum, 16 * 3);
+//        Print_output(str + displayNum, 16 * 3);
           l -= 16 * 3;
           displayNum += 16 * 3;
         } else {
           Debug_output(str + displayNum, l);
-//          Print_output(str + displayNum, l);
+//        Print_output(str + displayNum, l);
           l = 0;
         }
-      
-       Debug_output((u8_t *)"\r\n", 2);
-//        Print_output((u8_t *)"\r\n", 2);
+        Debug_output((u8_t *)"\r\n", 2);
+//      Print_output((u8_t *)"\r\n", 2);
       }
-//      Debug_output(str, l);
-       APP_DEBUG("\r\n");
-       memory_release(str);
+//    Debug_output(str, l);
+      APP_DEBUG("\r\n");
+      memory_release(str);
     }
   }
 }
-        
-   
-
 
 /*******************************************************************************
   * @brief
@@ -383,10 +377,11 @@ static void ESP_process(void) {
 
   APP_DEBUG("ESP=pdu len:%04X, waitCnt:%04X\r\n", esp->PDULen, esp->waitCnt);
   APP_DEBUG("ESP=head serail:%04X, code:%04X\r\n", esp->head.serial, esp->head.code);
-  APP_DEBUG("ESP=head msg len:%04X, addr:%02X func:%02X\r\n", esp->head.msgLen, esp->head.addr, esp->head.func);
+//  APP_DEBUG("ESP=head msg len:%04X, addr:%02X func:%02X\r\n", esp->head.msgLen, esp->head.addr, esp->head.func);
 
   while (esp != null && esp->waitCnt != 0) {
-    if (++esp->waitCnt > ESP_WAIT_CNT) { //wait prcesso overtime
+    if (++esp->waitCnt > ESP_WAIT_CNT) { // wait prcesso overtime
+      APP_DEBUG("ESP=pdu len:%04X, waitCnt:%04X\r\n", esp->PDULen, esp->waitCnt);
       list_nodeDelete(&rcveList, esp);
       return;
     }
@@ -394,6 +389,7 @@ static void ESP_process(void) {
   }
 
   if (esp != null) {
+    APP_DEBUG("ESP=head msg len:%04X, addr:%02X func:%02X\r\n", esp->head.msgLen, esp->head.addr, esp->head.func);
     overtime_ESP = 0;
     relinkCnt = 0;
     funcationTab_t *exe = (funcationTab_t *)ALG_binaryFind(esp->head.func, (void *)funTab,
@@ -401,6 +397,7 @@ static void ESP_process(void) {
     if (exe != null) {
       if (0 != exe->fun(esp)) { // 把指令节点传递具体的函数
         esp->waitCnt++;
+        APP_DEBUG("ESP=pdu len:%04X, waitCnt:%04X\r\n", esp->PDULen, esp->waitCnt);
         return;
       }
     }
@@ -490,38 +487,36 @@ static u8_t paraSet(ESP_t *esp) {
   EybondHeader_t *ackHead;
   u8_t *para = esp->PDU;
 #if 1
-    APP_DEBUG("ESP=pdu len:%04X, waitCnt:%04X\r\n", esp->PDULen, esp->waitCnt);
-    APP_DEBUG("ESP=head serail:%04X, code:%04X\r\n", esp->head.serial, esp->head.code);
-    APP_DEBUG("ESP=head msg len:%04X, addr:%02X func:%02X\r\n", esp->head.msgLen, esp->head.addr, esp->head.func);
+  APP_DEBUG("ESP=pdu len:%04X, waitCnt:%04X\r\n", esp->PDULen, esp->waitCnt);
+  APP_DEBUG("ESP=head serail:%04X, code:%04X\r\n", esp->head.serial, esp->head.code);
+  APP_DEBUG("ESP=head msg len:%04X, addr:%02X func:%02X\r\n", esp->head.msgLen, esp->head.addr, esp->head.func);
 
-    buf.lenght = ENDIAN_BIG_LITTLE_16(esp->head.msgLen) - 3;
-    for (i = 0; i < (buf.lenght + 1); i++) {
-        APP_DEBUG("ESP=PDU %02X\r\n", esp->PDU[i]);
-    }
+  buf.lenght = ENDIAN_BIG_LITTLE_16(esp->head.msgLen) - 3;
+  for (i = 0; i < (buf.lenght + 1); i++) {
+    APP_DEBUG("ESP=PDU %02X\r\n", esp->PDU[i]);
+  }
 
-    buf.payload = memory_apply(buf.lenght + 1);
-    buf.size = buf.lenght + 1;
-    r_memcpy(buf.payload, para + 1, buf.lenght);
-    buf.payload[buf.lenght] = '\0';
-    //  buf.payload = para + 1;
-    APP_DEBUG("Set para: %d %s\r\n", *para, buf.payload);
-    ret = parametr_set(*para, &buf);  // 设置参数
-
-    memory_release(buf.payload);  // free old buf
+  buf.payload = memory_apply(buf.lenght + 1);
+  buf.size = buf.lenght + 1;
+  r_memcpy(buf.payload, para + 1, buf.lenght);
+  buf.payload[buf.lenght] = '\0';
+  //  buf.payload = para + 1;
+  APP_DEBUG("Set para: %d %s\r\n", *para, buf.payload);
+  ret = parametr_set(*para, &buf);  // 设置参数
+  memory_release(buf.payload);  // free old buf
 #endif
-    ackHead = &esp->head;
-    ackHead->msgLen = ENDIAN_BIG_LITTLE_16(4);
-    para[1] = para[0];
-    para[0] = ret;
+  ackHead = &esp->head;
+  ackHead->msgLen = ENDIAN_BIG_LITTLE_16(4);
+  para[1] = para[0];
+  para[0] = ret;
 
-    buf.lenght = sizeof(EybondHeader_t) + 2;
-    buf.payload = memory_apply(buf.lenght + 1);
-    //  buf.payload = (u8_t *)ackHead;
-    r_memcpy(buf.payload, (u8_t *)ackHead, buf.lenght);
+  buf.lenght = sizeof(EybondHeader_t) + 2;
+  buf.payload = memory_apply(buf.lenght + 1);
+  //  buf.payload = (u8_t *)ackHead;
+  r_memcpy(buf.payload, (u8_t *)ackHead, buf.lenght);
   esp->ack(&buf);   // 设置指令成功、失败返回
   APP_DEBUG("Set para callback %d %s\r\n", buf.lenght, buf.payload);
   memory_release(buf.payload);
-
   return 0;
 }
 
@@ -540,8 +535,9 @@ static u8_t devtrans(ESP_t *esp) {
   cmd = list_nodeApply(sizeof(DeviceCmd_t));
 
   cmd->waitTime = 1500;     // 1500=1.5 sec
+//  cmd->waitTime = 2000;
   cmd->state = 0;
-//  cmd->ack.size = 0;      // mike 20200926
+//  cmd->ack.size = 0;        // mike 20200926
 //  cmd->ack.payload = null;  // 指令返回数据初始化
   cmd->ack.size = DEVICE_ACK_SIZE;
   cmd->ack.payload = memory_apply(cmd->ack.size);
@@ -621,10 +617,15 @@ static u8_t deviceDataGet(ESP_t *esp) {
   buf.lenght = 0;
   buf.size = MAX_CMD_LEN;
   buf.payload = memory_apply(buf.size);
+  if (buf.payload == NULL) {
+    APP_DEBUG("buf malloc failed!!\r\n");
+    return -1;
+  }
 
   tail = onlineDeviceList.node;
 
-  if (tail != null && buf.payload != null) {
+//  if (tail != null && buf.payload != null) {
+    if (tail != null) {
     APP_DEBUG("enter the upload device data\r\n");
     do {
       Node_t *node;
@@ -732,7 +733,9 @@ static u8_t deviceDataGet(ESP_t *esp) {
     // historySaveCnt = histprySaveSpace + 15;
   } else {
     u8_t *para;
-    APP_DEBUG("buf malloc failed!!\r\n");
+//    APP_DEBUG("buf malloc failed!!\r\n");
+    APP_DEBUG("onlineDeviceList.node is null !!\r\n");
+//    APP_DEBUG("onlineDeviceList.node is null count:%d rsv:%d !!\r\n", onlineDeviceList.count, onlineDeviceList.rsv);
     buf.lenght = sizeof(EybondHeader_t) + 2;
     // buf.payload = memory_apply(buf.lenght);
     ackHead = (EybondHeader_t *)buf.payload;
@@ -743,9 +746,10 @@ static u8_t deviceDataGet(ESP_t *esp) {
     para[1] = 0;
   }
   esp->ack(&buf);
-  memory_release(buf.payload);  
+  memory_release(buf.payload);
   if (overTime > 5) {
-    log_save("No device online reboot!");
+    APP_DEBUG("No device online reset!\r\n");
+    log_save("No device online reset!");
 #ifdef _PLATFORM_BC25_
     Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif

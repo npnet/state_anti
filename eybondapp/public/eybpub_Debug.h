@@ -8,7 +8,7 @@
 #define __EYBPUB_DEBUG_H_
 
 #define EYBOND_DEBUG_ENABLE    // 打开DEBUG log
-// #define EYBOND_TRACE_ENABLE    // 将DEBUG log输出改为TRACE模式,不能直接用TRACE_ENABLE做开关,会影响SDK里面的接口
+#define EYBOND_TRACE_ENABLE    // 将DEBUG log输出改为TRACE模式,不能直接用TRACE_ENABLE做开关,会影响SDK里面的接口
 #define DBG_BUF_LEN     1024
 
 #ifdef _PLATFORM_BC25_
@@ -68,7 +68,7 @@ extern void Debug_trace(u8_t *p, u16_t len);
 #include "eyblib_r_stdlib.h"
 
 #define DEBUG_PORT      2 //调试串口
-static char DebugBuffer[DBG_BUF_LEN];
+char DebugBuffer[DBG_BUF_LEN];
 #define DEBUG_PORT_BITRATE 115200
 
 #define DEBUG_INPUT_EHCO   0
@@ -88,23 +88,20 @@ extern void Print_output(u8_t *p, u16_t len);
   snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
   Print_output((u8_t*)DebugBuffer, r_strlen(DebugBuffer));\
 }
-
-#else
-
-///
-extern void Debug_output(u8_t *p, u16_t len);
-#define APP_DEBUG(FORMAT,...)
-// #define APP_PRINT(FORMAT,...)
-extern void Print_output(u8_t *p, u16_t len);
-#define APP_PRINT(FORMAT,...) {\
+extern void Debug_trace(u8_t *p, u16_t len);
+#define APP_TRACE(FORMAT,...) {\
   r_memset(DebugBuffer, 0, DBG_BUF_LEN);\
   snprintf(DebugBuffer, DBG_BUF_LEN, "%s:%d %s::"FORMAT, __FILE__, __LINE__, __func__, ##__VA_ARGS__); \
-  Print_output((u8_t*)DebugBuffer, r_strlen(DebugBuffer));\
+  Debug_trace((u8_t*)DebugBuffer, r_strlen(DebugBuffer));\
 }
+#else
+#define APP_DEBUG(FORMAT,...)
+#define APP_PRINT(FORMAT,...)
 #define APP_TRACE(FORMAT,...)
 #endif
 
 #endif
+
 void Debug_init(void);
 #endif //__EYBPUB_DEBUG_H_
 /******************************************************************************/

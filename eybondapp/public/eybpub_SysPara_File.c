@@ -518,7 +518,7 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
   int j = 0;
   for (j = 0; j < number_of_array_elements; j++) {
     if (number == PDT[j].num) {
-      APP_DEBUG("para_meter[%d]num = %ld!\r\n", j, number);
+      APP_DEBUG("para_meter[%d]num = %ld \r\n", j, number);
       buf_value = memory_apply(sizeof(char) * 64);
       if (buf_value == NULL) {
         APP_DEBUG("MEM Alloc Error\r\n");

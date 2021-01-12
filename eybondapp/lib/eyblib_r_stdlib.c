@@ -317,7 +317,7 @@ mcu_t r_strlen(const char *trg) {
 char *r_strcpy(char *trg, const char *src) {
   char *ret = trg;  // 保存返回地址
   ERRR(null == trg || null == src, return null);
-  while (*trg++ = *src++);  // 实现拷贝
+  while ((*trg++ = *src++));  // 实现拷贝
   return ret;
 }
 /*******************************************************************************
@@ -380,7 +380,7 @@ char *r_strcat(char *trg, const char *src) {
     trg++;//找到trg结尾
   }
 
-  while (*trg++ = *src++);//实现链接
+  while ((*trg++ = *src++));//实现链接
   return ret;
 }
 /*******************************************************************************

@@ -61,6 +61,7 @@ extern UINT32 EYBOND_TASK;
 extern UINT32 ALIYUN_TASK;
 extern UINT32 FOTA_TASK;
 extern UINT32 UPDATE_TASK;
+extern UINT32 COMMON_SERVER_TASK;
 
 /* typedef struct {
   u8_t  message;    // message

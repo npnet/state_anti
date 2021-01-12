@@ -24,7 +24,7 @@
 #ifdef _PLATFORM_L610_
 #define EYBOND_SERVER_ADDR      (21)
 // #define SAJ_SERVER_ADDR         (22)
-// #define STATE_GRID_SERVER_ADDR  (23)
+#define STATE_GRID_SERVER_ADDR  (23)
 #define HANERGY_SERVER_ADDR     (24)
 /* Sarnath parameters*/
 #define SARNATH_SERVER_ADDR     (71)
@@ -35,10 +35,11 @@
 #endif
 
 #define GPRS_BASE_ID            (59)
-// #define STATE_GRID_SN           (65)
-// #define STATE_GRID_USER_NAME    (66)
-// #define STATE_GRID_PASSWORD     (67)
-// #define STATE_GRID_REGISTER_ID  (68)
+/* 国网参数 */
+#define STATE_GRID_SN           (65)
+#define STATE_GRID_USER_NAME    (66)
+#define STATE_GRID_PASSWORD     (67)
+#define STATE_GRID_REGISTER_ID  (68)
 
 #define LOCAL_TIME              (26)
 #define TIME_ZONE_ADDR          (25)
@@ -99,7 +100,7 @@ typedef struct {
 // void SysPara_printf(void_fun_bufp output);       // mike 20200825
 // void SysPara_Get(u8_t num, Buffer_t *buf);       // mike 20200825
 // int  SysPara_Set(u8_t num, Buffer_t *buf);       // mike 20200825
-//void SysPara_init(void);
+// void SysPara_init(void);
 int SysPara_init(void);
 
 void Get_Data(Buffer_t *buf); //test

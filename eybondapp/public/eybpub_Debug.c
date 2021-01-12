@@ -177,7 +177,7 @@ void Debug_trace(u8_t *p, u16_t len) {
 #include "eybapp_appTask.h"
 
 #ifdef  EYBOND_DEBUG_ENABLE
-static Buffer_t UARTDEBUG_buf;
+Buffer_t UARTDEBUG_buf;
 #endif
 
 void UARTDEBUG_CallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg) {
@@ -195,7 +195,10 @@ void UARTDEBUG_CallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void
           return;
         }
       }
-      memory_release(UARTDEBUG_buf.payload);  // clean debug buffer DEBUG串口接收的数据统一在这里释放内存
+      if (UARTDEBUG_buf.payload != NULL) {
+        memory_release(UARTDEBUG_buf.payload);  // clean debug buffer DEBUG串口接收的数据统一在这里释放内存
+        UARTDEBUG_buf.payload = NULL;
+      }
       UARTDEBUG_buf.payload = memory_apply(SERIAL_RX_BUFFER_LEN);
       if (UARTDEBUG_buf.payload == NULL) {
         APP_DEBUG("memory alloc Fail\r\n");
@@ -213,66 +216,6 @@ void UARTDEBUG_CallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void
     default:
       break;
   }
-/*  u8_t *str = memory_apply(len * 2 + 8);  
-  u8_t strTemp[3];
-  if (str != null) {
-    r_memset(str, '\0', len * 2 + 8);
-    for (nTemp_i=0; nTemp_i < len; nTemp_i ++) {
-      r_memset(strTemp, '\0', 3);
-      snprintf(strTemp, 3, "%02X", data[nTemp_i]);
-      if (nTemp_i == 0) {
-        r_strcpy(str, strTemp);
-      } else {
-        r_strcat(str, strTemp);
-      }
-    }
-
-    r_strcat(str, "\r\n");
-    int l = r_strlen((char *)str);
-    Debug_output(str, l);
-    memory_release(str);
-  } */
-// #ifdef  EYBOND_DEBUG_ENABLE
-#if  0
-  switch (uart_port) {
-    case DEBUG_PORT:
-      APP_DEBUG("Read data in DEBUG_PORT buffer!\r\n");
-      if (len > SERIAL_RX_BUFFER_LEN || len == 0) {
-        APP_DEBUG("UART get data len is big than %d\r\n", SERIAL_RX_BUFFER_LEN);
-        return;
-      }
-      memory_release(UARTDEBUG_buf.payload);  // clean debug buffer DEBUG串口接收的数据统一在这里释放内存
-      UARTDEBUG_buf.payload = memory_apply(SERIAL_RX_BUFFER_LEN);
-      if (UARTDEBUG_buf.payload == NULL) {
-        APP_DEBUG("memory alloc Fail\r\n");
-        return;
-      }
-      UARTDEBUG_buf.size = SERIAL_RX_BUFFER_LEN;
-      UARTDEBUG_buf.lenght = 0;
-      r_memset(UARTDEBUG_buf.payload, '\0', UARTDEBUG_buf.size);
-      r_memcpy(UARTDEBUG_buf.payload, data, len);
-      UARTDEBUG_buf.lenght = len;
-
-#if DEBUG_INPUT_EHCO > 0
-      // Echo
-      fibo_hal_uart_put(uart_port, UARTDEBUG_buf.payload, UARTDEBUG_buf.lenght);
-#endif
-      char *pCh = NULL;
-      pCh = r_strstr((char *)UARTDEBUG_buf.payload, "\r\n");
-      if (pCh != NULL) {
-        *(pCh + 0) = '\0';
-        *(pCh + 1) = '\0';
-        UARTDEBUG_buf.lenght = UARTDEBUG_buf.lenght - 2;
-      } else {
-        APP_DEBUG("DEBUG UART no Enter & New Line\r\n");
-      }
-      Eybpub_UT_SendMessage(EYBAPP_TASK, APP_DEBUG_MSG_ID, (u32_t)(&UARTDEBUG_buf), (u32_t)((void*)Debug_buffer));
-      break;
-    default:
-      APP_DEBUG("DEBUG UART get data from Error port\r\n");
-      break;
-  }
-#endif  
 }
 
 /*******************************************************************************
@@ -292,7 +235,7 @@ void Debug_init(void) {
   hal_uart_config_t drvcfg;
   fibo_hal_uart_deinit(DEBUG_PORT);
   fibo_taskSleep(1000);
-  memset(&drvcfg,0,sizeof(hal_uart_config_t));
+  r_memset(&drvcfg,0,sizeof(hal_uart_config_t));
   drvcfg.baud = DEBUG_PORT_BITRATE;
   drvcfg.parity = HAL_UART_NO_PARITY;
   drvcfg.data_bits = HAL_UART_DATA_BITS_8;
@@ -305,7 +248,10 @@ void Debug_init(void) {
   fibo_hal_uart_init(DEBUG_PORT, &drvcfg, UARTDEBUG_CallBack, NULL);
 
 #ifdef  EYBOND_DEBUG_ENABLE
-  memory_release(UARTDEBUG_buf.payload);
+  if (UARTDEBUG_buf.payload != NULL) {
+    memory_release(UARTDEBUG_buf.payload);
+  }
+  UARTDEBUG_buf.payload = NULL;
   UARTDEBUG_buf.size = 0;
   UARTDEBUG_buf.lenght = 0;
 #endif  
@@ -327,8 +273,8 @@ void  Debug_buffer(Buffer_t *buf) {
 *******************************************************************************/
 void Debug_output(u8_t *p, u16_t len) {
 #ifdef EYBOND_TRACE_ENABLE
-//  fibo_textTrace("%s", (UINT8 *)p);
-  OSI_PRINTFI("%s", (UINT8 *)p);
+  fibo_textTrace("%s", (UINT8 *)p);
+//  OSI_PRINTFI("%s", (UINT8 *)p);
 #else
   fibo_hal_uart_put(DEBUG_PORT, (UINT8 *)p, len);
 #endif
@@ -339,7 +285,7 @@ void Print_output(u8_t *p, u16_t len) {
 }
 
 void Debug_trace(u8_t *p, u16_t len) {
-
+  OSI_PRINTFI("%s", (UINT8 *)p);
 }
 #else
 void Print_output(u8_t *p, u16_t len) {

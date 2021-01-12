@@ -361,7 +361,7 @@ void L610Net_close(u8_t nIndex) {
 void L610Net_ready(void) {
   s32_t ret;
 
-  registe = 1;
+//  registe = 1;
   L610pdpCntxtId = 0;
 }
 
@@ -445,7 +445,7 @@ void L610Net_manage(void) {
           registe_times++;
           if (registe_times >= SIM_REGISTER_TIMES) { // 确认sim注册失败
             registe_times = 0;
-            m_GprsActState = STATE_SIM_NOT_READY;          
+            m_GprsActState = STATE_SIM_NOT_READY;
           }
         }
       } else {
@@ -453,7 +453,7 @@ void L610Net_manage(void) {
         registe_times++;
         if (registe_times >= SIM_REGISTER_TIMES) { // 确认sim注册失败
           registe_times = 0;
-          m_GprsActState = STATE_SIM_NOT_READY;          
+          m_GprsActState = STATE_SIM_NOT_READY;
         }
       }
       break;
@@ -497,6 +497,7 @@ void L610Net_manage(void) {
     case STATE_GSM_READY: {
       ret = fibo_getHostByName(EYBOND_DEFAULT_SERVER, &addr_para, 1, SINGLE_SIM);  // 0成功 小于0失败
       if (ret == 0) {
+        registe_times = 0;
         APP_DEBUG("%s DNS IP is:%ld:%ld:%ld:%ld\r\n", EYBOND_DEFAULT_SERVER, (addr_para.u_addr.ip4.addr >> 0) & 0x000000FF, (addr_para.u_addr.ip4.addr >> 8) & 0x000000FF, (addr_para.u_addr.ip4.addr >> 16) & 0x000000FF, (addr_para.u_addr.ip4.addr >> 24) & 0x000000FF);
         APP_DEBUG("Try PING %s last ret = %d\r\n", NET_PING_HOSTNAME, ping_ret);
         ping_ret = fibo_mping(1, NET_PING_HOSTNAME, 4, 32, 64, 0, 4000);
@@ -513,9 +514,16 @@ void L610Net_manage(void) {
           m_GprsActState = STATE_DNS_NOT_READY;
         }
       } else {
-        log_save("GSM DNS Fail\r\n");
-        m_GprsActState = STATE_DNS_NOT_READY;        
-        registe = 0;
+        registe_times++;
+        if (registe_times >= 6) {
+          log_save("GSM DNS Fail");
+          registe_times = 0;
+          m_GprsActState = STATE_DNS_NOT_READY;
+          registe = 0;
+        }
+//        log_save("GSM DNS Fail\r\n");
+//        m_GprsActState = STATE_DNS_NOT_READY;
+//        registe = 0;
       }
       break;
     }
@@ -524,7 +532,7 @@ void L610Net_manage(void) {
       m_GprsActState = STATE_GSM_QUERY_STATE;
       break;
     case STATE_DNS_READY: {
-      if (registe) {
+      if (registe == 1) {
         u8_t nIndex = 0;
         for (nIndex = 0; nIndex < sizeof(netManage) / sizeof(netManage[0]); nIndex++) {
           if (netManage[nIndex].flag == 1 && netManage[nIndex].status != L610_SUCCESS && netManage[nIndex].status != L610_CONNECTING) {
@@ -613,7 +621,7 @@ void L610Net_manage(void) {
               }
             }
           } else if (netManage[nIndex].flag == 1 && netManage[nIndex].status == L610_SUCCESS) {
-//            APP_DEBUG("nIndex %d socketID %d is connected\r\n", nIndex, netManage[nIndex].socketID);
+//          APP_DEBUG("nIndex %d socketID %d is connected\r\n", nIndex, netManage[nIndex].socketID);
           } else {
 //          APP_DEBUG("nIndex %d socketID %ld is not ready\r\n", nIndex, netManage[nIndex].socketID);
           }
@@ -646,6 +654,7 @@ void L610Net_manage(void) {
       APP_DEBUG("fibo_PDPRelease ret = %d\r\n", ret);
       m_GprsActState = STATE_GSM_QUERY_STATE;
       Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_DNS_FAIL, 0, 0);
+      registe = 0;
       break;
     }
     case STATE_TOTAL_NUM:

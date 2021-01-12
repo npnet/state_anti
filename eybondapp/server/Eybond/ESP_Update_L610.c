@@ -23,7 +23,7 @@
 
 #include "Modbus.h"
 // #include "FlashHard.h"
-// #include "StateGridData.h"
+#include "StateGridData.h"
 #include "L610Net_SSL.h"
 
 // #define FILE_FLAG_ADDR  (FLASH_UPDATE_FILE_ADDR) // POINT_TAB_FILE_ADDR// 
@@ -86,7 +86,7 @@ u8_t Update_file(ESP_t *esp) {  // 升级CA、电表文件
       fileFlagMode = CA_FILE_FLAG;
       update = File_init(fileFlagMode, blockNum, (rcvePara->sliceSizeH << 8) | rcvePara->sliceSizeL);
     } else if (rcvePara->type == 0x20) { // point file
-//      fileFlagMode = POINT_TAB_FILE_FLAG;     // mike 20201215
+      fileFlagMode = POINT_TAB_FILE_FLAG;
       update = File_init(fileFlagMode, blockNum, (rcvePara->sliceSizeH << 8) | rcvePara->sliceSizeL);
     }
 
@@ -353,7 +353,7 @@ u8_t Update_info(ESP_t *esp) {
     if (rcve->result == 0x10) {
       flagMode = CA_FILE_FLAG;
     } else if (rcve->result == 0x20) {
-//      flagMode = POINT_TAB_FILE_FLAG;     // mike 20201215
+      flagMode = POINT_TAB_FILE_FLAG;
     }
     File_state(file, flagMode);
     APP_DEBUG("file name:%s addr:%04lX\r\n", file->name, file->addr);

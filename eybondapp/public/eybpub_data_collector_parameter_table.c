@@ -333,6 +333,36 @@ static u8_t setCollectorVersion(struct _ParamDescripTable_t *element, void *buf,
   return 0;
 }
 
+static u8_t setStateGridSN(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+static u8_t setStateGridUsername(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+static u8_t setStateGridPassword(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+static u8_t setStateGridRID(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
+static u8_t setBuzzer(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(buf);
+  r_memcpy(element->a, buf, r_strlen(buf));
+  return 0;
+}
+
 // 读 类型
 static u8_t getflag(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
   *paramLen = r_strlen(element->a);
@@ -662,6 +692,36 @@ static u8_t getCollectorVersion(struct _ParamDescripTable_t *element, void *buf,
   return 0;
 }
 
+static u8_t getStateGridSN(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+static u8_t getStateGridUsername(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+static u8_t getStateGridPassword(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+static u8_t getStateGridRID(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
+static u8_t getBuzzer(struct _ParamDescripTable_t *element, void *buf, u16_t *paramLen) {
+  *paramLen = r_strlen(element->a);
+  r_memcpy(buf, element->a, r_strlen(element->a));
+  return 0;
+}
+
 #define JIN_LANG_COLL_VER  "3A010000"  // 锦浪采集器版本
 const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽略
   {0,   "",                       },
@@ -701,17 +761,22 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
   {32,  "",                       },         /* 数据传输模式 */
   {33,  "30",                     },         /* 通讯保护时间 */
   {34,  "",                       },         /* 串口通讯速率 */
-  // 35-48
+  // 35-47
+  {48,  "",                       },         /* Buzzer enable */
   {49,  "",                       },         /* 网络注册信息 */
   {50,  "",                       },         /* GPRS网络注册状态 */
   {51,  MAKE_DATE,                },         /* 固件编译日期 */
   {52,  MAKE_TIME2,               },         /* 固件编译时间 */
   // 53 运行设备类型及地址
-  {54,  ""                        },         /*运行日志*/
+  {54,  ""                        },         /* 运行日志 */
   {55,  "",                       },         /* 信号强度 */
   {56,  "",                       },         /* 通信卡CCID */
   {57,  "",                       },
   {58,  "",                       },
+  {65,  "",                       },         /* 国网SN */
+  {66,  "",                       },         /* 国网Username */
+  {67,  "",                       },         /* 国网Password */
+  {68,  "",                       },         /* 国网register ID */
   {82,  "300",                    },         /* 主动上报间隔时间 */
   // 阿里MQTT
   {92,  ""                        },         /*product_key*/
@@ -762,7 +827,8 @@ struct _ParamDescripTable_t PDT[] = {
   {32,  "1",                       setTransmitMode,            getTransmitMode},         /* 数据传输模式 */
   {33,  "30",                      setRecommunicateTime,       getRecommunicateTime},    /* 通讯保护时间 */
   {34,  "9600",                    setSerialBaudRate,          getSerialBaudRate},       /* 串口通讯速率 */
-  // 35-48
+  // 35-47
+  {48,  "0",                       setBuzzer,                  getBuzzer},                /* Buzzer enable */
   {49,  "00",                      setcreg,                    getcreg},                  /* 网络注册信息 */
   {50,  "00",                      setcgreg,                   getcgreg},                 /* GPRS网络注册状态 */
   {51,  "0",                       setSoftCompileData,         getSoftCompileData},       /* 固件编译日期 */
@@ -773,6 +839,11 @@ struct _ParamDescripTable_t PDT[] = {
   {56,  "0",                       setEthernetSerial,          getEthernetSerial},        /* 通信卡CCID */
   {57,  "apn:user,pwd",            setAPN,                     getAPN},
   {58,  "0",                       setCPUID,                   getCPUID},
+  // 国网
+  {65,  "0",                       setStateGridSN,             getStateGridSN},           /* SN */
+  {66,  "0",                       setStateGridUsername,       getStateGridUsername},     /* user name */
+  {67,  "0",                       setStateGridPassword,       getStateGridPassword},     /* paddword  */
+  {68,  "0",                       setStateGridRID,            getStateGridRID},          /* registeer ID */
   {82,  "300",                     setReportTime,              getReportTime},
   // 阿里MQTT
   {92,  "0",                       setProdectKey,              getProdectKey },         /*product_key*/

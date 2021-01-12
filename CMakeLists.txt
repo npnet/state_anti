@@ -43,6 +43,8 @@ include_directories(eybondapp/net)
 include_directories(eybondapp/device)
 include_directories(eybondapp/device/Manufactor)
 include_directories(eybondapp/server/Eybond)
+include_directories(eybondapp/server/CommonServer)
+include_directories(eybondapp/server/StateGrid)
 include_directories(eybondapp/fota)
 else()
 include_directories(components/include components/newlib/include app/include)
@@ -139,6 +141,8 @@ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
     file(GLOB DEVICES_FILES eybondapp/device/*.c)
     file(GLOB DEVICES_MANUFACTOR_FILES eybondapp/device/Manufactor/*.c)
     file(GLOB SERVER_EYBOND_FILES eybondapp/server/Eybond/*.c)
+    file(GLOB SERVER_COMMON_FILES eybondapp/server/CommonServer/*.c)
+    file(GLOB SERVER_STATEGRID_FILES eybondapp/server/StateGrid/*.c)
     file(GLOB FOTA_FILES eybondapp/fota/*.c)
     file(GLOB LIB_FILES eybondapp/lib/*.c)
     file(GLOB PUB_FILES eybondapp/public/*.c)
@@ -149,6 +153,8 @@ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
     ${DEVICES_FILES}
     ${DEVICES_MANUFACTOR_FILES}
     ${SERVER_EYBOND_FILES}
+    ${SERVER_COMMON_FILES}
+    ${SERVER_STATEGRID_FILES}
     ${FOTA_FILES}
     ${LIB_FILES}
     ${PUB_FILES}
@@ -182,7 +188,6 @@ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
     app/src/device_access_information.c
     )
 endif()
-
 
     target_link_libraries(${target} PRIVATE ${libc_file_name} ${libm_file_name} ${libgcc_file_name})
 

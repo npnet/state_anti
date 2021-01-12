@@ -25,6 +25,7 @@
 #include "UpdateTask.h"
 #include "L610_conn_ali_net.h"
 #include "http_fota.h"
+#include "CommonServer.h"
 
 UINT32 EYBAPP_TASK = 0;
 UINT32 EYBNET_TASK = 0;
@@ -33,6 +34,7 @@ UINT32 EYBOND_TASK = 0;
 UINT32 ALIYUN_TASK = 0;
 UINT32 FOTA_TASK = 0;
 UINT32 UPDATE_TASK = 0;
+UINT32 COMMON_SERVER_TASK = 0;
 
 static void prvInvokeGlobalCtors(void) {
   extern void (*__init_array_start[])();
@@ -241,6 +243,7 @@ void * appimg_enter(void *param) {
   UINT32 ali_thread_id = 0;
   UINT32 fota_thread_id = 0;
   UINT32 upd_thread_id = 0;
+  UINT32 com_thread_id = 0;
 
   EYBAPP_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   EYBNET_TASK = fibo_queue_create(10, sizeof(ST_MSG));
@@ -249,23 +252,26 @@ void * appimg_enter(void *param) {
   ALIYUN_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   FOTA_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   UPDATE_TASK = fibo_queue_create(10, sizeof(ST_MSG));
+  COMMON_SERVER_TASK = fibo_queue_create(10, sizeof(ST_MSG));
 
-  fibo_thread_create_ex(proc_app_task,       "Eybond APP TASK",     1024*8*2, NULL, OSI_PRIORITY_REALTIME, &app_thread_id);
-  fibo_taskSleep(1000);
-  fibo_thread_create_ex(proc_net_task,       "Eybond NET TASK",     1024*8*4, NULL, OSI_PRIORITY_NORMAL, &net_thread_id);
-  fibo_taskSleep(1000);  
-  fibo_thread_create_ex(proc_device_task,    "Eybond DEVICE TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW, &dev_thread_id);
-  fibo_taskSleep(1000);
-  fibo_thread_create_ex(proc_eybond_task,    "Eybond CMD TASK",     1024*8*4, NULL, OSI_PRIORITY_LOW, &eyb_thread_id);
-  fibo_taskSleep(1000);
-  fibo_thread_create_ex(mqtt_conn_ali_task,  "MQTT CONN ALI TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW, &ali_thread_id);
-  fibo_taskSleep(1000);  
-  fibo_thread_create_ex(proc_http_fota_task, "Http fota",           1024*8*2, NULL, OSI_PRIORITY_NORMAL, &fota_thread_id);
-  fibo_taskSleep(1000);
-  fibo_thread_create_ex(proc_update_task,    "Eybond UPDATE TASK",  1024*8*2, NULL, OSI_PRIORITY_NORMAL, &upd_thread_id);
-  fibo_taskSleep(1000);
-  APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X UPd %X JLFota %X\r\n", \
-    net_thread_id, app_thread_id, dev_thread_id, eyb_thread_id, ali_thread_id, upd_thread_id, fota_thread_id);
+  fibo_thread_create_ex(proc_app_task,          "Eybond APP TASK",     1024*8*2, NULL, OSI_PRIORITY_REALTIME, &app_thread_id);
+  fibo_taskSleep(100);
+  fibo_thread_create_ex(proc_net_task,          "Eybond NET TASK",     1024*8*4, NULL, OSI_PRIORITY_NORMAL,   &net_thread_id);
+  fibo_taskSleep(100);
+  fibo_thread_create_ex(proc_device_task,       "Eybond DEVICE TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &dev_thread_id);
+  fibo_taskSleep(100);
+  fibo_thread_create_ex(proc_eybond_task,       "Eybond CMD TASK",     1024*8*4, NULL, OSI_PRIORITY_LOW,      &eyb_thread_id);
+  fibo_taskSleep(100);
+  fibo_thread_create_ex(proc_update_task,       "Eybond UPDATE TASK",  1024*8*2, NULL, OSI_PRIORITY_NORMAL,   &upd_thread_id);
+  fibo_taskSleep(100);
+  fibo_thread_create_ex(mqtt_conn_ali_task,     "MQTT CONN ALI TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &ali_thread_id);
+  fibo_taskSleep(100);
+  fibo_thread_create_ex(proc_http_fota_task,    "Http fota TASK",      1024*8*2, NULL, OSI_PRIORITY_NORMAL,   &fota_thread_id);
+  fibo_taskSleep(100);
+  fibo_thread_create_ex(proc_commonServer_task, "Common Server TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &com_thread_id);
+  fibo_taskSleep(100);
+  APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X UPd %X JLFota %X COM %X\r\n", \
+    net_thread_id, app_thread_id, dev_thread_id, eyb_thread_id, ali_thread_id, upd_thread_id, fota_thread_id, com_thread_id);
   Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_UART_READY, 0, 0);
 
   return (void *)&user_callback;

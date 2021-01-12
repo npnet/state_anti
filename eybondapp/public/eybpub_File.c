@@ -20,11 +20,12 @@
 #include "fibo_opencpu.h"
 #include "ESP_Update_L610.h"
 #include "L610Net_SSL.h"
+#include "StateGridData.h"
 #endif
-#define FILE_FLAG	(0xAA550088)
+#define FILE_FLAG (0xAA550088)
 
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
@@ -32,10 +33,10 @@
 File_t *File_init(u32_t addr, u16_t sliceCnt, u16_t sliceSize) {
   File_t *file = NULL;
   u16_t len = 0;
-    
-  len = (sliceCnt>>3) + ((sliceCnt&0x07) ? 1 : 0);
+
+  len = (sliceCnt >> 3) + ((sliceCnt & 0x07) ? 1 : 0);
   file = memory_apply(sizeof(File_t) + len + 8);
-    
+
   if (file != null) {
     int i = 0;
 
@@ -47,8 +48,8 @@ File_t *File_init(u32_t addr, u16_t sliceCnt, u16_t sliceSize) {
     file->sliceStateLen = len;
     r_memset(file->sliceState, 0, len);
 
-    for (i = (file->sliceCnt&0x07); i < 8 && i != 0; i++) {
-      file->sliceState[len - 1] |= (1<<i);
+    for (i = (file->sliceCnt & 0x07); i < 8 && i != 0; i++) {
+      file->sliceState[len - 1] |= (1 << i);
     }
 #ifdef _PLATFORM_L610_  // 在文件系统中addr只是标识flag，不再是文件读写的地址
     r_memset(file->name, '\0', sizeof(file->name));
@@ -62,7 +63,9 @@ File_t *File_init(u32_t addr, u16_t sliceCnt, u16_t sliceSize) {
       case CA_FILE_FLAG:
         r_strncpy(file->name, CA_FILE_NAME, r_strlen(CA_FILE_NAME));
         break;
-//    case POINT_TAB_FILE_FLAG:
+      case POINT_TAB_FILE_FLAG:
+        r_strncpy(file->name, POINT_TAB_FILE_NAME, r_strlen(POINT_TAB_FILE_NAME));
+        break;
       default:
         break;
     }
@@ -71,18 +74,18 @@ File_t *File_init(u32_t addr, u16_t sliceCnt, u16_t sliceSize) {
     if (nfile_size >= 0) {   // 文件存在或长度为0
       APP_DEBUG("File %s is existing, delete it!!\r\n", file->name);
       ret = fibo_file_delete(file->name);
-      if (ret < 0) {        
+      if (ret < 0) {
         APP_DEBUG("Delete %s file fail\r\n", file->name);
         return NULL;
       }
-    }  
-#endif    
+    }
+#endif
   }
   return file;
 }
 
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
@@ -96,176 +99,159 @@ u8_t File_validCheck(File_t *file) {
 
 #ifdef _PLATFORM_M26_
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
 *******************************************************************************/
-u8_t File_rcve(File_t *file, u16_t offset, u8_t *data, u16_t len)
-{
-    if (((file->sliceSize == len) || ((offset + 1) == file->sliceCnt ))
-        && (file->sliceCnt > offset)
-    )
-    {
-        u32_t saveAddr = file->addr + (offset * file->sliceSize);
-       
-        file->sliceState[offset>>3] |= (1<<(offset&0x07));
-        
-        if (0 == (saveAddr&(X25Q_SECTOR_SIZE - 1)))
-        {
-			APP_DEBUG("Save area earse addr: %x \r\n", saveAddr);
-            x25Qxx_earse(saveAddr);
-        }
-      	x25Qxx_wrtie(saveAddr, len, data);
-        
-        return 0;
+u8_t File_rcve(File_t *file, u16_t offset, u8_t *data, u16_t len) {
+  if (((file->sliceSize == len) || ((offset + 1) == file->sliceCnt))
+      && (file->sliceCnt > offset)) {
+    u32_t saveAddr = file->addr + (offset * file->sliceSize);
+
+    file->sliceState[offset >> 3] |= (1 << (offset & 0x07));
+
+    if (0 == (saveAddr & (X25Q_SECTOR_SIZE - 1))) {
+      APP_DEBUG("Save area earse addr: %x \r\n", saveAddr);
+      x25Qxx_earse(saveAddr);
     }
-    
-    APP_DEBUG("file size %d - %d, slice %d - %d  \r\n ", file->sliceSize, len, file->sliceCnt, offset);
-    return 1;
+    x25Qxx_wrtie(saveAddr, len, data);
+
+    return 0;
+  }
+
+  APP_DEBUG("file size %d - %d, slice %d - %d  \r\n ", file->sliceSize, len, file->sliceCnt, offset);
+  return 1;
 }
 
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
 *******************************************************************************/
-s16_t File_read(File_t *file, u8_t *data, u16_t len)
-{
-	static MD5_t *md5 = null;
-    int readLen;
+s16_t File_read(File_t *file, u8_t *data, u16_t len) {
+  static MD5_t *md5 = null;
+  int readLen;
 
-	if (file->seat == 0)
-	{
-		memory_release(md5);
-		md5 = memory_apply(sizeof(MD5_t));
-		Hash_MD5Init(md5);
-		APP_DEBUG("File Satrt read\r\n");
-	}
-    readLen = (file->size - file->seat) > len ? len : (file->size - file->seat);
-
-    x25Qxx_read(file->addr + file->seat, readLen, data);
-    file->seat += readLen;
-
-	if (md5 != null)
-	{
-		Hash_MD5Update(md5, data, readLen);
-		if (file->size == file->seat)
-		{
-			Hash_MD5Final(md5);
-	    
-	    	if (r_memcmp(file->md5, md5->md, 16) != 0)
-	    	{
-				readLen = -1;
-				log_save("File read rusult fail\r\n");
-	    	}
-			memory_release(md5);
-			md5 = null;
-		}
-
-		if (0 == (file->seat&0x001FFFF))
-		{
-			Watchdog_feed();
-		}
-	}
-    else 
-    {
-        readLen = 0;
-        log_save("MD5 memory apply fail");
-    }
-	
-    return readLen;
-}
-
-/*******************************************************************************
-  * @brief  
-  * @note   None
-  * @param  None
-  * @retval None
-*******************************************************************************/
-u8_t File_Check(File_t *file)
-{
-    MD5_t *md5;
-    u8_t *buf;
-    int i;
-    u16_t len;
-
-	//Watchdog_feed();
-    md5 = memory_apply(sizeof(MD5_t));
-    buf = memory_apply(X25Q_READ_SIZE);
-    
-    Hash_MD5Init(md5);
-    
-    for (i = 0; i < file->size; i += len)
-    {
-        len = (file->size - i) > X25Q_READ_SIZE ? X25Q_READ_SIZE : (file->size - i);
-        
-        x25Qxx_read(file->addr + i, len, buf);
-        Hash_MD5Update(md5, buf, len);
-		if (0 == (i&0x001FFFF))
-		{
-			Watchdog_feed();
-		}
-    }
-    
-    Hash_MD5Final(md5);
-	
-    i = (r_memcmp(file->md5, md5->md, 16) == 0) ? 0 : 1;
+  if (file->seat == 0) {
     memory_release(md5);
-    memory_release(buf);
-    
-    return i;
+    md5 = memory_apply(sizeof(MD5_t));
+    Hash_MD5Init(md5);
+    APP_DEBUG("File Satrt read\r\n");
+  }
+  readLen = (file->size - file->seat) > len ? len : (file->size - file->seat);
+
+  x25Qxx_read(file->addr + file->seat, readLen, data);
+  file->seat += readLen;
+
+  if (md5 != null) {
+    Hash_MD5Update(md5, data, readLen);
+    if (file->size == file->seat) {
+      Hash_MD5Final(md5);
+
+      if (r_memcmp(file->md5, md5->md, 16) != 0) {
+        readLen = -1;
+        log_save("File read rusult fail\r\n");
+      }
+      memory_release(md5);
+      md5 = null;
+    }
+
+    if (0 == (file->seat & 0x001FFFF)) {
+      Watchdog_feed();
+    }
+  } else {
+    readLen = 0;
+    log_save("MD5 memory apply fail");
+  }
+
+  return readLen;
 }
 
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
 *******************************************************************************/
-void File_state(File_t *file, u32_t addr)
-{
-    x25Qxx_read(addr, sizeof(File_t), (u8_t*)file);
-	file->seat = 0;
+u8_t File_Check(File_t *file) {
+  MD5_t *md5;
+  u8_t *buf;
+  int i;
+  u16_t len;
+
+  //Watchdog_feed();
+  md5 = memory_apply(sizeof(MD5_t));
+  buf = memory_apply(X25Q_READ_SIZE);
+
+  Hash_MD5Init(md5);
+
+  for (i = 0; i < file->size; i += len) {
+    len = (file->size - i) > X25Q_READ_SIZE ? X25Q_READ_SIZE : (file->size - i);
+
+    x25Qxx_read(file->addr + i, len, buf);
+    Hash_MD5Update(md5, buf, len);
+    if (0 == (i & 0x001FFFF)) {
+      Watchdog_feed();
+    }
+  }
+
+  Hash_MD5Final(md5);
+
+  i = (r_memcmp(file->md5, md5->md, 16) == 0) ? 0 : 1;
+  memory_release(md5);
+  memory_release(buf);
+
+  return i;
 }
 
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
 *******************************************************************************/
-void File_save(File_t *file, u32_t addr)
-{
-    x25Qxx_earse(addr);
-    x25Qxx_wrtie(addr, sizeof(File_t), (u8_t*)file);
+void File_state(File_t *file, u32_t addr) {
+  x25Qxx_read(addr, sizeof(File_t), (u8_t *)file);
+  file->seat = 0;
+}
+
+/*******************************************************************************
+  * @brief
+  * @note   None
+  * @param  None
+  * @retval None
+*******************************************************************************/
+void File_save(File_t *file, u32_t addr) {
+  x25Qxx_earse(addr);
+  x25Qxx_wrtie(addr, sizeof(File_t), (u8_t *)file);
 }
 #endif
 
 #ifdef _PLATFORM_L610_
 #define FILE_READ_SIZE 2048
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
 *******************************************************************************/
 u8_t File_rcve(File_t *file, u16_t offset, u8_t *data, u16_t len) {
-  if (((file->sliceSize == len) || ((offset + 1) == file->sliceCnt )) && (file->sliceCnt > offset)) {
+  if (((file->sliceSize == len) || ((offset + 1) == file->sliceCnt)) && (file->sliceCnt > offset)) {
     u32_t saveAddr = offset * file->sliceSize;
-    file->sliceState[offset>>3] |= (1<<(offset&0x07));
+    file->sliceState[offset >> 3] |= (1 << (offset & 0x07));
     s32_t nfile_size = fibo_file_getSize(file->name);
     INT32 iFd_File = 0;
     s32_t ret = 0;
     APP_DEBUG("%s file old size:%ld\r\n", file->name, nfile_size);
 
     if (nfile_size > 0) {   // 文件已存在
-      iFd_File = fibo_file_open(file->name, FS_O_RDWR|FS_O_APPEND);
+      iFd_File = fibo_file_open(file->name, FS_O_RDWR | FS_O_APPEND);
       if (iFd_File < 0) {
         APP_DEBUG("Open %s file fail\r\n", file->name);
         return 1;
-      }      
+      }
     } else {    // 文件不存在或者长度为0
       iFd_File = fibo_file_open(file->name, FS_O_RDWR | FS_O_CREAT | FS_O_TRUNC);
       if (iFd_File < 0) {
@@ -284,7 +270,7 @@ u8_t File_rcve(File_t *file, u16_t offset, u8_t *data, u16_t len) {
     }
     ret = fibo_file_write(iFd_File, data, len);
     if (ret < 0) {
-      APP_DEBUG("Write %s file %d len data fail\r\n", file->name, len);      
+      APP_DEBUG("Write %s file %d len data fail\r\n", file->name, len);
       ret = fibo_file_close(iFd_File);
       if (ret < 0) {
         APP_DEBUG("Close %s file fail\r\n", file->name);
@@ -312,7 +298,7 @@ u8_t File_rcve(File_t *file, u16_t offset, u8_t *data, u16_t len) {
 }
 
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
@@ -343,7 +329,7 @@ s16_t File_read(File_t *file, u8_t *data, u16_t len) {
     APP_DEBUG("Open %s file fail\r\n", file->name);
     readenLen = -1;
     return readenLen;
-  }  
+  }
   if (file->seat == 0) {
     r_memset(&file_md5, 0, sizeof(MD5_t));
     Hash_MD5Init(&file_md5);
@@ -380,17 +366,17 @@ s16_t File_read(File_t *file, u8_t *data, u16_t len) {
   file->seat += readenLen;
 //  APP_DEBUG("End read File %s %d len, size:%ld seat:%ld\r\n", file->name, readenLen, file->size, file->seat);
   Hash_MD5Update(&file_md5, data, readenLen);
-  if (file->size == file->seat) {    
+  if (file->size == file->seat) {
     r_memset(file_md5_value, '\0', sizeof(file_md5_value));
     Hash_MD5Final(file_md5_value, &file_md5);
     APP_DEBUG("File read md5 %s, source md5 %s \r\n", file_md5_value, file->md5);
- 	if (r_memcmp(file_md5_value, file->md5, 16) != 0) {
+    if (r_memcmp(file_md5_value, file->md5, 16) != 0) {
       readenLen = -1;
       APP_DEBUG("File read rusult fail\r\n");
       log_save("File read rusult fail");
     }
   }
-  if (0 == (file->seat&0x001FFFF)) {
+  if (0 == (file->seat & 0x001FFFF)) {
 //  Watchdog_feed();
   }
 
@@ -398,23 +384,23 @@ s16_t File_read(File_t *file, u8_t *data, u16_t len) {
 }
 
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
 *******************************************************************************/
 u8_t File_Check(File_t *file) {
   MD5_t md5;
-  u8_t *buf =NULL;
+  u8_t *buf = NULL;
   u32_t i = 0;
   u16_t len = 0;
   u8_t md5_str[32 + 1] = {0};
-  
+
   s32_t nfile_size = fibo_file_getSize(file->name);
   INT32 iFd_File = 0;
   s32_t ret = 0;
   u32_t readenLen = 0;
-  
+
   if (nfile_size <= 0) {   // 文件不存在或长度为0
     APP_DEBUG("File %s is not existing\r\n", file->name);
     i = 1;
@@ -429,7 +415,7 @@ u8_t File_Check(File_t *file) {
 
   r_memset(&md5, 0, sizeof(MD5_t));
   buf = memory_apply(FILE_READ_SIZE);
-  
+
   Hash_MD5Init(&md5);
   for (i = 0; i < file->size; i += len) {
     r_memset(buf, 0, FILE_READ_SIZE);
@@ -458,9 +444,9 @@ u8_t File_Check(File_t *file) {
     }
 //  x25Qxx_read(file->addr + i, len, buf);
     Hash_MD5Update(&md5, buf, len);
-    if (0 == (i&0x001FFFF)) {
-//	  Watchdog_feed();
-	}
+    if (0 == (i & 0x001FFFF)) {
+//    Watchdog_feed();
+    }
   }
   memory_release(buf);
   ret = fibo_file_close(iFd_File);
@@ -483,7 +469,7 @@ u8_t File_Check(File_t *file) {
 }
 
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
@@ -502,11 +488,13 @@ void File_state(File_t *file, u32_t addr) {
     case CA_FILE_FLAG:
       r_strncpy(strFileName, CA_STATUSFILE_NAME, r_strlen(CA_STATUSFILE_NAME));
       break;
-//  case POINT_TAB_FILE_FLAG:
+    case POINT_TAB_FILE_FLAG:
+      r_strncpy(strFileName, POINT_TABSTATUS_FILE_NAME, r_strlen(POINT_TABSTATUS_FILE_NAME));
+      break;
     default:
       break;
   }
-  
+
   s32_t nfile_size = fibo_file_getSize(strFileName);
   INT32 iFd_File = 0;
   s32_t ret = 0;
@@ -533,7 +521,7 @@ void File_state(File_t *file, u32_t addr) {
     return;
   }
 
-  readenLen = fibo_file_read(iFd_File, (u8_t*)file, sizeof(File_t));
+  readenLen = fibo_file_read(iFd_File, (u8_t *)file, sizeof(File_t));
   if (readenLen != sizeof(File_t)) {
     APP_DEBUG("read %s file %ld len data fail\r\n", strFileName, readenLen);
     ret = fibo_file_close(iFd_File);
@@ -550,7 +538,7 @@ void File_state(File_t *file, u32_t addr) {
 }
 
 /*******************************************************************************
-  * @brief  
+  * @brief
   * @note   None
   * @param  None
   * @retval None
@@ -568,11 +556,13 @@ void File_save(File_t *file, u32_t addr) {
     case CA_FILE_FLAG:
       r_strncpy(strFileName, CA_STATUSFILE_NAME, r_strlen(CA_STATUSFILE_NAME));
       break;
-//  case POINT_TAB_FILE_FLAG:
+    case POINT_TAB_FILE_FLAG:
+      r_strncpy(strFileName, POINT_TABSTATUS_FILE_NAME, r_strlen(POINT_TABSTATUS_FILE_NAME));
+      break;
     default:
       break;
   }
-  
+
   s32_t nfile_size = fibo_file_getSize(strFileName);
   INT32 iFd_File = 0;
   s32_t ret = 0;
@@ -581,7 +571,7 @@ void File_save(File_t *file, u32_t addr) {
   if (nfile_size >= 0) {   // 文件存在或长度为0
     APP_DEBUG("File %s is existing\r\n", strFileName);
     ret = fibo_file_delete(strFileName);
-    if (ret < 0) {        
+    if (ret < 0) {
       APP_DEBUG("Delete %s file fail\r\n", strFileName);
       return;
     }
@@ -593,7 +583,7 @@ void File_save(File_t *file, u32_t addr) {
     return;
   }
 
-  writeenLen = fibo_file_write(iFd_File, (u8_t*)file, sizeof(File_t));
+  writeenLen = fibo_file_write(iFd_File, (u8_t *)file, sizeof(File_t));
   if (writeenLen != sizeof(File_t)) {
     APP_DEBUG("Write %s file %d len data fail\r\n", strFileName, sizeof(File_t));
     ret = fibo_file_close(iFd_File);

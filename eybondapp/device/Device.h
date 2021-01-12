@@ -1,5 +1,5 @@
 /**************Copyright(C) 2015-2026 Shenzhen Eybond Co., Ltd.***************
-  *@brief   : device.h
+  *@brief   : Device.h
   *@notes   : 2017.04.20 CGQ
 *******************************************************************************/
 #ifndef __DEVICE_H_

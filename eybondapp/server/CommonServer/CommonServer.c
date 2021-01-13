@@ -89,6 +89,7 @@ void proc_commonServer_task(s32_t taskId) {
       case APP_MSG_TIMER_ID:
         ret = Net_status(sPort);
         APP_DEBUG("socket[%d] status %d relinkTime %d\r\n", sPort, ret, relinkTime);
+ /*       
         if (ret == 0xFF && relinkTime++ > 50) {
 //        relinkTime = 0;
           if (server == null) {
@@ -128,11 +129,15 @@ void proc_commonServer_task(s32_t taskId) {
         if (server != null && server->api != null) {
           server->api->run(ret);
         }
+*/
       case COMMON_SERVER__DATA_PROCESS:
+/*
         if (server != null && server->api != null) {
           server->api->process();
         }
+*/
         break;
+
       default:
         break;
     }

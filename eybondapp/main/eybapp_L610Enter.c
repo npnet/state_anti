@@ -264,10 +264,10 @@ void * appimg_enter(void *param) {
   fibo_taskSleep(100);
   fibo_thread_create_ex(proc_update_task,       "Eybond UPDATE TASK",  1024*8*2, NULL, OSI_PRIORITY_NORMAL,   &upd_thread_id);
   fibo_taskSleep(100);
-  fibo_thread_create_ex(mqtt_conn_ali_task,     "MQTT CONN ALI TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &ali_thread_id);
-  fibo_taskSleep(100);
-  fibo_thread_create_ex(proc_http_fota_task,    "Http fota TASK",      1024*8*2, NULL, OSI_PRIORITY_NORMAL,   &fota_thread_id);
-  fibo_taskSleep(100);
+  //fibo_thread_create_ex(mqtt_conn_ali_task,     "MQTT CONN ALI TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &ali_thread_id);
+  //fibo_taskSleep(100);
+  //fibo_thread_create_ex(proc_http_fota_task,    "Http fota TASK",      1024*8*2, NULL, OSI_PRIORITY_NORMAL,   &fota_thread_id);
+  //fibo_taskSleep(100);
   fibo_thread_create_ex(proc_commonServer_task, "Common Server TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &com_thread_id);
   fibo_taskSleep(100);
   APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X UPd %X JLFota %X COM %X\r\n", \

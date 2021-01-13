@@ -303,6 +303,41 @@ static INT8 setCPUID(struct _ParamDescripTable_t* element,void *buf, UINT16 *par
     return 0;
 }
 
+//写 国网SN 
+static INT8 setStateGridSN(struct _ParamDescripTable_t* element,void *buf, UINT16 *paramLen)
+{
+    *paramLen       = strlen(buf);
+    memcpy(element->a,buf,strlen(buf));
+    return 0;
+}
+
+//写 国网 user name
+static INT8 setStateGridUserName(struct _ParamDescripTable_t* element,void *buf, UINT16 *paramLen)
+{
+    *paramLen       = strlen(buf);
+    memcpy(element->a,buf,strlen(buf));
+    return 0;
+}
+
+//写 国网SN 
+static INT8 setStateGridPassword(struct _ParamDescripTable_t* element,void *buf, UINT16 *paramLen)
+{
+    *paramLen       = strlen(buf);
+    memcpy(element->a,buf,strlen(buf));
+    return 0;
+}
+
+//写 国网SN 
+static INT8 setStateGridRegisterID(struct _ParamDescripTable_t* element,void *buf, UINT16 *paramLen)
+{
+    *paramLen       = strlen(buf);
+    memcpy(element->a,buf,strlen(buf));
+    return 0;
+}
+
+
+
+
 //读 类型
 static INT8 getflag(struct _ParamDescripTable_t* element,void *buf, UINT16 *paramLen)
 {
@@ -617,6 +652,39 @@ static INT8 getCPUID(struct _ParamDescripTable_t* element,void *buf, UINT16 *par
     return 0;
 }
 
+//读 
+static INT8 getStateGridSN(struct _ParamDescripTable_t* element,void *buf, UINT16 *paramLen)
+{
+    *paramLen       = strlen(element->a);
+    memcpy(buf,element->a,strlen(element->a));
+    return 0;
+}
+
+//读 
+static INT8 getStateGridUserName(struct _ParamDescripTable_t* element,void *buf, UINT16 *paramLen)
+{
+    *paramLen       = strlen(element->a);
+    memcpy(buf,element->a,strlen(element->a));
+    return 0;
+}
+
+//读 
+static INT8 getStateGridPassword(struct _ParamDescripTable_t* element,void *buf, UINT16 *paramLen)
+{
+    *paramLen       = strlen(element->a);
+    memcpy(buf,element->a,strlen(element->a));
+    return 0;
+}
+
+//读 
+static INT8 getStateGridRegisterID(struct _ParamDescripTable_t* element,void *buf, UINT16 *paramLen)
+{
+    *paramLen       = strlen(element->a);
+    memcpy(buf,element->a,strlen(element->a));
+    return 0;
+}
+
+
 /* 数采器参数读写接口 */
 struct _ParamDescripTable_t PDT[] =
 { 
@@ -667,7 +735,14 @@ struct _ParamDescripTable_t PDT[] =
     {55,  "20",                      setCSQ,                     getCSQ},                   /* 信号强度 */
     {56,  "0",                       setEthernetSerial,          getEthernetSerial},        /* 通信卡CCID */
     {57,  "SYNIVERSE",               setAPN,                     getAPN},
-    {58,  "0",                       setCPUID,                   getCPUID}
+    {58,  "0",                       setCPUID,                   getCPUID},
+    //以下为国网参数
+    {65,  "1000000000228877",                       setStateGridSN,             getStateGridSN},            /*国网SN*/
+    {66,  "pvcloud",                       setStateGridUserName,       getStateGridUserName},      /*国网USER NAME*/
+    {67,  "pvcloud",                       setStateGridPassword,       getStateGridPassword},      /*国网PASSWORD*/
+    {68,  "1468125152",                       setStateGridRegisterID,     getStateGridRegisterID}    /*国网REGISTER ID*/
+
+
 };
 
 /*----------------------------------------------------------------------------*

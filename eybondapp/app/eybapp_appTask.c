@@ -447,7 +447,7 @@ void proc_app_task(s32_t taskId) {
         Eybpub_UT_SendMessage(EYBNET_TASK, APP_MSG_UART_READY, 0, 0);
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_UART_READY, 0, 0);
         Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_UART_READY, 0, 0);
-        Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_UART_READY, 0, 0);
+        //Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_UART_READY, 0, 0);
         APP_timer = fibo_timer_period_new(APP_time_Interval, UserTimerAPPscallback, &m_timeCnt);    // 注册APPTimer
         if (APP_timer == 0) {
           log_save("Register app timer(%d) fail", APP_timer);
@@ -475,13 +475,13 @@ void proc_app_task(s32_t taskId) {
       case NET_MSG_DNS_READY:
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_DNS_READY, 0, 0);
         Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_DNS_READY, 0, 0);
-        Eybpub_UT_SendMessage(ALIYUN_TASK, NET_MSG_DNS_READY, 0, 0);
+        //Eybpub_UT_SendMessage(ALIYUN_TASK, NET_MSG_DNS_READY, 0, 0);
         APP_DEBUG("Net task NET_MSG_DNS_READY\r\n");
         break;
       case NET_MSG_DNS_FAIL:
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_DNS_FAIL, 0, 0);
         Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_DNS_FAIL, 0, 0);
-        Eybpub_UT_SendMessage(ALIYUN_TASK, NET_MSG_DNS_FAIL, 0, 0);
+        //Eybpub_UT_SendMessage(ALIYUN_TASK, NET_MSG_DNS_FAIL, 0, 0);
         APP_DEBUG("Net task NET_MSG_DNS_FAIL\r\n");
         break;
       case NET_MSG_NET_READY:    // 连接服务器成功消息
@@ -592,8 +592,8 @@ static void UserTimerAPPscallback(void *param) {
     if (m_wdgCnt > 3) {
       Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
       Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
-      Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_TIMER_ID, 0, 0);
-      Eybpub_UT_SendMessage(FOTA_TASK, APP_MSG_TIMER_ID, 0, 0);
+      //Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_TIMER_ID, 0, 0);
+      //Eybpub_UT_SendMessage(FOTA_TASK, APP_MSG_TIMER_ID, 0, 0);
       Eybpub_UT_SendMessage(UPDATE_TASK, APP_MSG_TIMER_ID, 0, 0);
       Eybpub_UT_SendMessage(COMMON_SERVER_TASK, APP_MSG_TIMER_ID, 0, 0);
     }

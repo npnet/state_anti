@@ -21,6 +21,8 @@
 #include "eybapp_appTask.h"
 // #include "restart_net.h"
 
+#include "L610Net_SSL.h"
+
 typedef struct {
   u8_t nIndex;
   Buffer_t buf;
@@ -100,6 +102,8 @@ void proc_net_task(s32_t taskId) {
         GSMLED_On();
         L610Net_ready();
         Eybpub_UT_SendMessage(EYBAPP_TASK, NET_MSG_GSM_READY, 0, 0);
+
+        SSL_init();   
         break;
       case NET_MSG_GSM_FAIL:
         APP_DEBUG("Net task NET_MSG_GSM_FAIL\r\n");

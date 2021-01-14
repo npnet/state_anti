@@ -28,11 +28,13 @@
 #include "eybpub_Debug.h"
 #include "eybpub_run_log.h"
 #include "eybpub_SysPara_File.h"
+#include "grid_tool.h"
 
 #include "eybapp_appTask.h"
 #include "DeviceIO.h"
 #include "Device.h"
 #include "Protocol.h"
+
 
 s8_t g_UARTIO_AT_enable = 0;
 UINT32 s_devtimer = 0;
@@ -439,39 +441,6 @@ void DeviceIO_init(ST_UARTDCB *cfg) {
   }
 }
 
-
-/*******************************************************************************
-  * @brief  打印最长为1024长度BUFFER，16进制显示
-  * @note   None
-  * @param  None
-  * @retval None
-*******************************************************************************/
-void print_out(u8_t *buf,u16_t lenght) {
-  u32_t displayNum = 0;
-  APP_DEBUG("\r\n-->buf lenght: %d value: \r\n", lenght);
-  if (lenght < MAX_NET_BUFFER_LEN) {
-    u8_t *str = memory_apply(lenght * 3 + 8);
-    r_memset(str, 0, lenght * 3 + 8);
-    if (str != null) {
-      hextostr(buf, str, lenght);   // 和Swap_hexChar是反的
-      int l = r_strlen((char *)str);
-      while (l) {
-        if (l >= 16 * 3) {
-          Debug_output(str + displayNum, 16 * 3);
-          l -= 16 * 3;
-          displayNum += 16 * 3;
-        } else {
-          Debug_output(str + displayNum, l);
-          l = 0;
-        }
-        Debug_output((u8_t *)"\r\n", 2);
-      }
-      APP_DEBUG("\r\n");
-      memory_release(str);
-    }
-  }
-}
-
 /*******************************************************************************
   * @brief
   * @note   None
@@ -486,7 +455,7 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
     }
     else{
       APP_DEBUG("\r\n-->UART1 get %d data!!!\r\n", len);
-      print_out(data, len);
+      print_buf(data, len);
     }
     if (rcveBuf.payload != null) {
       // 设备串口接收的数据统一在这里释放内存

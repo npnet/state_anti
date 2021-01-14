@@ -31,6 +31,7 @@
 // #include "Hanergy.h"
 #include "StateGrid.h"
 #include "CommonServer.h"
+#include "L610Net_SSL.h"
 
 typedef int (*ServerCheck)(void);
 
@@ -48,9 +49,15 @@ static const CommonServerTab_t serverTab[] = {
   {common, null},
 };
 
+static const CommonServerTab_t server_con={
+   StateGrid_check, &StateGrid_API
+};
+
 static u8_t sPort;
 static int overtime;
-static CommonServerTab_t  const *server;
+//static CommonServerTab_t  const *server;
+static CommonServerTab_t *server;
+
 
 static void output(Buffer_t *buf);
 static void dataProcess(u8_t port, Buffer_t *buf);
@@ -87,25 +94,40 @@ void proc_commonServer_task(s32_t taskId) {
         sPort = 0xff;  //
         server = null;
       case APP_MSG_TIMER_ID:
+        APP_DEBUG("\r\n-->APP_MSG_TIMER_ID\r\n");
+        //ssl_socket();     //后续处理，Luee
+
         ret = Net_status(sPort);
-        APP_DEBUG("socket[%d] status %d relinkTime %d\r\n", sPort, ret, relinkTime);
- /*       
-        if (ret == 0xFF && relinkTime++ > 50) {
-//        relinkTime = 0;
+        APP_DEBUG("\r\n-->socket[%d] status %d relinkTime %d\r\n", sPort, ret, relinkTime);
+        
+        APP_DEBUG("\r\n-->server=%d\r\n",server);
+        //50
+        if (ret == 0xFF && relinkTime++ > 10) {   
           if (server == null) {
-            for (ret = 0; ret < sizeof(serverTab) / sizeof(serverTab[0]); ret++) {
+            //for (ret = 0; ret < sizeof(serverTab) / sizeof(serverTab[0]); ret++) {
+              ret=0;        //仅有国网
               // Select remote server
-              APP_DEBUG("CommonServer[%d] check!!!!!\r\n", ret);
-              if (serverTab[ret].check() >= 0) {
-                server = &serverTab[ret];
+              APP_DEBUG("\r\n-->CommonServer[%d] check!!!!!\r\n", ret);
+              //if (serverTab[ret].check() >= 0) {
+              if (server_con.check() >= 0) {
+                APP_DEBUG("\r\n-->state grid is exist\r\n");
+                //server = &serverTab[ret];
+                server = &server_con;
+                APP_DEBUG("\r\n-->server=%d\r\n",server);
                 break;
               }
-            }
+            //}
           }
+
 
           if (server != null && server->api != null) {
             // Configuration the protocol initial parameters
+             APP_DEBUG("\r\n-->server != null && server->api != null\r\n");
+             break;
+
+             
             ServerAddr_t *serverAddr = server->api->getAddr();
+             APP_DEBUG("\r\n-->server->api->getAddr?\r\n");
 
             server->api->init();
             APP_DEBUG("server %s init!\r\n", server->api->name);
@@ -113,29 +135,35 @@ void proc_commonServer_task(s32_t taskId) {
               overtime = 0;
               sPort = Net_connect(serverAddr->type, serverAddr->addr, serverAddr->port, dataProcess);
               memory_release(serverAddr);
+              
             }
+            
           } else {
+              APP_DEBUG("\r\n-->server->api == null?\r\n");
             break;
           }
-        }else {
+        }
+        else {
           if (server == NULL) {
             break;
           }
+          APP_DEBUG("\r\n-->ret!=ff\r\n");
           if (overtime++ > server->api->waitTime) {
             overtime = 20;
             Net_close(sPort);
           }
         }
         if (server != null && server->api != null) {
+          APP_DEBUG("\r\n-->server->api->run(ret)\r\n");
           server->api->run(ret);
         }
-*/
+
       case COMMON_SERVER__DATA_PROCESS:
-/*
+
         if (server != null && server->api != null) {
           server->api->process();
         }
-*/
+
         break;
 
       default:

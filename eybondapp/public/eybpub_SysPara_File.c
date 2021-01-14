@@ -910,6 +910,7 @@ ServerAddr_t *ServerAdrrGet(u8_t num) {
   r_memset(&portBuf, 0, sizeof(Buffer_t));
   parametr_get(num, &buf);  // TODO获取的buf长度有问题?
 
+
   if (buf.payload != null && buf.lenght > 5) {
     ListHandler_t cmdStr;
     int len = 0;

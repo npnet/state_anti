@@ -588,20 +588,21 @@ void proc_app_task(s32_t taskId) {
  return   :
 *******************************************************************************/
 static void UserTimerAPPscallback(void *param) {
-  if (*((s32_t *)param) == 0) {
-    if (m_wdgCnt > 3) {
+  Eybpub_UT_SendMessage(COMMON_SERVER_TASK, APP_MSG_TIMER_ID, 0, 0);
+  //if (*((s32_t *)param) == 0) {
+  //  if (m_wdgCnt > 3) {
       Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
       Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
       //Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_TIMER_ID, 0, 0);
       //Eybpub_UT_SendMessage(FOTA_TASK, APP_MSG_TIMER_ID, 0, 0);
       Eybpub_UT_SendMessage(UPDATE_TASK, APP_MSG_TIMER_ID, 0, 0);
-      Eybpub_UT_SendMessage(COMMON_SERVER_TASK, APP_MSG_TIMER_ID, 0, 0);
-    }
+      //Eybpub_UT_SendMessage(COMMON_SERVER_TASK, APP_MSG_TIMER_ID, 0, 0);
+    //}
     *((s32_t *)param) += 1;
-  } else {
+  //} else {
     Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_TIMER_ID, 0, 0);
     *((s32_t *)param) -= 1;;
-  }
+ // }
 }
 /*******************************************************************************
  Brief    : void

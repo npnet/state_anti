@@ -26,6 +26,8 @@
 #include "StateGrid.h"
 #include "StateGridData.h"
 
+#include "grid_tool.h"
+
 #define SEND_SPACE              (3)
 #define STATION_COUNT           4
 typedef struct StateGrid {
@@ -108,23 +110,27 @@ int StateGrid_check(void) {
   Buffer_t buf;
   int i = -1;
 
-//  SysPara_Get(65, &buf);
-  parametr_get(STATE_GRID_SN, &buf);
-  if ((buf.payload != null) && (buf.lenght > 1)
+  SysPara_Get(65, &buf);
+  //parametr_get(STATE_GRID_SN, &buf);
+  //if ((buf.payload != null) && (buf.lenght > 1)
+  if ((buf.lenght > 1)
       && (r_strlen((char *)buf.payload) > 2 && r_strlen((char *)buf.payload) < 50)
       && (StateGrid_pointTab() == 0)) {
     memory_release(buf.payload);
-//    SysPara_Get(66, &buf);
-    parametr_get(STATE_GRID_USER_NAME, &buf);
-    if ((buf.payload != null) && (buf.lenght > 1)
+    SysPara_Get(66, &buf);
+    //parametr_get(STATE_GRID_USER_NAME, &buf);
+    //if ((buf.payload != null) && (buf.lenght > 1)
+    if ((buf.lenght > 1)
         && (r_strlen((char *)buf.payload) > 2 && r_strlen((char *)buf.payload) < 50)) {
       u32_t number[STATION_COUNT];
       memory_release(buf.payload);
-//    SysPara_Get(68, &buf);
-      parametr_get(STATE_GRID_REGISTER_ID, &buf);
-      if ((buf.payload != null) && (buf.lenght > 1)
+      SysPara_Get(68, &buf);
+      //parametr_get(STATE_GRID_REGISTER_ID, &buf);
+     //if ((buf.payload != null) && (buf.lenght > 1)
+      if ((buf.lenght > 1)
           && (r_strlen((char *)buf.payload) > 5 && StateGrid_station(0, number) > 0)) {
         i = 0;
+        APP_DEBUG("\R\N-->state grid check ok\r\n")
       }
     }
   }
@@ -154,6 +160,7 @@ static void StateGrid_init(void) {
 *******************************************************************************/
 static void StateGrid_run(u8_t status) {
   static u8_t space = 0;
+  APP_DEBUG("\r\n-->StateGrid_run\r\n");
   if (status == 0) {
     if (++space > SEND_SPACE) {
       space = 0;
@@ -253,7 +260,9 @@ static u8_t StateGrid_cmd(Buffer_t *buf, DataAck ch) {
   * @retval None
 *******************************************************************************/
 static ServerAddr_t *StateGrid_Addr(void) {
+  APP_DEBUG("\r\n-->server->api->getAddr1?\r\n");
   ServerAddr_t *stateGridServer = ServerAdrrGet(STATE_GRID_SERVER_ADDR);
+  APP_DEBUG("\r\n-->server->api->getAddr2?\r\n");
 
   if (stateGridServer == null) {
     Buffer_t buf;

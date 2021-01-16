@@ -21,6 +21,7 @@
 #include "eybpub_SysPara_File.h"
 #define MSG_ID_USER_COMMONSERVER_START     0xA000
 #define COMMON_SERVER__DATA_PROCESS        MSG_ID_USER_COMMONSERVER_START + 0xF10
+#define COMMON_SERVER__EYBNET_READY        MSG_ID_USER_COMMONSERVER_START + 0xF11
 #endif
 
 #define SERVER_PROCESS_FREP                (1000)       //ms

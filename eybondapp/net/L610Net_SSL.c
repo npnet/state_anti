@@ -18,6 +18,9 @@
 L610Net_t *SSLNet;
 
 s32 sslsock;
+static u8 ssl_index=0;
+
+static int ssl_socket(void);
 
 /******************************************************************************
  Brief    : SSL Ca file write
@@ -86,10 +89,9 @@ void SSL_init(void)
 * return:           none       
 * author:           Luee                                              
 *****************************************************************************/
-void ssl_socket(void) 
+static int ssl_socket(void) 
 {
     int ret;
-    static u8 ssl_index=0;
     static u8 ssl_counter=0;
 
     if(ssl_counter)
@@ -125,6 +127,8 @@ void ssl_socket(void)
       break;
       //ssl socket connect success,handle
       case 2: 
+        ssl_index=0;
+        return 0;
         //登录
         //stateGrid_login();
         //ssl_rec();
@@ -138,6 +142,8 @@ void ssl_socket(void)
 
       //ssl socket connect fail,handle
       case 3: 
+        ssl_index=0;
+        return -1;
       break;
 
       default:
@@ -145,6 +151,49 @@ void ssl_socket(void)
     }
 }
 
+/******************************************************************************                     
+* introduce:        ssl socket create      
+* parameter:        none                 
+* return:           none       
+* author:           Luee                                              
+*****************************************************************************/
+static int ssl_socket2(void) 
+{
+    int ret=-1;
+
+    //如果需要验证服务器的证书，将这个值设置为１，否则设置为０
+    fibo_set_ssl_chkmode(1);
+  
+    fibo_write_ssl_file("TRUSTFILE", STATEGRID_CA_FILE, sizeof(STATEGRID_CA_FILE) - 1);
+
+    fibo_taskSleep(10000);
+    
+    //fibo_ssl_sock_close(sslsock);
+    sslsock = fibo_ssl_sock_create();
+    if (sslsock == -1){
+        APP_DEBUG("\r\n-->create ssl sock failed\r\n");
+        //send_message(queue_l610net,L610NET_SSLFAIL_ID,0,0,0);
+    }
+    else{
+        APP_DEBUG("\r\n-->fibossl sslsock %d\r\n", sslsock);
+        SSLNet->socketID=sslsock;
+        ret = fibo_ssl_sock_connect(SSLNet->socketID, SSLNet->ipStr, SSLNet->port);  
+        APP_DEBUG("\r\n-->fibossl sys_sock_connect %d\r\n", ret);
+        if(ret==0)
+            APP_DEBUG("\r\n-->ssl socket connet succes!!!");
+            //send_message(queue_l610net,L610NET_SSLOK_ID,0,0,0);
+    }
+    return ret;   
+}
+
+
+void ssl_init(void) 
+{
+    int result;
+    SSLNet = null;
+}
+
+/*
 int SSL_Open(L610Net_t *net) {
   int ret = 0;
   char *at = NULL;
@@ -158,6 +207,48 @@ int SSL_Open(L610Net_t *net) {
     
   return ret;
 }
+*/
+int SSL_Open(L610Net_t *net)
+{
+    int ret;
+
+    SSLNet = net;
+    //建立SSL SOCKET连接
+    return ssl_socket();
+}
+
+/******************************************************************************                    
+ * introduce:        ssl 数据接收     
+ * parameter:        none                 
+ * return:           none       
+ * author:           Luee                                              
+ *****************************************************************************/
+void ssl_rec(void)
+{
+    s32 ret;
+    u8 rerec=1;
+    u8 recbuf[64] = {0};
+    while(rerec){
+    log_d("\r\nssl receiving\r\n");
+    ret = fibo_ssl_sock_recv(sslsock, recbuf, sizeof(recbuf));
+    log_d("\r\nfibossl sys_sock_recv %d\r\n", ret);
+    if (ret > 0){
+        log_d("\r\nssl receive data: %x\r\n", (char *)recbuf);
+        print_buf((UINT8 *)recbuf, sizeof(recbuf));
+        rerec=0;
+        //fibo_taskSleep(1000);
+       // send_message(queue_l610net,L610NET_SSLOK_ID,0,0,0);
+        }
+    else{
+       log_d("\r\nssl recing\r\n"); 
+       //fibo_taskSleep(1000);
+       rerec=0;
+      //send_message(queue_l610net,L610NET_SSLFAIL_ID,0,0,0);
+        }
+    }
+}
+
+
 
 /*******************************************************************************
  Brief    : SSL Ca file write

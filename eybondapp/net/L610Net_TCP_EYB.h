@@ -16,6 +16,7 @@
 #define SINGLE_SIM              0
 #define SECOND_SIM              1
 
+
 typedef struct {
   u8_t apnName[MAX_GPRS_APN_LEN];
   u8_t apnUserId[MAX_GPRS_USER_NAME_LEN]; 
@@ -61,6 +62,9 @@ typedef struct {
     NetDataCallback callback;  //rcveData callback fun
 }L610Net_t;
 
+#define EYB_SOCKET_COUNTS 6
+extern L610Net_t netManage[];
+
 extern GSMState_e m_GprsActState;
 extern u32_t g_SemFlag;
 
@@ -75,6 +79,9 @@ void L610Net_ready(void);
 L610Net_t *L610Socket(s8_t socketid, u8_t *offset);
 int netInTest(Buffer_t *buf);
 //int netInTest(Buffer_t *buf, void_fun_bufp output);
+
+u8_t get_eybnet_index(void);
+void grid_Net_manage(void);
 
 #endif  // __L610_NET_TCP_EYB_H_
 /******************************************************************************/

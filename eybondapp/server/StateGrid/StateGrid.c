@@ -14,6 +14,8 @@
 #include "eybpub_Debug.h"
 #include "eybpub_UnixTime.h"
 
+#include "eybpub_data_collector_parameter_table.h"
+
 // #include "SysAttr.h"
 
 #ifdef _PLATFORM_M26_
@@ -27,6 +29,8 @@
 #include "StateGridData.h"
 
 #include "grid_tool.h"
+#include "L610Net_SSL.h"
+#include "L610Net_TCP_EYB.h"
 
 #define SEND_SPACE              (3)
 #define STATION_COUNT           4
@@ -158,6 +162,7 @@ static void StateGrid_init(void) {
   * @param  None
   * @retval None
 *******************************************************************************/
+/*
 static void StateGrid_run(u8_t status) {
   static u8_t space = 0;
   APP_DEBUG("\r\n-->StateGrid_run\r\n");
@@ -186,6 +191,65 @@ static void StateGrid_run(u8_t status) {
       stateGrid_historySave();
     }
   }
+
+}
+
+*/
+
+static void StateGrid_run(u8_t status)
+{
+    static u8_t space = 0;
+    if (status == L610_SUCCESS)
+    {
+        if (++space > SEND_SPACE)
+        {
+            space = 0;
+            if (step == 0)
+            {
+                stateGrid_login();
+                ssl_rec();
+                APP_DEBUG("\r\nstate grid login ok\r\n");
+                step++;     //Luee
+            }
+            else if (step == 1)
+            {
+                stateGrid_register();
+                ssl_rec();
+                APP_DEBUG("\r\nstate grid register ok\r\n");
+                step++;     //Luee
+            }
+            else if ((step == 2)
+                    && (++uploadDataSpace  >  (60 * 5/SEND_SPACE))
+                    
+                    && (stateGrid_historyUpload())        //Luee ,模拟上传，关掉下面三行
+                    && (StateGrid_dataStatus() == 1
+                    )
+                )
+            {
+                uploadDataSpace -= 2;
+                stateGrid_upload();
+                ssl_rec();      //Luee
+                APP_DEBUG("\r\nstate grid upload ok\r\n");
+            }
+            else if (++heartbeatSpace > (60/SEND_SPACE))
+            {
+                heartbeatSpace -= 2;
+                stateGrid_heartbeat();
+                ssl_rec();      //Luee
+                APP_DEBUG("\r\nstate grid heartbeat ok\r\n");
+            }
+            
+        }
+    }
+    else 
+    {
+        step = 0;
+        if (historySapce++ > (60 * 5))
+        {
+            stateGrid_historySave();
+        }
+    }
+    
 
 }
 /*******************************************************************************
@@ -398,6 +462,7 @@ static void StateGrid_clear(void) {
   * @param  None
   * @retval None
 *******************************************************************************/
+/*
 static Buffer_t  *StateGrid_create(StateGridCmd_t *st) {
   Buffer_t *buf = null;
 
@@ -427,6 +492,54 @@ static Buffer_t  *StateGrid_create(StateGridCmd_t *st) {
 
   return buf;
 }
+*/
+
+/*******************************************************************************            
+ * introduce:        create state grid send buf ,灏嗗緟鍙戦€佺殑鏁版嵁缁勬垚涓€涓猙uf,鍙戦€佽皟鐢ㄦBUF鍗冲彲 
+ * parameter:        StateGridCmd_t *st                 
+ * return:           buf         
+ * author:           Luee                                                    
+ *******************************************************************************/
+static Buffer_t  *StateGrid_create(StateGridCmd_t *st)
+{
+    Buffer_t *buf = null;
+
+    if (st != null)
+    {
+        //buf = memory_apply(sizeof(Buffer_t) + sizeof(st->lenght) + st->lenght);
+        buf = fibo_malloc(sizeof(Buffer_t) + sizeof(st->lenght) + st->lenght);
+        if (buf != null)
+        {
+            u8_t *pData;
+
+            log_d("\r\nbuf != null\r\n");
+
+            buf->size = sizeof(st->lenght) + st->lenght;
+            buf->lenght = buf->size;
+            buf->payload = (u8_t*)(buf + 1);
+            pData = buf->payload;
+
+            *pData++ = (st->lenght>>24);
+            *pData++ = (st->lenght>>16);
+            *pData++ = (st->lenght>>8);
+            *pData++ = (st->lenght>>0);
+            *pData++ = st->nameLen;
+            //r_memcpy(pData, st->name, st->nameLen);
+            memcpy(pData, st->name, st->nameLen);
+            pData += st->nameLen;
+            //r_memcpy(pData++, &st->ctr, 1);
+            memcpy(pData++, &st->ctr, 1);
+            *pData++ = st->func;
+            //r_memcpy(pData, st->pdu.payload, st->pdu.lenght);
+            memcpy(pData, st->pdu.payload, st->pdu.lenght);
+        }
+        //stateGrid_free(st);
+        fibo_free(st);
+    }
+
+    return buf;
+}
+
 /*******************************************************************************
   * @note   None
   * @param  None
@@ -502,8 +615,8 @@ static u8_t getSysPara(int num,  char **p) {
   Buffer_t buf;
   u8_t lenght = 0;
 
-//  SysPara_Get(num, &buf);
-  parametr_get(num, &buf);
+  SysPara_Get(num, &buf);
+  //parametr_get(num, &buf);
   if (buf.payload != null) {
     if (*p == null) {
       *p = (char *)buf.payload;
@@ -647,6 +760,7 @@ static void setControl(u16_t ackFlag, Control_t *ctr) {
   * @param  code : command code , ackFlag: 0 No ack, 1 must ack , pdu
   * @retval
 *******************************************************************************/
+/*
 static Buffer_t  *StateGridCmd_create(u16_t code, u16_t ackFlag, Buffer_t pdu) {
   StateGridCmd_t *cmd = memory_apply(sizeof(StateGridCmd_t));
 
@@ -679,12 +793,51 @@ static Buffer_t  *StateGridCmd_ack(StateGridCmd_t *cmd, FS_e fs, Buffer_t pdu) {
 END:
   return null;
 }
+*/
+
+/*******************************************************************************            
+ * introduce:        state grid command create   
+ * parameter:        code : command code , ackFlag: 0 No ack, 1 must ack , pdu                
+ * return:           Buffer_t        
+ * author:           Luee                                                    
+ *******************************************************************************/
+static Buffer_t  *StateGridCmd_create(u16_t code, u16_t ackFlag, Buffer_t pdu)
+{
+    //StateGridCmd_t *cmd = memory_apply(sizeof(StateGridCmd_t));
+    StateGridCmd_t *cmd = (StateGridCmd_t *)fibo_malloc(sizeof(StateGridCmd_t));
+    ERRR(cmd == null, goto END);
+    log_d("\r\ncmd != null\r\n");
+
+    //cmd->nameLen = getName(&cmd->name);
+    char namebuf[64]={0};
+    cmd->name=namebuf;
+    for (u8 j = 0; j <number_of_array_elements; j++){
+	    if(65 == PDT[j].num){ 
+            u16 cmd_len  = 64;  
+		    PDT[j].rFunc(&PDT[j],cmd->name, &cmd_len);
+	    }
+	}
+    cmd->nameLen=strlen(cmd->name);
+    log_d("name len=%d",cmd->nameLen);
+
+    setControl(ackFlag, &cmd->ctr);
+    cmd->func = code;
+    //r_memcpy(&cmd->pdu, &pdu, sizeof(Buffer_t));
+    memcpy(&cmd->pdu, &pdu, sizeof(Buffer_t));
+    cmd->lenght = 1 + 1 + cmd->nameLen + 1 + pdu.lenght;
+
+    log_d("\r\nnext:StateGrid_create\r\n");
+    return StateGrid_create(cmd);
+END:
+    return null;
+}
 
 /*******************************************************************************
   * @note   0x00 login
   * @param  None
   * @retval None
 *******************************************************************************/
+/*
 static void stateGrid_login(void) {
   typedef struct {
     u8_t nameLen;
@@ -721,6 +874,81 @@ static void stateGrid_login(void) {
   memory_release(login.name);
   memory_release(login.password);
 }
+*/
+
+/*******************************************************************************            
+ * introduce: 0x00 login       
+ * parameter:                        
+ * return:                 
+ * author:           Luee                                                    
+ *******************************************************************************/
+static void stateGrid_login(void)
+{
+    typedef struct
+    {
+        u8_t nameLen;
+        u8_t passwordLen;
+        char *name;
+        char *password;
+    }login_t;
+
+    Buffer_t pdu;
+    login_t login = {0};
+    
+    //login.nameLen = getSysPara(STATE_GRID_USER_NAME, &login.name);
+    u8 tempbuf[64]={0};
+    login.name=tempbuf;
+    for (u8 j = 0; j <number_of_array_elements; j++){
+	    if(66 == PDT[j].num){
+        u16      cmd_len  = 64;  
+		PDT[j].rFunc(&PDT[j],login.name, &cmd_len);
+	    }
+	}
+    login.nameLen=strlen(login.name);
+    log_d("login name len=%d",login.nameLen);
+
+    //login.passwordLen = getSysPara(STATE_GRID_PASSWORD, &login.password);
+    u8 tempbuf2[64]={0};
+    login.password=tempbuf2;
+    for (u8 j = 0; j <number_of_array_elements; j++){
+	    if(67 == PDT[j].num){
+        u16      cmd_len  = 64;  
+		PDT[j].rFunc(&PDT[j],login.password, &cmd_len);
+	    }
+	}
+    login.passwordLen=strlen(login.password);
+    log_d("login password len=%d",login.passwordLen);
+
+    pdu.size = login.nameLen + login.passwordLen + 2;
+    //pdu.payload = memory_apply(pdu.size);
+    pdu.payload = fibo_malloc(pdu.size);
+
+    if (pdu.payload != null)
+    {
+        u8_t *p = pdu.payload;
+        Buffer_t *buf;
+
+        *p++ = login.nameLen;
+        //r_memcpy(p, login.name, login.nameLen);
+        memcpy(p, login.name, login.nameLen);
+        p += login.nameLen;
+        *p++ = login.passwordLen;
+        //r_memcpy(p, login.password, login.passwordLen);
+        memcpy(p, login.password, login.passwordLen);
+
+        pdu.lenght = pdu.size;
+        buf = StateGridCmd_create(0x00, 1, pdu);
+        fibo_free(pdu.payload);
+
+        CommonServerDataSend(buf);
+        //memory_release(buf);
+        fibo_free(buf);
+    }
+    //memory_release(login.name);
+    //memory_release(login.password);
+}
+
+
 /*******************************************************************************
   * @note   0x00 login ack
   * @param  None
@@ -753,6 +981,7 @@ static u8_t stateGrid_loginAck(StateGrid_t *sg) {
   * @param  None
   * @retval None
 *******************************************************************************/
+/*
 static void stateGrid_register(void) {
 #pragma pack(1)
   typedef struct {
@@ -774,10 +1003,10 @@ static void stateGrid_register(void) {
     u8_t  *p = pdu.payload;
 
     i = StateGrid_station(0, number);
-    /*station_count*/
+    
     *p++ = 0;
     *p++ = i;
-    /*station id array*/
+   
     while ((i--) > 0) {
       *p++ = (number[i] >> 24) & 0xFF;
       *p++ = (number[i] >> 16) & 0xFF;
@@ -791,6 +1020,64 @@ static void stateGrid_register(void) {
     memory_release(buf);
   }
 }
+*/
+
+/*******************************************************************************
+  * @note   0x01 register  
+  * @param  None
+  * @retval None
+*******************************************************************************/
+static void stateGrid_register(void)
+{
+
+#pragma pack(1)
+    typedef struct
+    {
+        s16_t count;
+        s32_t number;
+    }register_t;
+#pragma pack() 
+    
+    Buffer_t pdu;
+       
+    pdu.size = sizeof(register_t) * STATION_COUNT;
+    pdu.lenght = 0;
+    //pdu.payload = memory_apply(pdu.size);
+    pdu.payload = fibo_malloc(pdu.size);
+
+    if (pdu.payload != null)
+    {
+        u32_t number[STATION_COUNT];
+        Buffer_t *buf;
+        int i;
+        u8_t  *p = pdu.payload;
+
+        log_d("\r\npdu.payload != null\r\n");
+        i = StateGrid_station(0, number);
+        log_d("\r\nStateGrid_station finish\r\n");
+        //station_count
+        *p++ = 0;
+        *p++ = i;
+        //station id array
+        while ((i--) > 0)
+        {
+            *p++ = (number[i]>>24)&0xFF;
+            *p++ = (number[i]>>16)&0xFF;
+            *p++ = (number[i]>>8)&0xFF;
+            *p++ = (number[i]>>0)&0xFF;
+        }
+        pdu.lenght = p - pdu.payload;
+        buf = StateGridCmd_create(0x01, 1, pdu);
+        fibo_free(pdu.payload);
+        
+        CommonServerDataSend(buf);
+        //memory_release(buf);
+        fibo_free(buf);
+    }
+
+}
+
+
 /*******************************************************************************
   * @note   0x01 register ack
   * @param  None
@@ -1004,6 +1291,46 @@ static u8_t stateGrid_historyUploadAck(StateGrid_t *sg) {
   return 0;
 }
 
+static Buffer_t  *StateGridCmd_ack(StateGridCmd_t *cmd, FS_e fs, Buffer_t pdu)
+{
+    ERRR(cmd == null, goto END);
+    
+    fibo_free(cmd->pdu.payload);
+
+    //cmd->nameLen = getName(&cmd->name);
+    /*
+    for (u8 j = 0; j <number_of_array_elements; j++){
+	    if(65 == PDT[j].num){
+		cmd->name = fibo_malloc(sizeof(char)*64);
+		memset(cmd->name, 0, sizeof(char)*64);
+		PDT[j].rFunc(&PDT[j],cmd->name, sizeof(char)*64);
+        fibo_free(cmd->name);
+	    }
+	}
+    */
+   char tempbuf[64]={0};
+    cmd->name=tempbuf;
+    for (u8 j = 0; j <number_of_array_elements; j++){
+	    if(65 == PDT[j].num){
+            u16 cmd_len  = 64;  
+		    PDT[j].rFunc(&PDT[j],cmd->name, &cmd_len);
+	    }
+	}
+
+    cmd->nameLen=strlen(cmd->name);
+
+    cmd->ctr.dir = 1; 
+    cmd->ctr.fs = fs;
+    cmd->ctr.con = 0;
+    //r_memcpy(&cmd->pdu, &pdu, sizeof(Buffer_t));
+    memcpy(&cmd->pdu, &pdu, sizeof(Buffer_t));
+    cmd->lenght = 1 + cmd->nameLen + 1 + 1+ pdu.lenght;
+
+    return StateGrid_create(cmd);
+END:
+    return null;
+}
+
 /*******************************************************************************
   * @note   0x10 server get station point data
   * @param  None
@@ -1143,6 +1470,7 @@ static u8_t stateGrid_prooftime(StateGrid_t *sg) {
   * @param  None
   * @retval None
 *******************************************************************************/
+/*
 static void stateGrid_heartbeat(void) {
 #pragma pack(1)
   typedef struct {
@@ -1172,6 +1500,55 @@ static void stateGrid_heartbeat(void) {
     memory_release(buf);
   }
 }
+*/
+
+/*******************************************************************************            
+ * introduce: 0x99 send  heartbeat         
+ * parameter:                        
+ * return:                 
+ * author:           Luee                                                    
+ *******************************************************************************/
+static void stateGrid_heartbeat(void)
+{
+#pragma pack(1)
+    typedef struct
+    {
+        u8_t code;
+        u8_t timer[8];
+    }heartbeat_t;
+#pragma pack() 
+
+    s32 ret;
+
+    Buffer_t pdu;
+    heartbeat_t *heartbeat;
+
+    pdu.size = sizeof(heartbeat_t);
+    pdu.lenght = pdu.size;
+    //pdu.payload = memory_apply(pdu.size);
+    pdu.payload = fibo_malloc(pdu.size);
+
+    if (pdu.payload != null){
+        Buffer_t *buf;
+
+        log_d("\r\npdu.payload != null\r\n");
+
+        heartbeat = (heartbeat_t*) pdu.payload;
+        heartbeat->code = 0x01;
+        UnixTime_get(heartbeat->timer);
+
+        Swap_headTail(heartbeat->timer, sizeof(heartbeat->timer));
+
+        buf = StateGridCmd_create(0x99, 1, pdu);
+        fibo_free(pdu.payload);
+
+        CommonServerDataSend(buf);
+
+        //memory_release(buf);
+        fibo_free(buf);
+    }
+}
+
 /*******************************************************************************
   * @note   0x00 login ack
   * @param  None

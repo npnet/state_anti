@@ -23,7 +23,7 @@ void SSLHandler_TCPConnect(const char* strURC, void* reserved);
 int  SSL_Send(s32_t socketId, u8_t* pData, s32_t dataLen);
 void SSLHandler_DataRcve(const char* strURC, void* reserved);
 
-void ssl_socket(void);
+void ssl_rec(void);
 
 
 

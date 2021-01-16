@@ -7,7 +7,7 @@
 #ifndef __EYBPUB_PARAMETER_NUMBER_AND_VALUE_H__
 #define __EYBPUB_PARAMETER_NUMBER_AND_VALUE_H__
 
-#define g_backup_parameter_c   "/paraconfig_file_c.ini"  //Éú²ú²ÎÊı±¸·İÎÄ¼şÃû
+#define g_backup_parameter_c   "/paraconfig_file_c.ini"  //ç”Ÿäº§å‚æ•°å¤‡ä»½æ–‡ä»¶å
 
 
 void parameter_a_module(void);

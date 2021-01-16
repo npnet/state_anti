@@ -26,6 +26,8 @@
 
 #include "oc_uart.h"
 #include "DeviceIO.h"
+#include "grid_tool.h"
+#include "L610Net_SSL.h"
 
 
 #define r_in_range(c, lo, up) ((u8_t)c >= lo && (u8_t)c <= up)
@@ -183,7 +185,7 @@ GSMState_e m_GprsActState = STATE_TOTAL_NUM;
 #define NET_PING_HOSTNAME    "www.baidu.com"
 //#define NET_PING_HOSTNAME  "114.114.114.114"
 
-#define EYB_SOCKET_COUNTS 6
+//#define EYB_SOCKET_COUNTS 6
 L610Net_t netManage[EYB_SOCKET_COUNTS];
 
 static s32_t L610pdpCntxtId;
@@ -270,7 +272,7 @@ u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) 
       netManage[i].flag = 1;
       netManage[i].mode = mode;
       netManage[i].callback = netCallback;
-      APP_DEBUG("netManage[%d] ID:%d status:%d flag:%d mode:%d ipStr:%s ip:%lx port:%d \r\n", \
+      APP_DEBUG("\r\n-->netManage[%d] ID:%d status:%d flag:%d mode:%d ipStr:%s ip:%lx port:%d \r\n", \
         i, netManage[i].socketID, netManage[i].status, netManage[i].flag, netManage[i].mode, \
         netManage[i].ipStr, netManage[i].ip, netManage[i].port);
       break;
@@ -284,7 +286,7 @@ u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) 
       netManage[i].socketID = -1;
       netManage[i].ip = 0;  
       r_strcpy(netManage[i].ipStr, ip);
-      APP_DEBUG("netManage[%d] ID:%d status:%d flag:%d mode:%d ipStr:%s ip:%lx port:%d \r\n", \
+      APP_DEBUG("\r\n-->netManage[%d] ID:%d status:%d flag:%d mode:%d ipStr:%s ip:%lx port:%d \r\n", \
         i, netManage[i].socketID, netManage[i].status, netManage[i].flag, netManage[i].mode, \
         netManage[i].ipStr, netManage[i].ip, netManage[i].port);
       break;
@@ -313,6 +315,29 @@ u8_t L610Net_status(u8_t nIndex) {
     }
   }
 
+  return ret;
+}
+
+/*******************************************************************************
+ Brief    : get eybnet index
+ Parameter:
+ return   :
+*******************************************************************************/
+u8_t get_eybnet_index(void) {
+  u16_t ret = 0xff;
+  u8_t nIndex = 0;
+  Buffer_t *buf;
+
+  SysPara_Get(21,buf);
+
+  while (nIndex < sizeof(netManage) / sizeof(netManage[0])) {
+    if(netManage[nIndex].ipStr==buf->payload){
+      memory_release(buf->payload);
+      return nIndex;
+    }
+    nIndex++;
+  }
+  memory_release(buf->payload);
   return ret;
 }
 
@@ -681,6 +706,45 @@ void L610Net_manage(void) {
           registe_times = 1;
         }
       } */
+
+
+/*******************************************************************************
+ Brief    :
+ Parameter: 
+ return   : 
+*******************************************************************************/
+void grid_Net_manage(void)
+{
+	static s32 offset = 0;
+	int ret;
+
+	//益邦云连上后才处理国网
+	if(m_GprsActState == STATE_DNS_READY){
+		if (offset < sizeof(netManage)/sizeof(netManage[0])){
+			if (netManage[offset].flag == 1 && netManage[offset].status != L610_SUCCESS && netManage[offset].status != L610_CONNECTING){
+				if (netManage[offset].mode == 2){
+					APP_DEBUG("\r\n-->ready open ssl\r\n");
+					ret = SSL_Open(&netManage[offset]);
+					if (0 == ret){
+                        APP_DEBUG("\r\n-->connet ssl server SUCCESS\r\n", ret);
+                        netManage[offset].status = L610_SUCCESS;	
+			        }
+					else{
+						netManage[offset].status = L610_WAIT;	
+					}
+				}
+			}
+			offset++;
+		}
+		else{
+			offset=0;
+		}	
+	}	
+}
+
+
+
+
 /*******************************************************************************
  Brief    : socketClose
  Parameter:

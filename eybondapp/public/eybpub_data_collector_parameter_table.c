@@ -749,7 +749,7 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
   {20,  "",                       },         /* 本端端口号 */
   {21,  "www.shinemonitor.com",   },         /* 远端服务器1的IP地址或域名 */
   {22,  "",                       },         /* 远端服务器2的IP地址或域名 */
-  {23,  "",                       },         /* 远端服务器3的IP地址或域名 */
+  {23,  "gfyfront.esgcc.com.cn:19020:SSL",                       },         /* 远端服务器3的IP地址或域名 */
   {24,  "502",                    },         /* 远端的端口号 */
   {25,  "20",                     },         /* 系统时区 */
   {26,  "",                       },         /* 系统时间 */
@@ -815,7 +815,7 @@ struct _ParamDescripTable_t PDT[] = {
   {20,  "0",                       setLocalPort,               getLocalPort},            /* 本端端口号 */
   {21,  "www.shinemonitor.com",    setServer1IPAddr,           getServer1IPAddr},        /* 远端服务器1的IP地址或域名 */
   {22,  "0",                       setServer2IPAddr,           getServer2IPAddr},        /* 远端服务器2的IP地址或域名 */
-  {23,  "0",                       setServer3IPAddr,           getServer3IPAddr},        /* 远端服务器3的IP地址或域名 */
+  {23,  "gfyfront.esgcc.com.cn:19020:SSL",                       setServer3IPAddr,           getServer3IPAddr},        /* 远端服务器3的IP地址或域名 */
   {24,  "502",                     setServerPort,              getServerPort},           /* 远端的端口号 */
   {25,  "20",                      setSysTimeZone,             getSysTimeZone},          /* 系统时区 */
   {26,  "0000-00-00 00:00:00",     setSysTime,                 getSysTime},              /* 系统时间 */

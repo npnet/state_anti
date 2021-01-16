@@ -32,6 +32,7 @@
 #include "StateGrid.h"
 #include "CommonServer.h"
 #include "L610Net_SSL.h"
+#include "L610Net_TCP_EYB.h"
 
 typedef int (*ServerCheck)(void);
 
@@ -66,6 +67,7 @@ int common(void) {
   return 0;
 }
 
+
 /*******************************************************************************
   * @brief
   * @note   None
@@ -76,6 +78,7 @@ void proc_commonServer_task(s32_t taskId) {
   u8_t ret;
   ST_MSG msg;
   u16_t relinkTime = 0;
+  u8_t eybnet_index=0xff;
 
   APP_PRINT("Common server task run!!\r\n");
   r_memset(&msg, 0, sizeof(ST_MSG));
@@ -96,6 +99,18 @@ void proc_commonServer_task(s32_t taskId) {
       case APP_MSG_TIMER_ID:
         APP_DEBUG("\r\n-->APP_MSG_TIMER_ID\r\n");
         //ssl_socket();     //后续处理，Luee
+
+        //eybnet_index=get_eybnet_index();
+        //no eybnet
+        //if(eybnet_index==0xff)
+        //  break;
+        //eybnet inwork fail         
+        //if(netManage[eybnet_index].status!=L610_SUCCESS)
+        //  break;
+
+        //no eybnet
+        if(m_GprsActState != STATE_DNS_READY)
+          break;
 
         ret = Net_status(sPort);
         APP_DEBUG("\r\n-->socket[%d] status %d relinkTime %d\r\n", sPort, ret, relinkTime);
@@ -124,12 +139,9 @@ void proc_commonServer_task(s32_t taskId) {
             // Configuration the protocol initial parameters
              APP_DEBUG("\r\n-->server != null && server->api != null\r\n"); 
             ServerAddr_t *serverAddr = server->api->getAddr();
-             APP_DEBUG("\r\n-->server->api->getAddr?\r\n");
-             break;
-          
-/*
+
             server->api->init();
-            APP_DEBUG("server %s init!\r\n", server->api->name);
+            APP_DEBUG("\r\n-->server init %s !\r\n", server->api->name);
             if (serverAddr != null) {
               overtime = 0;
               sPort = Net_connect(serverAddr->type, serverAddr->addr, serverAddr->port, dataProcess);
@@ -140,35 +152,27 @@ void proc_commonServer_task(s32_t taskId) {
           } else {
               APP_DEBUG("\r\n-->server->api == null?\r\n");
             break;
-*/            
+            
           }
 
         }
-        else {
-          if (server == NULL) {
-            break;
-          }
-          APP_DEBUG("\r\n-->ret!=ff\r\n");
-          if (overtime++ > server->api->waitTime) {
-            overtime = 20;
-            Net_close(sPort);
-          }
+        else{
+            //if (overtime++ > server->api->waitTime){
+            //    overtime = 20;
+						//    Net_close(sPort);
+					  //}
         }
-        if (server != null && server->api != null) {
-          APP_DEBUG("\r\n-->server->api->run(ret)\r\n");
-          server->api->run(ret);
+        if (server != null && server->api != null){
+              server->api->run(ret);
         }
 
-      case COMMON_SERVER__DATA_PROCESS:
-
-        if (server != null && server->api != null) {
-          server->api->process();
-        }
-
-        break;
-
-      default:
-        break;
+        case COMMON_SERVER__DATA_PROCESS:
+          if (server != null && server->api != null){
+                  server->api->process();
+                }
+                break;
+            defualt :
+                break;
     }
   }
 }
@@ -178,12 +182,16 @@ void proc_commonServer_task(s32_t taskId) {
   * @param  None
   * @retval None
 *******************************************************************************/
+
+/*
 void CommonServerDataSend(Buffer_t *buf) {
   if (buf != null && buf->payload != null && buf->lenght > 0) {
 //    output(buf);
     Net_send(sPort, buf->payload, buf->lenght);
   }
 }
+
+*/
 
 static void dataProcess(u8_t port, Buffer_t *buf) {
   output(buf);
@@ -199,6 +207,33 @@ static void dataProcess(u8_t port, Buffer_t *buf) {
   }
   memory_release(buf);
 }
+
+
+
+/******************************************************************************                     
+* introduce:        向服务器发送数据通用接口       
+* parameter:        none                 
+* return:           none         
+* author:           Luee                                              
+*******************************************************************************/
+void CommonServerDataSend(Buffer_t *buf)
+{
+	if (buf != null && buf->payload != null && buf->lenght > 0)
+	{
+        u32 ret;
+        //网络空闲才发送
+       //while(eybnet_para.send_status)
+       //     fibo_taskSleep(200);
+        //statenet_para.send_status=true;
+        log_d("\r\nssl sending\r\n");
+        ret = fibo_ssl_sock_send(sslsock, (u8 *)buf->payload, buf->lenght);
+        log_d("\r\nfibossl sys_sock_send %d\r\n", ret);
+        //log_hex((UINT8 *)buf->payload, buf->lenght);
+        print_buf((UINT8 *)buf->payload, buf->lenght);
+        //statenet_para.send_status=false;
+
+	}
+} 
 
 /*******************************************************************************
   * @brief

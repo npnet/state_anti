@@ -46,6 +46,9 @@ typedef volatile const unsigned long vuc8;   /*!< Read Only */
 #define bool    u8
 #endif
 
+#define memory_release  fibo_free
+#define memory_apply    fibo_malloc
+
 void print_buf(u8_t *buf,u16_t lenght);
 void SysPara_Get(u8_t num, Buffer_t *databuf);
 int SysPara_Set(u8_t num, Buffer_t *buf);

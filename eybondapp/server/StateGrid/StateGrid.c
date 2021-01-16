@@ -254,15 +254,113 @@ static u8_t StateGrid_cmd(Buffer_t *buf, DataAck ch) {
 
   return e;
 }
+
+/*******************************************************************************            
+* introduce:        
+* parameter:                       
+* return:                 
+* author:           Luee                                                    
+*******************************************************************************/
+ServerAddr_t *state_ServerAdrrGet(u8_t num)
+{
+	Buffer_t buf;
+	//Buffer_t portBuf;       //Luee
+	ServerAddr_t *serverAddr = null;
+	//得到23号参数
+	SysPara_Get(num, &buf);	
+
+	//if (buf.payload != null && buf.lenght > 5)
+  if (buf.lenght > 5)
+	{
+    //定义链表
+		ListHandler_t cmdStr;
+		int len;
+		char *str = memory_apply(buf.lenght);
+
+		r_memcpy(str, buf.payload, buf.lenght);
+		r_strsplit(&cmdStr, str, '.');
+    //验证网址格式是否正确，网址同两占三段组成，如：gfyfront.esgcc.com.cn:19020:SSL
+		if (cmdStr.count < 3)
+		{
+			list_delete(&cmdStr);
+			memory_release(str);
+			return null;
+		}
+		list_delete(&cmdStr);
+		memory_release(str);
+    //得到以“：”分隔的结点
+		r_strsplit(&cmdStr, (char*)buf.payload, ':');
+
+		if (cmdStr.count > 0)
+		{
+			len = r_strlen((char*)*(int*)cmdStr.node->payload);
+			serverAddr = memory_apply(sizeof(ServerAddr_t) + len);
+			r_strcpy(serverAddr->addr, (char*)*(int*)cmdStr.node->payload);
+
+			if(num == SARNATH_SERVER_ADDR)
+			{
+                //SysPara_Get(SARNATH_SERVER_PORT, &portBuf);       //Luee
+                //serverAddr->port = Swap_charNum(portBuf.payload); //Luee
+			}
+			else
+			{
+			    serverAddr->port = 502;
+			}
+			serverAddr->type = 1;
+
+			if (cmdStr.count > 1)
+			{
+        //字符串转为16进制实际值，得到端口号，如：国网：19020
+				serverAddr->port = Swap_charNum((char*)*(int*)cmdStr.node->next->payload);
+			}
+			if (cmdStr.count > 2)
+			{
+				if (r_strfind("UDP", (char*)*(int*)cmdStr.node->next->next->payload) >= 0)
+				{
+					serverAddr->type = 0;
+				}
+				else if (r_strfind("SSL", (char*)*(int*)cmdStr.node->next->next->payload) >= 0)
+				{
+					serverAddr->type = 2;
+				}
+			}
+      list_delete(&cmdStr);
+		}
+    else{
+      list_delete(&cmdStr);
+       goto END;
+  }
+		
+	}
+  else{
+    goto END;
+  }
+
+	if(serverAddr->port == 0)
+	{
+	    memory_release(serverAddr);
+	    serverAddr = null;
+	}
+END:
+	//memory_release(portBuf.payload);    //未申请内存，死机的原因
+	memory_release(buf.payload);
+
+	return serverAddr;
+}
+
+
+
+
+
 /*******************************************************************************
   * @note   None
   * @param  None
   * @retval None
 *******************************************************************************/
 static ServerAddr_t *StateGrid_Addr(void) {
-  APP_DEBUG("\r\n-->server->api->getAddr1?\r\n");
-  ServerAddr_t *stateGridServer = ServerAdrrGet(STATE_GRID_SERVER_ADDR);
-  APP_DEBUG("\r\n-->server->api->getAddr2?\r\n");
+  
+  ServerAddr_t *stateGridServer = state_ServerAdrrGet(STATE_GRID_SERVER_ADDR);
+  APP_DEBUG("\r\n-->state grid addr:%s ,type:%d ,port:%d\r\n",stateGridServer->addr,stateGridServer->type,stateGridServer->port);
 
   if (stateGridServer == null) {
     Buffer_t buf;
@@ -270,8 +368,9 @@ static ServerAddr_t *StateGrid_Addr(void) {
     buf.lenght = sizeof(stateGridServerAddr);
     buf.payload = (u8_t *)stateGridServerAddr;
 
-//    SysPara_Set(STATE_GRID_SERVER_ADDR, &buf);
-    parametr_set(STATE_GRID_SERVER_ADDR, &buf);
+    SysPara_Set(STATE_GRID_SERVER_ADDR, &buf);
+    //parametr_set(STATE_GRID_SERVER_ADDR, &buf);
+    APP_DEBUG("\r\n-->init 23 para\r\n");
   }
 
   return stateGridServer;

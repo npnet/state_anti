@@ -51,6 +51,9 @@ typedef struct {
 extern const CommonServer_t  StateGrid_API;
 int StateGrid_check(void);
 u16_t StateGrid_station(u8_t addr, u32_t *No);
+
+ServerAddr_t *state_ServerAdrrGet(u8_t num);
+
 #endif //__STATE_GRID_H
 /******************************************************************************/
 

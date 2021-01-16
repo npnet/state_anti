@@ -122,13 +122,12 @@ void proc_commonServer_task(s32_t taskId) {
 
           if (server != null && server->api != null) {
             // Configuration the protocol initial parameters
-             APP_DEBUG("\r\n-->server != null && server->api != null\r\n");
-             break;
-
-             
+             APP_DEBUG("\r\n-->server != null && server->api != null\r\n"); 
             ServerAddr_t *serverAddr = server->api->getAddr();
              APP_DEBUG("\r\n-->server->api->getAddr?\r\n");
-
+             break;
+          
+/*
             server->api->init();
             APP_DEBUG("server %s init!\r\n", server->api->name);
             if (serverAddr != null) {
@@ -141,7 +140,9 @@ void proc_commonServer_task(s32_t taskId) {
           } else {
               APP_DEBUG("\r\n-->server->api == null?\r\n");
             break;
+*/            
           }
+
         }
         else {
           if (server == NULL) {

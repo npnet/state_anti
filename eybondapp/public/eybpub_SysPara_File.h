@@ -94,7 +94,8 @@ typedef struct {
 typedef struct {
   u8_t  type;  // connect type 0: UDP 1:TCP 2:SSL 3: LWM2M 4: MQTT
   u16_t port;  // port
-  char addr[2];  //
+  //char addr[2];  //
+  char addr[50];
 } ServerAddr_t;
 
 // void SysPara_printf(void_fun_bufp output);       // mike 20200825

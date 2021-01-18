@@ -30,6 +30,8 @@ void Clock_timeZone(Clock_t * time);
 void Clock_save(void);
 u8_t runTimeCheck(u8_t start, u8_t end);
 
+void get_GMT(Clock_t * time,u8_t dir);
+
 #endif //__EYBPUB_CLOCK_H
 /******************************************************************************/
 

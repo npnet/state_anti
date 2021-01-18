@@ -23,6 +23,8 @@
 #include "eybpub_run_log.h"
 #include "eybpub_Clock.h"
 
+#include "grid_tool.h"
+
 // #include "FlashHard.h"		//mike 20200805
 // #define CLOCK_FALSH_ADDR            (FLASH_SYSPARA_ADDR + FLASH_SYSPARA_SIZE) 
 // #define CLOCK_FALSH_SIZE            (0x2000)
@@ -334,9 +336,114 @@ void Clock_Set(Clock_t *clk)
  Parameter: 
  return   : 
 *******************************************************************************/
+
 Clock_t *Clock_get(void)
 {
     return &local_clock;
+}
+
+/*
+Clock_t *Clock_get(void)
+{
+  Clock_t *gmtclock;
+  get_GMT(gmtclock,1);
+
+    return gmtclock;
+}
+*/
+
+/*******************************************************************************
+ Brief    : 格林威治时间GMT与本地时间转换
+ Parameter: dir=1,本地时间转GMT，=0 GMT转本地时间 
+ return   : 
+ *******************************************************************************/
+void get_GMT(Clock_t * time,u8_t dir)
+{
+	Buffer_t buf;
+
+	r_memcpy(time, &local_clock, sizeof(Clock_t));
+	SysPara_Get(TIME_ZONE_ADDR, &buf);
+	if (buf.payload != null && buf.lenght > 0)
+	{
+		int timeZone;
+		timeZone = Swap_charNum((char*)buf.payload);
+		if (timeZone >= 0 && timeZone <= 24)
+		{
+			int hour = time->hour;
+			timeZone -= 12;
+			if(dir)
+				hour -= timeZone;
+			else
+				hour += timeZone;
+			
+			if (hour < 0)
+			{
+				hour += 24;
+				if (time->day == 1)
+				{
+					if (time->month == 1)
+					{
+						time->year--;
+						time->month = 12;
+						time->day = 31;
+					}
+					else 
+					{
+						time->month--;
+						if (time->month == 2)
+						{
+							if (0 == leapYear(time->year))
+							{
+								time->day = 29;
+							}
+							else
+							{
+								time->day = 28;
+							}
+						}
+						else if (((time->month < 8) && ((time->month&0x01) == 0x01))
+									|| ((time->month > 7)&& ((time->month&0x01) == 0x00))
+									)
+						{
+							
+							time->day = 31;
+						}
+						else 
+						{
+							time->day = 30;
+						}
+					}
+				}
+			}
+			else if (hour > 23)
+			{
+				hour -= 24;
+				if ((time->day < 28) 
+					|| ((time->month != 2) 
+                    	&& (time->day < (30 + (time->month > 7 ? (time->month - 7)&0x01 : time->month &0x01))))
+              		|| (time->day < 29 && 0 == leapYear(time->year))
+	            )
+	   			{
+					time->day++;
+				}
+				else
+				{
+					time->day = 1;
+					if (time->month < 12)
+					{
+						time->month++;
+					}
+					else
+					{
+						time->year++;
+						time->month = 1;
+					}
+				}
+			}
+			time->hour = hour;
+		}
+	}
+	memory_release(buf.payload);
 }
 
 /*******************************************************************************

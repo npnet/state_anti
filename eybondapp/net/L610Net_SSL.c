@@ -15,6 +15,18 @@
 #include "grid_tool.h"
 
 #include "fibo_opencpu.h"
+
+#define LOGIN_ID      0x00
+#define REGISTER_ID   0x01
+#define UPLOAD_ID     0x04
+#define HEARTBEAT_ID  0x99
+
+#define LOGIN_ID_ACK      1
+#define REGISTER_ID_ACK   1
+#define UPLOAD_ID_ACK     1
+#define HEARTBEAT_ID_ACK  2
+
+
 L610Net_t *SSLNet;
 
 s32 sslsock;
@@ -220,32 +232,73 @@ int SSL_Open(L610Net_t *net)
 /******************************************************************************                    
  * introduce:        ssl 数据接收     
  * parameter:        none                 
- * return:           none       
+ * return:           返回ret,=-1接收失败，否则返回数据长度       
  * author:           Luee                                              
  *****************************************************************************/
-void ssl_rec(void)
+
+s32 ssl_rec(void)
 {
-    s32 ret;
+    s32 ret=-1;
     u8 rerec=1;
     u8 recbuf[64] = {0};
+    u8 index=0;
+    u16 rec_len=0;
     while(rerec){
-    log_d("\r\nssl receiving\r\n");
-    ret = fibo_ssl_sock_recv(sslsock, recbuf, sizeof(recbuf));
-    log_d("\r\nfibossl sys_sock_recv %d\r\n", ret);
-    if (ret > 0){
-        log_d("\r\nssl receive data: %x\r\n", (char *)recbuf);
-        print_buf((UINT8 *)recbuf, sizeof(recbuf));
+    APP_DEBUG("\r\nssl receiving\r\n");
+    rec_len = fibo_ssl_sock_recv(sslsock, recbuf, sizeof(recbuf));
+    log_d("\r\nfibossl sys_sock_recv %d\r\n", rec_len);
+    if (rec_len > 0){
+        APP_DEBUG("\r\n-->ssl receive buf:%x\r\n",recbuf);
+        print_buf((UINT8 *)recbuf, rec_len);
         rerec=0;
-        //fibo_taskSleep(1000);
+        //得到功能码地址
+        //消息头（4）+采集终端ID（长度1+内容）+ 控制域（1）+消息体（功能码1+数据）
+        index=4+1+recbuf[4]+1;
+        switch(recbuf[index]){
+          case LOGIN_ID:
+            if(recbuf[index+1]==LOGIN_ID_ACK){
+              APP_DEBUG("\r\n-->state grid login success\r\n");
+              ret=rec_len;
+            }else{
+              APP_DEBUG("\r\n-->state grid login fail\r\n");
+            }
+          break;
+          case REGISTER_ID:
+            if(recbuf[index+1]==REGISTER_ID_ACK){
+              APP_DEBUG("\r\n-->state grid register success\r\n");
+              ret=rec_len;
+            }else{
+              APP_DEBUG("\r\n-->state grid register fail\r\n");
+            }
+          break;
+          case UPLOAD_ID:
+            if(recbuf[index+1]==UPLOAD_ID_ACK){
+              APP_DEBUG("\r\n-->state grid upload success\r\n");
+              ret=rec_len;
+            }else{
+              APP_DEBUG("\r\n-->state grid upload fail\r\n");
+            }
+          break;
+          case HEARTBEAT_ID:
+            if(recbuf[index+1]==HEARTBEAT_ID_ACK){
+              APP_DEBUG("\r\n-->state grid heartbeat success\r\n");
+              ret=rec_len;
+            }else{
+              APP_DEBUG("\r\n-->state grid heartbeat fail\r\n");
+            }
+          break;
+          default:
+          break;
+        }
        // send_message(queue_l610net,L610NET_SSLOK_ID,0,0,0);
         }
     else{
-       log_d("\r\nssl recing\r\n"); 
-       //fibo_taskSleep(1000);
+       log_d("\r\n-->ssl receive fail\r\n"); 
        rerec=0;
       //send_message(queue_l610net,L610NET_SSLFAIL_ID,0,0,0);
         }
     }
+    return ret;
 }
 
 

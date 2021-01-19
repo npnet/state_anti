@@ -8,7 +8,7 @@
 #define __EYBPUB_DEBUG_H_
 
 #define EYBOND_DEBUG_ENABLE    // 打开DEBUG log
-//#define EYBOND_TRACE_ENABLE    // 将DEBUG log输出改为TRACE模式,不能直接用TRACE_ENABLE做开关,会影响SDK里面的接口
+#define EYBOND_TRACE_ENABLE    // 将DEBUG log输出改为TRACE模式,不能直接用TRACE_ENABLE做开关,会影响SDK里面的接口
 #define DBG_BUF_LEN     1024
 
 #ifdef _PLATFORM_BC25_

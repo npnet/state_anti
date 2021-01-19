@@ -23,7 +23,7 @@ void SSLHandler_TCPConnect(const char* strURC, void* reserved);
 int  SSL_Send(s32_t socketId, u8_t* pData, s32_t dataLen);
 void SSLHandler_DataRcve(const char* strURC, void* reserved);
 
-void ssl_rec(void);
+s32 ssl_rec(void);
 
 
 
@@ -65,7 +65,7 @@ void ssl_rec(void);
                             "gQDF8M2VsIjtwOOn2mNEqJ+yL7Lz2SeRVfnx/mmYs5fqYN//mz/LQtX6DLhuUIg3\r\n" \
                             "nehDa7sX1VQeFd7YuVCv7aKoUfHLllfy5MWq5leM+F2UOkH1IF6BSl+PRxgIwAEQ\r\n" \
                             "X2M69VhSCQva6p/dZs0pdn1GW2bGrp1WjNdwfH5qor+zLwIDAQABo1AwTjAdBgNV\r\n" \
-                            "HQ4EFgQUxrYkWFqCIsmasiWXptWzhcDJABkwHwYDVR0jBBgwFoAUxrYkWFqCIsma\r\n" \ 
+                            "HQ4EFgQUxrYkWFqCIsmasiWXptWzhcDJABkwHwYDVR0jBBgwFoAUxrYkWFqCIsma\r\n" \
                             "siWXptWzhcDJABkwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOBgQAurlSk\r\n" \
                             "YBsorMV+4zPOH1unbdph5K1W0soUtLNfejWUWDEJQRoYA2UxPPbVYkzdEsTsbgnt\r\n" \
                             "ZeHF6gk1V9VmDhmVKFAy141iYlLjIJxNHVnhGZDot06oPsF+gZ1ymAzX6RB+I9GD\r\n" \

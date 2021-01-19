@@ -198,6 +198,7 @@ static void StateGrid_run(u8_t status) {
 
 static void StateGrid_run(u8_t status)
 {
+    s32 ret=-1;
     static u8_t space = 0;
     if (status == L610_SUCCESS)
     {
@@ -207,16 +208,16 @@ static void StateGrid_run(u8_t status)
             if (step == 0)
             {
                 stateGrid_login();
-                ssl_rec();
-                APP_DEBUG("\r\nstate grid login ok\r\n");
-                step++;     //Luee
+                ret=ssl_rec();
+                if(ret>0)
+                  step=1;     
             }
             else if (step == 1)
             {
                 stateGrid_register();
-                ssl_rec();
-                APP_DEBUG("\r\nstate grid register ok\r\n");
-                step++;     //Luee
+                ret=ssl_rec();
+                if(ret>0)
+                  step=2;     
             }
             else if ((step == 2)
                     && (++uploadDataSpace  >  (60 * 5/SEND_SPACE))
@@ -228,15 +229,19 @@ static void StateGrid_run(u8_t status)
             {
                 uploadDataSpace -= 2;
                 stateGrid_upload();
-                ssl_rec();      //Luee
-                APP_DEBUG("\r\nstate grid upload ok\r\n");
+                ret=ssl_rec();
+                if(ret>0)
+                  step=2;     
             }
             else if (++heartbeatSpace > (60/SEND_SPACE))
             {
                 heartbeatSpace -= 2;
                 stateGrid_heartbeat();
-                ssl_rec();      //Luee
-                APP_DEBUG("\r\nstate grid heartbeat ok\r\n");
+                ret=ssl_rec();
+                if(ret>0){
+                  APP_DEBUG("\r\nState Grid heartbeat OK\r\n");
+                }
+                       
             }
             
         }

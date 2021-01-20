@@ -45,7 +45,7 @@ typedef struct {
 
 static int common(void);
 
-static const CommonServerTab_t serverTab[] = {
+static CommonServerTab_t serverTab[] = {
 //  {Hanergy_check, &HanergyServer},
 //  {SAJ_check, &SAJ_API},
   {StateGrid_check, &StateGrid_API},
@@ -219,11 +219,11 @@ void proc_commonServer_task(s32_t taskId) {
 
         case COMMON_SERVER__DATA_PROCESS:
           if (server != null && server->api != null){
-                  server->api->process();
-                }
-                break;
-            defualt :
-                break;
+              server->api->process();
+            }
+        break;
+        //defualt:
+        //break;
     }
   }
 }

@@ -8,6 +8,7 @@
 
 #include "eyblib_typedef.h"
 #include "eyblib_memory.h"
+#include "fibo_opencpu.h"
 
 typedef signed long long   s64;                            
 typedef signed long  s32;

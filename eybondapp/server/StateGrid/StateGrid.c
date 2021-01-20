@@ -134,7 +134,7 @@ int StateGrid_check(void) {
       if ((buf.lenght > 1)
           && (r_strlen((char *)buf.payload) > 5 && StateGrid_station(0, number) > 0)) {
         i = 0;
-        APP_DEBUG("\R\N-->state grid check ok\r\n")
+        APP_DEBUG("\r\n-->state grid check ok\r\n")
       }
     }
   }
@@ -901,7 +901,7 @@ static void stateGrid_login(void)
     login_t login = {0};
     
     //login.nameLen = getSysPara(STATE_GRID_USER_NAME, &login.name);
-    u8 tempbuf[64]={0};
+    char tempbuf[64]={0};
     login.name=tempbuf;
     for (u8 j = 0; j <number_of_array_elements; j++){
 	    if(66 == PDT[j].num){

@@ -70,6 +70,13 @@ int common(void) {
   return 0;
 }
 
+static u8 soft_reset_flag=0;
+static u16 soft_reset_counter=0;
+
+static void soft_reset_handle(void);
+
+
+//////////////////////////////////////
 //ssl 重连
 void ssl_relink(void)
 {
@@ -81,6 +88,28 @@ void ssl_relink(void)
   SSL_init();
 
   APP_DEBUG("\r\n-->state grid relink!!!\r\n");
+}
+
+void soft_reset_en(void)
+{
+  soft_reset_flag=1;
+  soft_reset_counter=6;   //after 3s,reset
+
+}
+
+static void soft_reset_handle(void)
+{
+  if(soft_reset_flag){
+    if(soft_reset_counter)
+      soft_reset_counter--;
+    APP_DEBUG("\r\n-->soft reset downcount:%d\r\n",soft_reset_counter);
+    if(soft_reset_counter==0){
+      soft_reset_flag=0;
+      log_save("System Software Reset!");
+      APP_DEBUG("\r\n-->System Software Reset!\r\n");
+      fibo_softReset();
+    }
+  }
 }
 
 /*******************************************************************************
@@ -108,11 +137,12 @@ void proc_commonServer_task(s32_t taskId) {
 #endif
     switch (msg.message) {
       case SYS_PARA_CHANGE:
-        CommonServer_close();
-        sPort = 0xff;  //
-        server = null;
+        //CommonServer_close();
+        //sPort = 0xff;  //
+        //server = null;
+        ssl_relink();
       case APP_MSG_TIMER_ID:
-        APP_DEBUG("\r\n-->APP_MSG_TIMER_ID\r\n");
+        //APP_DEBUG("\r\n-->APP_MSG_TIMER_ID\r\n");
         //ssl_socket();     //后续处理，Luee
 
         //eybnet_index=get_eybnet_index();
@@ -122,6 +152,9 @@ void proc_commonServer_task(s32_t taskId) {
         //eybnet inwork fail         
         //if(netManage[eybnet_index].status!=L610_SUCCESS)
         //  break;
+
+        //软件复位
+        soft_reset_handle();
 
         //no eybnet
         if(m_GprsActState != STATE_DNS_READY)
@@ -173,8 +206,10 @@ void proc_commonServer_task(s32_t taskId) {
         }
         else{
             //if (overtime++ > server->api->waitTime){
+            //if (overtime++ > 280){
             //    overtime = 20;
-						//    Net_close(sPort);
+						//    //Net_close(sPort);
+            //    ssl_relink();
 					  //}
         }
         if (server != null && server->api != null){

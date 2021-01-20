@@ -42,6 +42,7 @@
 #include "Device.h"
 #include "Protocol.h"
 #include "eybond.h"
+#include "CommonServer.h"
 
 
 #ifdef _PLATFORM_BC25_
@@ -639,7 +640,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
       }
       r_memset(str, '\0', sizeof(char) * 64);
       r_strncpy(str, (char *)data->payload, r_strlen((char *)data->payload));
-      APP_DEBUG("para[%d] number is %ld str %s\r\n", j, number, str);
+      APP_DEBUG("\r\n-->para[%d] number is %ld str %s\r\n", j, number, str);
       switch (number) {  // 01/02/03/07/08/12/14/29/34/57 生产是必须写的参数
         case 0:
         case 4:
@@ -666,10 +667,13 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
           break;
         }
         case 29:
+          APP_DEBUG("\r\n-->number is %ld str %s\r\n",number, data->payload);
           switch (*(data->payload)) {
             case '1':  // 采集器重启
-              log_save("System Software Reset!");
-              fibo_softReset();
+              soft_reset_en();
+              //log_save("System Software Reset!");
+              //APP_DEBUG("\r\n-->System Software Reset!\r\n");
+              //fibo_softReset();
               break;
             case '2':  // 恢复出厂设置 -- 指示按defult参数表恢复，生产时写的数据如果改了就恢复不了了
               log_save("System Para Reset!");

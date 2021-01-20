@@ -501,7 +501,7 @@ static u8_t paraSet(ESP_t *esp) {
   r_memcpy(buf.payload, para + 1, buf.lenght);
   buf.payload[buf.lenght] = '\0';
   //  buf.payload = para + 1;
-  APP_DEBUG("Set para: %d %s\r\n", *para, buf.payload);
+  APP_DEBUG("\r\n-->Set para: %d %s\r\n", *para, buf.payload);
   ret = parametr_set(*para, &buf);  // 设置参数
   memory_release(buf.payload);  // free old buf
 #endif

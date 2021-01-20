@@ -261,7 +261,7 @@ s32 ssl_rec(void)
         switch(recbuf[index]){
           case LOGIN_ID:
             if(recbuf[index+1]==LOGIN_ID_ACK){
-              APP_DEBUG("\r\n-->state grid login success\r\n");
+              APP_DEBUG("\r\n-->state grid login success!!!\r\n");
               ret=rec_len;
             }else{
               APP_DEBUG("\r\n-->state grid login fail\r\n");
@@ -269,7 +269,7 @@ s32 ssl_rec(void)
           break;
           case REGISTER_ID:
             if(recbuf[index+1]==REGISTER_ID_ACK){
-              APP_DEBUG("\r\n-->state grid register success\r\n");
+              APP_DEBUG("\r\n-->state grid register success!!!\r\n");
               ret=rec_len;
             }else{
               APP_DEBUG("\r\n-->state grid register fail\r\n");
@@ -277,7 +277,7 @@ s32 ssl_rec(void)
           break;
           case UPLOAD_ID:
             if(recbuf[index+1]==UPLOAD_ID_ACK){
-              APP_DEBUG("\r\n-->state grid upload success\r\n");
+              APP_DEBUG("\r\n-->state grid upload success!!!\r\n");
               ret=rec_len;    //测试SSL断网重连
             }else{
               APP_DEBUG("\r\n-->state grid upload fail\r\n");
@@ -285,7 +285,7 @@ s32 ssl_rec(void)
           break;
           case HEARTBEAT_ID:
             if(recbuf[index+1]==HEARTBEAT_ID_ACK){
-              APP_DEBUG("\r\n-->state grid heartbeat success\r\n");
+              APP_DEBUG("\r\n-->state grid heartbeat success!!!\r\n");
               ret=rec_len;
             }else{
               APP_DEBUG("\r\n-->state grid heartbeat fail\r\n");

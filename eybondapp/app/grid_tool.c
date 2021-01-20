@@ -27,7 +27,8 @@
 void print_buf(u8_t *buf,u16_t lenght) {
   u32_t displayNum = 0;
   APP_DEBUG("\r\n-->buf lenght: %d value: \r\n", lenght);
-  if (lenght < MAX_NET_BUFFER_LEN) {
+  //if (lenght < MAX_NET_BUFFER_LEN) {
+  if (lenght <= 0x61) {
     u8_t *str = memory_apply(lenght * 3 + 8);
     r_memset(str, 0, lenght * 3 + 8);
     if (str != null) {

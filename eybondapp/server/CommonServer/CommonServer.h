@@ -51,6 +51,7 @@ void CommonServer_close(void);
 void CommonServerData_clean(void);
 
 void ssl_relink(void);
+void soft_reset_en(void);
 
 #endif //__COMMON_SERVER_H
 /******************************************************************************/

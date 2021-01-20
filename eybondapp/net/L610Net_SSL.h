@@ -54,7 +54,7 @@ s32 ssl_rec(void);
                      "9SoOHidKUkQe\r\n"                                                     \
                      "-----END CERTIFICATE-----\r\n"
 
-
+/*
 #define STATEGRID_CA_FILE   "-----BEGIN CERTIFICATE-----\r\n"                                      \
                             "MIICuDCCAiGgAwIBAgIJAP+L+/yzpCHgMA0GCSqGSIb3DQEBBQUAMHQxCzAJBgNV\r\n" \
                             "BAYTAnpoMQswCQYDVQQIDAJkbDELMAkGA1UEBwwCZGwxDTALBgNVBAoMBHNvZnQx\r\n" \
@@ -72,7 +72,7 @@ s32 ssl_rec(void);
                             "ZeHF6gk1V9VmDhmVKFAy141iYlLjIJxNHVnhGZDot06oPsF+gZ1ymAzX6RB+I9GD\r\n" \
                             "N8BeBxfUcpriXykKg5MraSlMsjyeD1XhwZfJ/w==\r\n"                         \
                             "-----END CERTIFICATE-----\r\n"
-
+*/
 #define TEST_CLIENT_CRT_FILE "-----BEGIN CERTIFICATE-----\r\n"                                      \
                              "MIID9TCCAt2gAwIBAgIJAOEIwHHcR9K7MA0GCSqGSIb3DQEBBQUAMIGPMQswCQYD\r\n" \
                              "VQQGEwJDTjEPMA0GA1UECAwGc2hhbnhpMQ0wCwYDVQQHDAR4aWFuMRAwDgYDVQQK\r\n" \

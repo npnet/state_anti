@@ -7,6 +7,7 @@
 #define _GRID_TOOL_H_
 
 #include "eyblib_typedef.h"
+#include "eyblib_memory.h"
 
 typedef signed long long   s64;                            
 typedef signed long  s32;
@@ -46,8 +47,8 @@ typedef volatile const unsigned long vuc8;   /*!< Read Only */
 #define bool    u8
 #endif
 
-#define memory_release  fibo_free
-#define memory_apply    fibo_malloc
+//#define memory_release  fibo_free
+//#define memory_apply    fibo_malloc
 
 #define log_d APP_DEBUG
 

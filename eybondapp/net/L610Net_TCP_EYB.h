@@ -56,7 +56,7 @@ typedef struct {
     u8_t    mode;     // link connect mode
     u16_t   port;		// net port
     u32_t   ip;    // link inter net IP -> ___.___.___.___
-    s8_t    socketID;	// socket id 
+    s32_t    socketID;	// socket id 
     L610NetState_e status; // link status
     char  ipStr[52]; 		// user connet IP/DNS, lake
     NetDataCallback callback;  //rcveData callback fun

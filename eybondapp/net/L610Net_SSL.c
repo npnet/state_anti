@@ -105,7 +105,7 @@ void SSL_init(void)
 *****************************************************************************/
 static int ssl_socket(void) 
 {
-    int ret;
+    int ret=-1;
     static u8 ssl_counter=0;
 
     if(ssl_counter)
@@ -117,7 +117,68 @@ static int ssl_socket(void)
         fibo_set_ssl_chkmode(1);
         fibo_write_ssl_file("TRUSTFILE", STATEGRID_CA_FILE, sizeof(STATEGRID_CA_FILE) - 1);
         //执行后需延时10S
-        ssl_counter=20;   //*500ms
+        ssl_counter=20;   //*500ms*20
+        ssl_index=1;
+        break;
+
+      case 1:
+        if(ssl_counter)
+          break;
+        
+        ssl_index=3; 
+
+        sslsock = fibo_ssl_sock_create();
+        if (sslsock == -1){
+            APP_DEBUG("\r\n-->create ssl sock failed\r\n");
+            //send_message(queue_l610net,L610NET_SSLFAIL_ID,0,0,0);
+        }
+        else{
+            APP_DEBUG("\r\n-->fibossl sslsock %d\r\n", sslsock);
+            SSLNet->socketID=sslsock;
+            ret = fibo_ssl_sock_connect(SSLNet->socketID, SSLNet->ipStr, SSLNet->port);  
+            APP_DEBUG("\r\n-->fibossl sys_sock_connect %d\r\n", ret);
+            if(ret==0){
+              ssl_index=2;
+              APP_DEBUG("\r\n-->ssl socket connet succes!!!");
+              //send_message(queue_l610net,L610NET_SSLOK_ID,0,0,0);
+            }
+        }
+      break;
+      //ssl socket connect success,handle
+      case 2: 
+        ssl_index=0;
+        ret=0;
+      break;
+
+      //ssl socket connect fail,handle
+      case 3: 
+        ssl_index=0;
+        ret=-1;
+      break;
+
+      default:
+      break;
+    }
+    return ret;
+}
+
+
+/*
+static int ssl_socket(void) 
+{
+    int ret=-1;
+    static u8 ssl_counter=0;
+
+    if(ssl_counter)
+      ssl_counter--;
+
+    switch(ssl_index){
+      case 0:
+        //如果需要验证服务器的证书，将这个值设置为１，否则设置为０
+        fibo_set_ssl_chkmode(1);
+        fibo_write_ssl_file("TRUSTFILE", STATEGRID_CA_FILE, sizeof(STATEGRID_CA_FILE) - 1);
+        //执行后需延时10S
+        ssl_counter=20;   //*500ms*20
         ssl_index=1;
         break;
 
@@ -126,7 +187,6 @@ static int ssl_socket(void)
           break;
         
         ssl_index=3;    
-        //fibo_ssl_sock_close(sslsock);
         sslsock = fibo_ssl_sock_create();
         if (sslsock == -1){
           APP_DEBUG("\r\ncreate ssl sock failed\r\n");
@@ -163,7 +223,9 @@ static int ssl_socket(void)
       default:
       break;
     }
+    return ret;
 }
+*/
 
 /******************************************************************************                     
 * introduce:        ssl socket create      
@@ -224,7 +286,7 @@ int SSL_Open(L610Net_t *net) {
 */
 int SSL_Open(L610Net_t *net)
 {
-    int ret;
+    //int ret;
 
     SSLNet = net;
     //建立SSL SOCKET连接

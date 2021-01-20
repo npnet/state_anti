@@ -328,6 +328,7 @@ u8_t L610Net_status(u8_t nIndex) {
  Parameter:
  return   :
 *******************************************************************************/
+/*
 u8_t get_eybnet_index(void) {
   u16_t ret = 0xff;
   u8_t nIndex = 0;
@@ -345,6 +346,7 @@ u8_t get_eybnet_index(void) {
   memory_release(buf->payload);
   return ret;
 }
+*/
 
 /*******************************************************************************
  Brief    : L610Net_close

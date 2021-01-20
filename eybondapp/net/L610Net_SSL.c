@@ -36,7 +36,7 @@ static u8 ssl_index=0;
 
 static int ssl_socket(void);
 
-static const u8 STATEGRID_CA_FILE[]={"-----BEGIN CERTIFICATE-----\r\n"                                      \
+static u8 STATEGRID_CA_FILE[]={"-----BEGIN CERTIFICATE-----\r\n"                                      \
                             "MIICuDCCAiGgAwIBAgIJAP+L+/yzpCHgMA0GCSqGSIb3DQEBBQUAMHQxCzAJBgNV\r\n" \
                             "BAYTAnpoMQswCQYDVQQIDAJkbDELMAkGA1UEBwwCZGwxDTALBgNVBAoMBHNvZnQx\r\n" \
                             "CzAJBgNVBAsMAmRsMREwDwYDVQQDDAhjanNlcnZlcjEcMBoGCSqGSIb3DQEJARYN\r\n" \
@@ -179,71 +179,6 @@ static int ssl_socket(void)
     }
     return ret;
 }
-
-
-/*
-static int ssl_socket(void) 
-{
-    int ret=-1;
-    static u8 ssl_counter=0;
-
-    if(ssl_counter)
-      ssl_counter--;
-
-    switch(ssl_index){
-      case 0:
-        //如果需要验证服务器的证书，将这个值设置为１，否则设置为０
-        fibo_set_ssl_chkmode(1);
-        fibo_write_ssl_file("TRUSTFILE", STATEGRID_CA_FILE, sizeof(STATEGRID_CA_FILE) - 1);
-        //执行后需延时10S
-        ssl_counter=20;   //*500ms*20
-        ssl_index=1;
-        break;
-
-      case 1:
-        if(ssl_counter)
-          break;
-        
-        ssl_index=3;    
-        sslsock = fibo_ssl_sock_create();
-        if (sslsock == -1){
-          APP_DEBUG("\r\ncreate ssl sock failed\r\n");
-          break;
-        }
-        APP_DEBUG("\r\nsslsock ID= %d\r\n", sslsock);
-        ret = fibo_ssl_sock_connect(sslsock, "gfyfront.esgcc.com.cn", 19020);
-        if(ret==0){
-          APP_DEBUG("\r\n-->ssl socket connet succes!!!")
-          ssl_index=2;
-        }   
-      break;
-      //ssl socket connect success,handle
-      case 2: 
-        ssl_index=0;
-        return 0;
-        //登录
-        //stateGrid_login();
-        //ssl_rec();
-
-        //注册
-        //log_d("\r\nregister state grid\r\n");
-        //fibo_taskSleep(1000);
-        //stateGrid_register();
-        //ssl_rec();
-      break;
-
-      //ssl socket connect fail,handle
-      case 3: 
-        ssl_index=0;
-        return -1;
-      break;
-
-      default:
-      break;
-    }
-    return ret;
-}
-*/
 
 /******************************************************************************                     
 * introduce:        ssl socket create      

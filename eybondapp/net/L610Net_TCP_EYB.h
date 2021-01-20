@@ -80,7 +80,7 @@ L610Net_t *L610Socket(s8_t socketid, u8_t *offset);
 int netInTest(Buffer_t *buf);
 //int netInTest(Buffer_t *buf, void_fun_bufp output);
 
-u8_t get_eybnet_index(void);
+//u8_t get_eybnet_index(void);
 void grid_Net_manage(void);
 
 #endif  // __L610_NET_TCP_EYB_H_

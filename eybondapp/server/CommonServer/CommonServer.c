@@ -26,6 +26,7 @@
 #include "Device.h"
 #include "ModbusDevice.h"
 #include "Modbus.h"
+#include "eybpub_run_log.h"
 
 // #include "SAJ.h"
 // #include "Hanergy.h"
@@ -171,11 +172,11 @@ void proc_commonServer_task(s32_t taskId) {
               ret=0;        //仅有国网
               // Select remote server
               APP_DEBUG("\r\n-->CommonServer[%d] check!!!!!\r\n", ret);
-              //if (serverTab[ret].check() >= 0) {
-              if (server_con.check() >= 0) {
+              if (serverTab[ret].check() >= 0) {
+              //if (server_con.check() >= 0) {
                 APP_DEBUG("\r\n-->state grid is exist\r\n");
-                //server = &serverTab[ret];
-                server = &server_con;
+                server = &serverTab[ret];
+                //server = &server_con;
                 APP_DEBUG("\r\n-->server=%d\r\n",server);
                 break;
               }

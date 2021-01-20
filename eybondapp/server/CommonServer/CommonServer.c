@@ -33,6 +33,7 @@
 #include "CommonServer.h"
 #include "L610Net_SSL.h"
 #include "L610Net_TCP_EYB.h"
+#include "eybpub_Status.h"
 
 typedef int (*ServerCheck)(void);
 
@@ -59,6 +60,8 @@ static int overtime;
 //static CommonServerTab_t  const *server;
 static CommonServerTab_t *server;
 
+static u16_t relinkTime = 0;
+
 
 static void output(Buffer_t *buf);
 static void dataProcess(u8_t port, Buffer_t *buf);
@@ -67,6 +70,18 @@ int common(void) {
   return 0;
 }
 
+//ssl 重连
+void ssl_relink(void)
+{
+  relinkTime=0;
+
+  CommonServer_close();
+  sPort = 0xff;  
+  server = null;
+  SSL_init();
+
+  APP_DEBUG("\r\n-->state grid relink!!!\r\n");
+}
 
 /*******************************************************************************
   * @brief
@@ -77,7 +92,7 @@ int common(void) {
 void proc_commonServer_task(s32_t taskId) {
   u8_t ret;
   ST_MSG msg;
-  u16_t relinkTime = 0;
+  //u16_t relinkTime = 0;
   u8_t eybnet_index=0xff;
 
   APP_PRINT("Common server task run!!\r\n");
@@ -117,7 +132,7 @@ void proc_commonServer_task(s32_t taskId) {
         
         APP_DEBUG("\r\n-->server=%d\r\n",server);
         //50
-        if (ret == 0xFF && relinkTime++ > 10) {   
+        if (ret == 0xFF && relinkTime++ > 50) {   
           if (server == null) {
             //for (ret = 0; ret < sizeof(serverTab) / sizeof(serverTab[0]); ret++) {
               ret=0;        //仅有国网
@@ -227,6 +242,12 @@ void CommonServerDataSend(Buffer_t *buf)
         //statenet_para.send_status=true;
         log_d("\r\nssl sending\r\n");
         ret = fibo_ssl_sock_send(sslsock, (u8 *)buf->payload, buf->lenght);
+        //连接失败重连
+      //if(ret==-1){
+      //  ssl_relink();
+      //  SSLNet->status=L610_FAIL;
+      //}
+
         log_d("\r\nfibossl sys_sock_send %d\r\n", ret);
         //log_hex((UINT8 *)buf->payload, buf->lenght);
         print_buf((UINT8 *)buf->payload, buf->lenght);

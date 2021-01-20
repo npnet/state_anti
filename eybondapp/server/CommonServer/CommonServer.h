@@ -50,6 +50,8 @@ void CommonServer_DeviceInit(void);
 void CommonServer_close(void);
 void CommonServerData_clean(void);
 
+void ssl_relink(void);
+
 #endif //__COMMON_SERVER_H
 /******************************************************************************/
 

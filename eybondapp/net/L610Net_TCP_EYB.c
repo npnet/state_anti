@@ -28,6 +28,7 @@
 #include "DeviceIO.h"
 #include "grid_tool.h"
 #include "L610Net_SSL.h"
+#include "CommonServer.h"
 
 
 #define r_in_range(c, lo, up) ((u8_t)c >= lo && (u8_t)c <= up)
@@ -311,6 +312,10 @@ u8_t L610Net_status(u8_t nIndex) {
         NetLED_On();
       } else {
         NetLED_Off();
+        //国网处理
+        //if (netManage[nIndex].mode == 2){
+        //  ssl_relink();
+        //}
       }
     }
   }
@@ -363,13 +368,14 @@ void L610Net_close(u8_t nIndex) {
   if (nIndex < sizeof(netManage) / sizeof(netManage[0])) {
     if (netManage[nIndex].flag != 0) {
       APP_DEBUG("netManage[%d] sockitID(%d) Close\r\n", nIndex, netManage[nIndex].socketID);
-//      if (netManage[port].status == L610_SUCCESS)
-      {
-//        FD_CLR(netManage[nIndex].socketID, &g_readfds);
-//        FD_CLR(netManage[nIndex].socketID, &g_errorfds);
-        fibo_sock_close(netManage[nIndex].socketID);
-        NetLED_Off();
+      if(netManage[nIndex].mode==2){
+          //close state grid 
+          //fibo_ssl_sock_close(netManage[nIndex].socketID);
       }
+      else{
+        fibo_sock_close(netManage[nIndex].socketID);
+      }
+      NetLED_Off();
     }
     netManage[nIndex].flag = 0;
     netManage[nIndex].socketID = -1;

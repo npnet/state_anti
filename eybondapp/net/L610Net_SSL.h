@@ -16,6 +16,7 @@
 #define CA_STATUSFILE_NAME      "/ca_file.status"           // ca文件名
 
 extern s32 sslsock;
+extern L610Net_t *SSLNet;
 
 void SSL_init(void);
 int  SSL_Open(L610Net_t *net);

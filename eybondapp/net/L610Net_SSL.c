@@ -15,6 +15,8 @@
 #include "grid_tool.h"
 
 #include "fibo_opencpu.h"
+#include "L610Net_TCP_EYB.h"
+#include "CommonServer.h"
 
 #define LOGIN_ID      0x00
 #define REGISTER_ID   0x01
@@ -29,7 +31,7 @@
 
 L610Net_t *SSLNet;
 
-s32 sslsock;
+s32 sslsock=-1;
 static u8 ssl_index=0;
 
 static int ssl_socket(void);
@@ -201,7 +203,7 @@ static int ssl_socket2(void)
 
 void ssl_init(void) 
 {
-    int result;
+    //int result;
     SSLNet = null;
 }
 
@@ -243,6 +245,8 @@ s32 ssl_rec(void)
     u8 recbuf[64] = {0};
     u8 index=0;
     u16 rec_len=0;
+    static u16 ssl_relink_times=0;
+
     while(rerec){
     APP_DEBUG("\r\nssl receiving\r\n");
     rec_len = fibo_ssl_sock_recv(sslsock, recbuf, sizeof(recbuf));
@@ -274,7 +278,7 @@ s32 ssl_rec(void)
           case UPLOAD_ID:
             if(recbuf[index+1]==UPLOAD_ID_ACK){
               APP_DEBUG("\r\n-->state grid upload success\r\n");
-              ret=rec_len;
+              ret=rec_len;    //测试SSL断网重连
             }else{
               APP_DEBUG("\r\n-->state grid upload fail\r\n");
             }
@@ -297,6 +301,14 @@ s32 ssl_rec(void)
        rerec=0;
       //send_message(queue_l610net,L610NET_SSLFAIL_ID,0,0,0);
         }
+    }
+    //连接失败重连
+    if(ret==-1){
+      APP_DEBUG("\r\n-->ssl recieve fail times:%d\r\n",ssl_relink_times);
+      if(ssl_relink_times++>30){
+        ssl_relink_times=0;
+        ssl_relink();
+      }
     }
     return ret;
 }

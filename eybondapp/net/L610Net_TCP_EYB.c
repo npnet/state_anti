@@ -212,7 +212,7 @@ static ST_GprsConfig m_GprsConfig = {
   NULL,
 };
 
-static void socketClose(s8_t socketid);
+static void socketClose(s32_t socketid);
 void L610_TCP_Callback(u8_t *param);
 
 /*******************************************************************************
@@ -273,9 +273,11 @@ u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) 
       netManage[i].flag = 1;
       netManage[i].mode = mode;
       netManage[i].callback = netCallback;
-      APP_DEBUG("\r\n-->netManage[%d] ID:%d status:%d flag:%d mode:%d ipStr:%s ip:%lx port:%d \r\n", \
+      /*
+      APP_DEBUG("\r\n-->netManage[%ld] ID:%ld status:%d flag:%d mode:%d ipStr:%s ip:%lx port:%d \r\n", \
         i, netManage[i].socketID, netManage[i].status, netManage[i].flag, netManage[i].mode, \
         netManage[i].ipStr, netManage[i].ip, netManage[i].port);
+      */
       break;
     } else if (netManage[i].flag == 0) {
       
@@ -287,9 +289,11 @@ u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) 
       netManage[i].socketID = -1;
       netManage[i].ip = 0;  
       r_strcpy(netManage[i].ipStr, ip);
-      APP_DEBUG("\r\n-->netManage[%d] ID:%d status:%d flag:%d mode:%d ipStr:%s ip:%lx port:%d \r\n", \
+      /*
+      APP_DEBUG("\r\n-->netManage[%ld] ID:%ld status:%d flag:%d mode:%d ipStr:%s ip:%lx port:%d \r\n", \
         i, netManage[i].socketID, netManage[i].status, netManage[i].flag, netManage[i].mode, \
         netManage[i].ipStr, netManage[i].ip, netManage[i].port);
+      */
       break;
     }
   }
@@ -369,7 +373,7 @@ void L610Net_closeAll(void) {
 void L610Net_close(u8_t nIndex) {
   if (nIndex < sizeof(netManage) / sizeof(netManage[0])) {
     if (netManage[nIndex].flag != 0) {
-      APP_DEBUG("netManage[%d] sockitID(%d) Close\r\n", nIndex, netManage[nIndex].socketID);
+      APP_DEBUG("netManage[%d] sockitID(%ld) Close\r\n", nIndex, netManage[nIndex].socketID);
       if(netManage[nIndex].mode==2){
           //close state grid 
           //fibo_ssl_sock_close(netManage[nIndex].socketID);
@@ -419,7 +423,7 @@ void L610Net_manage(void) {
   g_netmutex = 1;
   static s16_t ping_ret = -2;
 
-  int ret = 0;
+  s32_t ret = 0;
   ip_addr_t  addr_para;
   GAPP_TCPIP_ADDR_T addr;
   u8_t ip[50];
@@ -435,10 +439,10 @@ void L610Net_manage(void) {
         registe_times = 0;
         ret = fibo_set_prior_RAT(0, SINGLE_SIM);
         if (ret < 0) {
-          APP_DEBUG("set sim RAT to LTE mode fail:%d\r\n", ret);
+          APP_DEBUG("set sim RAT to LTE mode fail:%ld\r\n", ret);
         }
         ret = fibo_get_curr_prior_RAT(SINGLE_SIM);
-        APP_DEBUG("sim RAT mode after SIM inserted:%d\r\n", ret);
+        APP_DEBUG("sim RAT mode after SIM inserted:%ld\r\n", ret);
         Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_INSERTED, 0, 0);
         m_GprsActState = STATE_SIM_INSERTED;
       } else {
@@ -464,10 +468,10 @@ void L610Net_manage(void) {
           APP_DEBUG("sim regitster, gsm lac = %ld,cell id = %ld\r\n", sim_reg_info.gsm_scell_info.lac, sim_reg_info.gsm_scell_info.cell_id);
         }
         ret = fibo_get_curr_prior_RAT(SINGLE_SIM);
-        APP_DEBUG("sim RAT mode after register :%d\r\n", ret);
+        APP_DEBUG("sim RAT mode after register :%ld\r\n", ret);
         r_memset(ip, 0, sizeof(ip));
         ret = fibo_PDPActive(1, (UINT8*)m_GprsConfig.apnName, NULL, NULL, 0, SINGLE_SIM, ip);        
-        APP_DEBUG("active APN(%s) ret = %d,ip=%s\r\n", m_GprsConfig.apnName, ret, ip);
+        APP_DEBUG("active APN(%s) ret = %ld,ip=%s\r\n", m_GprsConfig.apnName, ret, ip);
         if (ret == 0) {
           Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_READY, 0, 0);
           m_GprsActState = STATE_SIM_READY;
@@ -500,7 +504,7 @@ void L610Net_manage(void) {
       if (0 == fibo_PDPStatus(1, ip, &cid_status, SINGLE_SIM)) {
          APP_DEBUG("sim ip = %s,cid_status=%d\r\n", ip, cid_status);
          ret = fibo_get_curr_prior_RAT(SINGLE_SIM);
-         APP_DEBUG("sim RAT mode after PDP active:%d\r\n", ret);
+         APP_DEBUG("sim RAT mode after PDP active:%ld\r\n", ret);
          if (cid_status == 1 && r_strlen((char *)ip) != 0) {
            Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_READY, 0, 0);
            m_GprsActState = STATE_GSM_READY;
@@ -578,25 +582,25 @@ void L610Net_manage(void) {
               fibo_taskSleep((UINT32)1000);
               if (netManage[nIndex].socketID < 0) {
   		        netManage[nIndex].status = L610_SOCKET_FAIL;
-                APP_DEBUG("Fail to create socket, ret = %d\r\n", netManage[nIndex].socketID);
+                APP_DEBUG("Fail to create socket, ret = %ld\r\n", netManage[nIndex].socketID);
 //              Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_RESTART_ID, 0, 1);   // mike需要修改逻辑?
                 g_netmutex = 0;
 		        return;
 
               }
 
-              APP_DEBUG("nIndex %d socketID %d mode %d\r\n", nIndex, netManage[nIndex].socketID, netManage[nIndex].mode);
+              APP_DEBUG("nIndex %d socketID %ld mode %d\r\n", nIndex, netManage[nIndex].socketID, netManage[nIndex].mode);
 
               int NODELAY = 1;
               ret = fibo_sock_setOpt(netManage[nIndex].socketID, IPPROTO_TCP, TCP_NODELAY, &NODELAY, sizeof(NODELAY));
               if (ret < 0) {
-                APP_DEBUG("fibo_sock_setOpt %d socket %d opt fail\r\n", nIndex, netManage[nIndex].socketID);
+                APP_DEBUG("fibo_sock_setOpt %d socket %ld opt fail\r\n", nIndex, netManage[nIndex].socketID);
               }
               fibo_taskSleep((UINT32)1000);
               int opt = 1;
               ret = fibo_sock_setOpt(netManage[nIndex].socketID, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(int));
               if (ret < 0) {
-                APP_DEBUG("fibo_sock_setOpt %d socket %d opt fail\r\n", nIndex, netManage[nIndex].socketID);
+                APP_DEBUG("fibo_sock_setOpt %d socket %ld opt fail\r\n", nIndex, netManage[nIndex].socketID);
               }
               fibo_taskSleep((UINT32)1000);
 //            INT32 socket_block = fibo_sock_lwip_fcntl(netManage[nIndex].socketID, F_GETFL,0);
@@ -633,7 +637,7 @@ void L610Net_manage(void) {
 //                addr.sin_addr.u_addr.ip4.addr = r_htonl(addr.sin_addr.u_addr.ip4.addr);
                   ret = fibo_sock_connect(netManage[nIndex].socketID, &addr);
 //                  fibo_taskSleep((UINT32)5000);
-                  APP_DEBUG("connet %s server:IP %ld:%ld:%ld:%ld port %d(sin_port %d) ret = %d\r\n", \
+                  APP_DEBUG("connet %s server:IP %ld:%ld:%ld:%ld port %d(sin_port %d) ret = %ld\r\n", \
                       netManage[nIndex].ipStr, \
                       (addr.sin_addr.u_addr.ip4.addr>> 0) & 0x000000FF, \
                       (addr.sin_addr.u_addr.ip4.addr >> 8) & 0x000000FF, \
@@ -647,7 +651,7 @@ void L610Net_manage(void) {
 //                  FD_SET(netManage[nIndex].socketID, &g_writefds);
                   } else {
                     netManage[nIndex].status = L610_CONNECT_FAIL;
-                    log_save("Fail to connect to %s server, port %d ret= %d", netManage[nIndex].ipStr, netManage[nIndex].port, ret);
+                    log_save("Fail to connect to %s server, port %d ret= %ld", netManage[nIndex].ipStr, netManage[nIndex].port, ret);
                     L610Net_close(nIndex);
                   }
                 }
@@ -665,7 +669,7 @@ void L610Net_manage(void) {
         if (0 == fibo_PDPStatus(1, ip, &cid_status, SINGLE_SIM)) {
           APP_DEBUG("sim ip = %s, cid_status=%d\r\n", ip, cid_status);
           ret = fibo_get_curr_prior_RAT(SINGLE_SIM);
-          APP_DEBUG("sim RAT mode when DNS is ready:%d\r\n", ret);
+          APP_DEBUG("sim RAT mode when DNS is ready:%ld\r\n", ret);
           registe_times++;
         } else {
           log_save("get sim ip fail, cid_status=%d", cid_status);
@@ -684,7 +688,7 @@ void L610Net_manage(void) {
     case STATE_DNS_NOT_READY: {
       L610Net_closeAll();
       ret = fibo_PDPRelease(0, SINGLE_SIM);
-      APP_DEBUG("fibo_PDPRelease ret = %d\r\n", ret);
+      APP_DEBUG("fibo_PDPRelease ret = %ld\r\n", ret);
       m_GprsActState = STATE_GSM_QUERY_STATE;
       Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_DNS_FAIL, 0, 0);
       registe = 0;
@@ -724,7 +728,7 @@ void L610Net_manage(void) {
 void grid_Net_manage(void)
 {
 	static s32 offset = 0;
-	int ret;
+	s8_t ret;
 
 	//益邦云连上后才处理国网
 	if(m_GprsActState == STATE_DNS_READY){
@@ -734,7 +738,7 @@ void grid_Net_manage(void)
 					APP_DEBUG("\r\n-->ready open ssl\r\n");
 					ret = SSL_Open(&netManage[offset]);
 					if (0 == ret){
-                        APP_DEBUG("\r\n-->connet ssl server SUCCESS\r\n", ret);
+                        APP_DEBUG("\r\n-->connet ssl server SUCCESS ret=%d\r\n", ret);
                         netManage[offset].status = L610_SUCCESS;	
 			        }
 					else{
@@ -758,9 +762,9 @@ void grid_Net_manage(void)
  Parameter:
  return   :
 *******************************************************************************/
-static void socketClose(s8_t socketid) {
+static void socketClose(s32_t socketid) {
   u8_t nIndex = 0;
-  APP_DEBUG("socket %d Close\r\n", socketid);
+  APP_DEBUG("socket %ld Close\r\n", socketid);
   L610Net_t *socke = L610Socket(socketid, &nIndex);
 
   if (socke != null) {
@@ -846,7 +850,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
  void L610_TCP_Callback(u8_t *param) {
   s16_t retlen = 0;
   u8_t nIndex = *param;
-  int ret = 0;
+  s32_t ret = 0;
   UINT8 strBuf[MAX_NET_BUFFER_LEN] = {0};
 
   while(1) {
@@ -875,7 +879,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
       ret = fibo_sock_recv(netManage[nIndex].socketID, cmdbuf.payload, cmdbuf.size);
       if (ret > 0) {
         cmdbuf.lenght = ret;
-        APP_DEBUG("IP: %s socket: %d read %d data!\r\n", netManage[nIndex].ipStr,netManage[nIndex].socketID, ret);
+        APP_DEBUG("IP: %s socket: %ld read %ld data!\r\n", netManage[nIndex].ipStr,netManage[nIndex].socketID, ret);
 
         if (netManage[nIndex].port == EYBOND_DEFAULT_SERVER_PORT && \
             (r_strncmp(netManage[nIndex].ipStr, EYBOND_DEFAULT_SERVER, r_strlen(EYBOND_DEFAULT_SERVER)) == 0 || \
@@ -896,10 +900,10 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
           memory_release(cmdbuf.payload);   // mike 20201210 可能会引起死机问题
         }
       } else if (retlen == 0) {
-        APP_DEBUG("socket: %d remote is closed!\r\n", netManage[nIndex].socketID);
+        APP_DEBUG("socket: %ld remote is closed!\r\n", netManage[nIndex].socketID);
         L610Net_close(nIndex);
       } else {
-        APP_DEBUG("socket: %d read failt!\r\n", netManage[nIndex].socketID);
+        APP_DEBUG("socket: %ld read failt!\r\n", netManage[nIndex].socketID);
       }
     } else {
       fibo_taskSleep(1000);
@@ -990,7 +994,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
 int netInTest(Buffer_t *buf)
 //int netInTest(Buffer_t *buf, void_fun_bufp output)
 {
-	int ret = -1;
+	s32_t ret = -1;
 	Buffer_t ackBuf;
   
 	 if (buf != null && buf->payload != null && buf->lenght > 20)	   
@@ -1015,8 +1019,8 @@ int netInTest(Buffer_t *buf)
                 s32_t file_c_size = fibo_file_getSize(g_backup_parameter_c);    
 
                 if (file_c_size >= 0) {
-                    int delete = fibo_file_delete(g_backup_parameter_c);
-                    APP_DEBUG("delete c is %d\r\n", delete);
+                    s32_t delete = fibo_file_delete(g_backup_parameter_c);
+                    APP_DEBUG("delete c is %ld\r\n", delete);
                 }
                 int g_iFd_backup_c = fibo_file_open(g_backup_parameter_c, FS_O_RDWR | FS_O_CREAT | FS_O_TRUNC);
                 if(g_iFd_backup_c < 0){

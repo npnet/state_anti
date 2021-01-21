@@ -19,7 +19,7 @@ extern s32 sslsock;
 extern L610Net_t *SSLNet;
 
 void SSL_init(void);
-int  SSL_Open(L610Net_t *net);
+s8  SSL_Open(L610Net_t *net);
 void SSLHandler_TCPConnect(const char* strURC, void* reserved);
 int  SSL_Send(s32_t socketId, u8_t* pData, s32_t dataLen);
 void SSLHandler_DataRcve(const char* strURC, void* reserved);

@@ -164,7 +164,7 @@ void proc_commonServer_task(s32_t taskId) {
         ret = Net_status(sPort);
         APP_DEBUG("\r\n-->socket[%d] status %d relinkTime %d\r\n", sPort, ret, relinkTime);
         
-        APP_DEBUG("\r\n-->server=%d\r\n",server);
+        //APP_DEBUG("\r\n-->server=%ld\r\n",server);
         //50
         if (ret == 0xFF && relinkTime++ > 50) {   
           if (server == null) {
@@ -177,7 +177,7 @@ void proc_commonServer_task(s32_t taskId) {
                 APP_DEBUG("\r\n-->state grid is exist\r\n");
                 server = &serverTab[ret];
                 //server = &server_con;
-                APP_DEBUG("\r\n-->server=%d\r\n",server);
+                //APP_DEBUG("\r\n-->server=%d\r\n",server);
                 break;
               }
             //}
@@ -271,12 +271,12 @@ void CommonServerDataSend(Buffer_t *buf)
 {
 	if (buf != null && buf->payload != null && buf->lenght > 0)
 	{
-        u32 ret;
+        s32 ret;
         //网络空闲才发送
        //while(eybnet_para.send_status)
        //     fibo_taskSleep(200);
         //statenet_para.send_status=true;
-        log_d("\r\nssl sending\r\n");
+        APP_DEBUG("\r\nssl sending\r\n");
         ret = fibo_ssl_sock_send(sslsock, (u8 *)buf->payload, buf->lenght);
         //连接失败重连
       //if(ret==-1){
@@ -284,7 +284,7 @@ void CommonServerDataSend(Buffer_t *buf)
       //  SSLNet->status=L610_FAIL;
       //}
 
-        log_d("\r\nfibossl sys_sock_send %d\r\n", ret);
+        APP_DEBUG("\r\nfibossl sys_sock_send %ld\r\n", ret);
         //log_hex((UINT8 *)buf->payload, buf->lenght);
         print_buf((UINT8 *)buf->payload, buf->lenght);
         //statenet_para.send_status=false;

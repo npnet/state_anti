@@ -34,7 +34,7 @@ L610Net_t *SSLNet;
 s32 sslsock=-1;
 static u8 ssl_index=0;
 
-static int ssl_socket(void);
+static s8 ssl_socket(void);
 
 static u8 STATEGRID_CA_FILE[]={"-----BEGIN CERTIFICATE-----\r\n"                                      \
                             "MIICuDCCAiGgAwIBAgIJAP+L+/yzpCHgMA0GCSqGSIb3DQEBBQUAMHQxCzAJBgNV\r\n" \
@@ -121,9 +121,9 @@ void SSL_init(void)
 * return:           none       
 * author:           Luee                                              
 *****************************************************************************/
-static int ssl_socket(void) 
+static s8 ssl_socket(void) 
 {
-    int ret=-1;
+    s8 ret=-1;
     static u8 ssl_counter=0;
 
     if(ssl_counter)
@@ -151,7 +151,7 @@ static int ssl_socket(void)
             //send_message(queue_l610net,L610NET_SSLFAIL_ID,0,0,0);
         }
         else{
-            APP_DEBUG("\r\n-->fibossl sslsock %d\r\n", sslsock);
+            APP_DEBUG("\r\n-->fibossl sslsock %ld\r\n", sslsock);
             SSLNet->socketID=sslsock;
             ret = fibo_ssl_sock_connect(SSLNet->socketID, SSLNet->ipStr, SSLNet->port);  
             APP_DEBUG("\r\n-->fibossl sys_sock_connect %d\r\n", ret);
@@ -186,6 +186,7 @@ static int ssl_socket(void)
 * return:           none       
 * author:           Luee                                              
 *****************************************************************************/
+/*
 static int ssl_socket2(void) 
 {
     int ret=-1;
@@ -204,17 +205,17 @@ static int ssl_socket2(void)
         //send_message(queue_l610net,L610NET_SSLFAIL_ID,0,0,0);
     }
     else{
-        APP_DEBUG("\r\n-->fibossl sslsock %d\r\n", sslsock);
+        APP_DEBUG("\r\n-->fibossl sslsock %ld\r\n", sslsock);
         SSLNet->socketID=sslsock;
         ret = fibo_ssl_sock_connect(SSLNet->socketID, SSLNet->ipStr, SSLNet->port);  
-        APP_DEBUG("\r\n-->fibossl sys_sock_connect %d\r\n", ret);
+        APP_DEBUG("\r\n-->fibossl sys_sock_connect %ld\r\n", ret);
         if(ret==0)
             APP_DEBUG("\r\n-->ssl socket connet succes!!!");
             //send_message(queue_l610net,L610NET_SSLOK_ID,0,0,0);
     }
     return ret;   
 }
-
+*/
 
 void ssl_init(void) 
 {
@@ -222,25 +223,8 @@ void ssl_init(void)
     SSLNet = null;
 }
 
-/*
-int SSL_Open(L610Net_t *net) {
-  int ret = 0;
-  char *at = NULL;
-
-  SSLNet = net;
-  at = memory_apply(100);
-  r_memset(at, 0, 100);
-
-  APP_DEBUG("%s, %d\r\n", at, ret);
-  memory_release(at);
-    
-  return ret;
-}
-*/
-int SSL_Open(L610Net_t *net)
+s8 SSL_Open(L610Net_t *net)
 {
-    //int ret;
-
     SSLNet = net;
     //建立SSL SOCKET连接
     return ssl_socket();
@@ -259,15 +243,15 @@ s32 ssl_rec(void)
     u8 rerec=1;
     u8 recbuf[64] = {0};
     u8 index=0;
-    u16 rec_len=0;
+    s32 rec_len=0;
     static u16 ssl_relink_times=0;
 
     while(rerec){
     APP_DEBUG("\r\nssl receiving\r\n");
     rec_len = fibo_ssl_sock_recv(sslsock, recbuf, sizeof(recbuf));
-    log_d("\r\nfibossl sys_sock_recv %d\r\n", rec_len);
+    APP_DEBUG("\r\nfibossl sys_sock_recv %ld\r\n", rec_len);
     if (rec_len > 0){
-        APP_DEBUG("\r\n-->ssl receive buf:%x\r\n",recbuf);
+        APP_DEBUG("\r\n-->ssl receive buf:\r\n");
         print_buf((UINT8 *)recbuf, rec_len);
         rerec=0;
         //得到功能码地址

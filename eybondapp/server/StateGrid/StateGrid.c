@@ -913,7 +913,7 @@ static void stateGrid_login(void)
     log_d("login name len=%d",login.nameLen);
 
     //login.passwordLen = getSysPara(STATE_GRID_PASSWORD, &login.password);
-    u8 tempbuf2[64]={0};
+    char tempbuf2[64]={0};
     login.password=tempbuf2;
     for (u8 j = 0; j <number_of_array_elements; j++){
 	    if(67 == PDT[j].num){

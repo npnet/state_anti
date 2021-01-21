@@ -35,6 +35,7 @@ s32 sslsock=-1;
 static u8 ssl_index=0;
 
 static s8 ssl_socket(void);
+static void write_ssl_from_file(void);
 
 static u8 STATEGRID_CA_FILE[]={"-----BEGIN CERTIFICATE-----\r\n"                                      \
                             "MIICuDCCAiGgAwIBAgIJAP+L+/yzpCHgMA0GCSqGSIb3DQEBBQUAMHQxCzAJBgNV\r\n" \
@@ -114,6 +115,27 @@ void SSL_init(void)
     SSLNet = null;
 }
 
+/*****************************************************************************                     
+* introduce:            
+* parameter:        none                 
+* return:           none       
+* author:           Luee                                             
+*****************************************************************************/
+static void write_ssl_from_file(void)
+{
+  s32 g_iFd_CA;
+  static u8 *CA_value_buf  = NULL;
+
+  g_iFd_CA = fibo_file_open(CA_FILE_NAME, FS_O_RDONLY);
+  s32 file_CA_size =  fibo_file_getSize(CA_FILE_NAME); 
+  CA_value_buf = fibo_malloc(sizeof(char)*file_CA_size);
+  memset(CA_value_buf, 0, sizeof(char)*file_CA_size); 
+  fibo_file_read(g_iFd_CA, (UINT8 *)CA_value_buf, file_CA_size);
+  fibo_file_close(g_iFd_CA);
+  fibo_write_ssl_file("TRUSTFILE", CA_value_buf, file_CA_size - 1);
+  fibo_free(CA_value_buf);
+  APP_DEBUG("\r\n-->state grid CA file get lenght=%ld",file_CA_size);
+}
 
 /*****************************************************************************                     
 * introduce:        ssl socket ,need running in timer 1s api       
@@ -133,7 +155,10 @@ static s8 ssl_socket(void)
       case 0:
         //如果需要验证服务器的证书，将这个值设置为１，否则设置为０
         fibo_set_ssl_chkmode(1);
-        fibo_write_ssl_file("TRUSTFILE", STATEGRID_CA_FILE, sizeof(STATEGRID_CA_FILE) - 1);
+        if (fibo_file_getSize(CA_FILE_NAME) >= 0 || fibo_file_exist(CA_FILE_NAME) == 1){
+          write_ssl_from_file();
+        }else
+          fibo_write_ssl_file("TRUSTFILE", STATEGRID_CA_FILE, sizeof(STATEGRID_CA_FILE) - 1);
         //执行后需延时10S
         ssl_counter=20;   //*500ms*20
         ssl_index=1;

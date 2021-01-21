@@ -9,6 +9,13 @@
 #include "eyblib_typedef.h"
 #include "eyblib_memory.h"
 #include "fibo_opencpu.h"
+#include "eyblib_r_stdlib.h"
+#include "eyblib_swap.h"
+#include "eybpub_utility.h"
+#include "eybpub_Debug.h"
+#include "eybpub_run_log.h"
+#include "eybpub_SysPara_File.h"
+#include "eybpub_data_collector_parameter_table.h"
 
 typedef signed long long   s64;                            
 typedef signed long  s32;

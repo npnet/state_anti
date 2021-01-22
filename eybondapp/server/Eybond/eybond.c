@@ -1212,10 +1212,12 @@ static u8_t heartbeat(ESP_t *esp) {
   Buffer_t buf;
   Clock_t time;
 
-  time.year = para->year + 2000;
+  //time.year = para->year + 2000;
+  time.year = para->year;
   time.month = para->month;
   time.day = para->day;
-  time.hour = para->hour + 8;
+  //time.hour = para->hour + 8;
+  time.hour = para->hour;
   time.min = para->min;
   time.secs = para->secs;
   APP_DEBUG("ESP time: %d-%d-%d %d:%d:%d\r\n", time.year, time.month, time.day, time.hour, time.min, time.secs);

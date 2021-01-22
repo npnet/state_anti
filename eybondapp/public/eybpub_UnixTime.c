@@ -93,8 +93,8 @@ void UnixTime_get(u8_t *time)
 */
 
 	Clock_t *clock = Clock_get();	
-	APP_DEBUG("\r\nBJclock is :%04d-%02d-%02d %02d:%02d:%02d\r\n",clock->year,clock->month,clock->day,clock->hour,clock->min,clock->secs);
-	get_GMT(clock,1);			//得到格林威治时间，Luee新加
+	//APP_DEBUG("\r\nBJclock is :%04d-%02d-%02d %02d:%02d:%02d\r\n",clock->year,clock->month,clock->day,clock->hour,clock->min,clock->secs);
+	//get_GMT(clock,1);			//得到格林威治时间，Luee新加
 	APP_DEBUG("\r\n GMT clock is :%04d-%02d-%02d %02d:%02d:%02d\r\n",clock->year,clock->month,clock->day,clock->hour,clock->min,clock->secs);
 	// 以平年时间计算的秒数
 	secs = (clock->year - 1970) * YEAR 
@@ -124,8 +124,8 @@ void UnixTime_get(u8_t *time)
 	}
 	r_memcpy(time, &msecL, sizeof(msecL));
 	r_memcpy(&time[4], &msecH, 4);
-	get_GMT(clock,0);	//将GMT转为本地时间
-	APP_DEBUG("\r\n BJ2GMT clock is :%04d-%02d-%02d %02d:%02d:%02d\r\n",clock->year,clock->month,clock->day,clock->hour,clock->min,clock->secs);
+	//get_GMT(clock,0);	//将GMT转为本地时间
+	//APP_DEBUG("\r\n BJ2GMT clock is :%04d-%02d-%02d %02d:%02d:%02d\r\n",clock->year,clock->month,clock->day,clock->hour,clock->min,clock->secs);
 }
 
 

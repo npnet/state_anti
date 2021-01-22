@@ -251,6 +251,7 @@ void Clock_init(void) {
  Parameter: 
  return   : 
  *******************************************************************************/
+/*
 void Clock_timeZone(Clock_t * time) {
   Buffer_t buf;
   r_memset(&buf, 0, sizeof(Buffer_t));    // mike 20200828
@@ -289,6 +290,94 @@ void Clock_timeZone(Clock_t * time) {
   buf.lenght = 0;
   buf.size = 0;
 }
+*/
+
+
+void Clock_timeZone(Clock_t * time)
+{
+	Buffer_t buf;
+
+	r_memcpy(time, &local_clock, sizeof(Clock_t));
+	SysPara_Get(TIME_ZONE_ADDR, &buf);
+	if (buf.payload != null && buf.lenght > 0)
+	{
+		int timeZone;
+		timeZone = Swap_charNum((char*)buf.payload);
+		if (timeZone >= 0 && timeZone <= 24)
+		{
+			int hour = time->hour;;
+			timeZone -= 12;
+			hour += timeZone;
+
+			if (hour < 0)
+			{
+				hour += 24;
+				if (time->day == 1)
+				{
+					if (time->month == 1)
+					{
+						time->year--;
+						time->month = 12;
+						time->day = 31;
+					}
+					else 
+					{
+						time->month--;
+						if (time->month == 2)
+						{
+							if (0 == leapYear(time->year))
+							{
+								time->day = 29;
+							}
+							else
+							{
+								time->day = 28;
+							}
+						}
+						else if (((time->month < 8) && ((time->month&0x01) == 0x01))
+									|| ((time->month > 7)&& ((time->month&0x01) == 0x00))
+									)
+						{
+							
+							time->day = 31;
+						}
+						else 
+						{
+							time->day = 30;
+						}
+					}
+				}
+			}
+			else if (hour > 23)
+			{
+				hour -= 24;
+				if ((time->day < 28) 
+					|| ((time->month != 2) 
+                    	&& (time->day < (30 + (time->month > 7 ? (time->month - 7)&0x01 : time->month &0x01))))
+              		|| (time->day < 29 && 0 == leapYear(time->year))
+	            )
+	   			{
+					time->day++;
+				}
+				else
+				{
+					time->day = 1;
+					if (time->month < 12)
+					{
+						time->month++;
+					}
+					else
+					{
+						time->year++;
+						time->month = 1;
+					}
+				}
+			}
+			time->hour = hour;
+		}
+	}
+	memory_release(buf.payload);
+}
 
 /*******************************************************************************
  Brief    : void
@@ -297,14 +386,28 @@ void Clock_timeZone(Clock_t * time) {
 *******************************************************************************/
 void Clock_Set(Clock_t *clk)
 {
+	//从益邦云得到是两位数年GMT如：(21.01.22 06:03:27)
+	APP_DEBUG("\r\n-->gmt_clock(%04d.%02d.%02d %02d:%02d:%02d)\r\n",
+      clk->year, clk->month, clk->day, clk->hour, clk->min, clk->secs);
+	clk->year+=2000; 
+	r_memcpy(&local_clock, clk, sizeof(Clock_t));		//local_clock用于发国网，国网要的是UNIX时钟，由4位数年GMT转换,如：(2021.01.22 06:03:27)
+	week();
+	APP_DEBUG("-->local_clock(%04d.%02d.%02d %02d:%02d:%02d week:%02d)\r\n",
+      local_clock.year, local_clock.month, local_clock.day, local_clock.hour, local_clock.min, local_clock.secs, local_clock.week);
+ 
     if (clk->year < CLOCK_MIN_YEAR || clk->year > CLOCK_MAX_YEAR
         || clk->month > 12 || clk->day > 31 || clk->hour > 24)
     {
         return;
     }
     //FlashEquilibria_write(&clockHead, &clock);    // mike 20200805
-    r_memcpy(&local_clock, clk, sizeof(Clock_t));
-    week();
+    //r_memcpy(&local_clock, clk, sizeof(Clock_t));
+    //week();
+	
+	
+	//get_GMT(clk,0);    //gmt-->bj
+	
+	Clock_timeZone(clk);
 
     hal_rtc_time_t current = {
 		.year 		= clk->year,
@@ -314,11 +417,15 @@ void Clock_Set(Clock_t *clk)
 		.min	    = clk->min,
 		.sec		= clk->secs,
 	};
+	APP_DEBUG("\r\n-->g2b_clock(%04d.%02d.%02d %02d:%02d:%02d)\r\n",
+      current.year, current.month, current.day, current.hour, current.min, current.sec);    
+
     s32_t current_flag = fibo_setRTC(&current);             //设置本地时间 参数：time 时间结构体
     APP_DEBUG("current_flag is %ld\r\n",current_flag);
     hal_rtc_time_t local_time;
     s32_t local_time_flag = fibo_getRTC(&local_time);       //获取本地时间
     APP_DEBUG("local_time_flag is %ld\r\n",local_time_flag);
+	local_time.year+=2000;
     char current_char[30]={0};
     snprintf(current_char, 30, "%04d-%02d-%02d %02d:%02d:%02d",current.year,current.month,current.day,current.hour,current.min,current.sec);
     Buffer_t buf;
@@ -326,8 +433,8 @@ void Clock_Set(Clock_t *clk)
     buf.lenght = r_strlen(current_char);
     buf.payload = (u8_t *)current_char;
     parametr_set(LOCAL_TIME, &buf);    
-    APP_DEBUG("Clock_Sett(%d.%02d.%02d %02d:%02d:%02d week:%02d)\r\n",
-      local_clock.year, local_clock.month, local_clock.day, local_clock.hour, local_clock.min, local_clock.secs, local_clock.week);
+    APP_DEBUG("Clock_Sett(%04d.%02d.%02d %02d:%02d:%02d week:%02d)\r\n",
+      local_time.year, local_time.month, local_time.day, local_time.hour, local_time.min, local_time.sec, local_time.wDay);
 }
 #endif
 

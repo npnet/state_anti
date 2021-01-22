@@ -12,6 +12,7 @@
 #define CLOCK_MIN_YEAR              (2015)
 #define CLOCK_MAX_YEAR              (2225)
 
+
 typedef struct {
     u8_t   week;               // [0,6]
     u8_t   secs;                // [0,59]
@@ -21,6 +22,20 @@ typedef struct {
     u8_t   month;              //[1,12]
     u16_t  year;               // [cMinYear,cMaxYear] 
 }Clock_t;
+
+/*
+typedef struct
+{
+    uint8_t sec;   ///< Second
+    uint8_t min;   ///< Minute
+    uint8_t hour;  ///< Hour
+    uint8_t day;   ///< Day
+    uint8_t month; ///< Month
+    uint16_t year;  ///< Year
+    uint8_t wDay;  ///< Week Day
+} hal_rtc_time_t;
+*/
+
 
 void Clock_init(void);
 void Clock_Add(void);

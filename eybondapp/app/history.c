@@ -17,53 +17,6 @@ history_head_t *history_head = (history_head_t *)history_head_buf;
 
 u16_t sw_historyhead_rp = 0;
 
-//history
-
-//void history_init(void)
-//{
-  //FlashFIFO_init(&historyHead, HISTORY_AREA_ADDR, HISTORY_AREA_SIZE);
-	//FlashEquilibria_init(&saveSpace, HISTORY_SPACE_ADDR, HISTORY_SPACE_SIZE,\
-	//						sizeof(histprySaveSpace), &histprySaveSpace);
-	//if (histprySaveSpace < 10 ||  histprySaveSpace > (60*8))
-	//{
-	//	histprySaveSpace = 60*5;	 //默锟斤拷5锟斤拷锟斤拷
-	//	FlashEquilibria_clear(&saveSpace);
-	//	FlashEquilibria_write(&saveSpace, &histprySaveSpace);
-	//}
-	//historySaveCnt = histprySaveSpace;
-/*
-  s32 check_history = 0;
-    check_history = fibo_file_exist(run_log_a);
-    if(1 == check_a)//文件存在
-    {
-        log_d("\r\nrun_log_a is exist\r\n");
-        iFd_run_log_a = fibo_file_open(run_log_a, FS_O_RDWR|FS_O_APPEND);//读写、追加
-    }
-    if(check_a<0)//文件不存在
-    {
-        log_d("\r\nrun_log_a  creat\r\n");
-        iFd_run_log_a = fibo_file_open(run_log_a, FS_O_RDWR|FS_O_CREAT|FS_O_APPEND);//读写、创建、追加
-    }
-    fibo_file_close(iFd_run_log_a);
-
-    int check_b = 0;
-    check_b = fibo_file_exist(run_log_b);
-    if(1 == check_b)//文件存在
-    {
-        log_d("\r\nrun_log_b is exist\r\n");
-        iFd_run_log_b = fibo_file_open(run_log_b, FS_O_RDWR|FS_O_APPEND);//读写、追加
-    }
-    if(check_b<0)//文件不存在
-    {
-        log_d("\r\nrun_log_b  creat\r\n");
-        iFd_run_log_b = fibo_file_open(run_log_b, FS_O_RDWR|FS_O_CREAT|FS_O_APPEND);//读写、创建、追加
-    }
-    fibo_file_close(iFd_run_log_b);
-
-
-
-*/
-//}
 
 s32 history_head_get(void) {
   s32_t ret = 0;
@@ -92,7 +45,7 @@ s32 history_init(void) {
   if (history_size > 0) {
     APP_DEBUG("found old history file!\r\n");
     //头信息获取失败
-    if (log_head_get() != 0) {
+    if (history_head_get() != 0) {
       APP_DEBUG("run history file head err!\r\n");
       fibo_file_delete(history_file);
       history_size = -1;
@@ -132,16 +85,16 @@ s32 history_init(void) {
       }
       return history_size;
     }
-    ret = fibo_file_fsync(history_file);
+    ret = fibo_file_fsync(iFd_history);
     if (ret < 0) {
       APP_DEBUG("history file create sync error\r\n");
-      ret = fibo_file_close(history_file);
+      ret = fibo_file_close(iFd_history);
       if (ret < 0) {
         APP_DEBUG("history file create close error\r\n");
       }
       return history_size;
     }
-    ret = fibo_file_close(history_file);
+    ret = fibo_file_close(iFd_history);
     if (ret < 0) {
       APP_DEBUG("history file create close error\r\n");
       return history_size;

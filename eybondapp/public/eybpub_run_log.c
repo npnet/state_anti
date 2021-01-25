@@ -453,7 +453,7 @@ void log_save(char *str, ...) {
     time.wDay = 4;
   }
 
-  s8_t ntimezone = fibo_getRTC_timezone();
+  //s8_t ntimezone = fibo_getRTC_timezone();
     
 //  APP_DEBUG("fibo_getRTC(20%02d-%02d-%02d %02d:%02d:%02d week=%d timezone=%02d)=%ld\r\n",
 //             time.year, time.month, time.day, time.hour, time.min, time.sec, time.wDay, ntimezone, ret);

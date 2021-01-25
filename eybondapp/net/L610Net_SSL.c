@@ -21,11 +21,13 @@
 #define LOGIN_ID      0x00
 #define REGISTER_ID   0x01
 #define UPLOAD_ID     0x04
+#define HISTORY_ID    0x05
 #define HEARTBEAT_ID  0x99
 
 #define LOGIN_ID_ACK      1
 #define REGISTER_ID_ACK   1
 #define UPLOAD_ID_ACK     1
+#define HISTORY_ID_ACK     1
 #define HEARTBEAT_ID_ACK  2
 
 
@@ -203,6 +205,7 @@ static s8 ssl_socket(void)
       break;
     }
     return ret;
+    //return -1;
 }
 
 /******************************************************************************                     
@@ -299,6 +302,7 @@ s32 ssl_rec(void)
               APP_DEBUG("\r\n-->state grid register fail\r\n");
             }
           break;
+
           case UPLOAD_ID:
             if(recbuf[index+1]==UPLOAD_ID_ACK){
               APP_DEBUG("\r\n-->state grid upload success!!!\r\n");
@@ -307,6 +311,16 @@ s32 ssl_rec(void)
               APP_DEBUG("\r\n-->state grid upload fail\r\n");
             }
           break;
+
+          case HISTORY_ID:
+            if(recbuf[index+1]==HISTORY_ID_ACK){
+              APP_DEBUG("\r\n-->state grid upload history success!!!\r\n");
+              ret=rec_len;    //测试SSL断网重连
+            }else{
+              APP_DEBUG("\r\n-->state grid upload history fail\r\n");
+            }
+          break;
+          
           case HEARTBEAT_ID:
             if(recbuf[index+1]==HEARTBEAT_ID_ACK){
               APP_DEBUG("\r\n-->state grid heartbeat success!!!\r\n");

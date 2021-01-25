@@ -15,8 +15,7 @@
 #include "eybpub_UnixTime.h"
 
 #include "eybpub_data_collector_parameter_table.h"
-
-// #include "SysAttr.h"
+#include "history.h"
 
 #ifdef _PLATFORM_M26_
 #include "FlashFIFO.h"
@@ -155,7 +154,8 @@ static void StateGrid_init(void) {
   historySapce = 0;
   list_init(&rcveList);
   StateGrid_dataCollect();
-//  FlashFIFO_init(&historyHead, FLASH_HANERGY_HISTORY_ADDR, FLASH_HANERGY_HISTORY_SIZE);
+  //FlashFIFO_init(&historyHead, FLASH_HANERGY_HISTORY_ADDR, FLASH_HANERGY_HISTORY_SIZE);
+  history_init();
 }
 /*******************************************************************************
   * @note   None
@@ -1240,6 +1240,8 @@ static void stateGrid_historySave(void) {
       }
       pdu.lenght = pointBuf.lenght + sizeof(history_t);
 //      FlashFIFO_put(&historyHead, &pdu);
+      //写历史数据到history_file
+      history_put(history_head,&pdu);
     }
     memory_release(pdu.payload);
   }
@@ -1257,6 +1259,7 @@ static u8_t stateGrid_historyUpload(void) {
   pdu.payload = memory_apply(pdu.size);
 
 //  pdu.lenght = FlashFIFO_get(&historyHead, &pdu);
+  pdu.lenght=history_get(history_head,&pdu);
   if (pdu.lenght > 0) {
     Buffer_t *buf;
 

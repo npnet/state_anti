@@ -7,13 +7,14 @@
 #define _HISTORY_H_
 
 #include "grid_tool.h"
+#include "StateGrid.h"
 
-#define history_headoffset_len  (128)
+#define history_headoffset_len  STATE_GRID_CMD_SIZE   
 
 // 历史行长度
-#define history_line_len        (128)
+#define history_line_len        STATE_GRID_CMD_SIZE   
 // 历史文件大小
-#define history_file_size       ((150)*(1024)+(history_headoffset_len))
+#define history_file_size       ((100)*(STATE_GRID_CMD_SIZE)+(history_headoffset_len))
 #define history_pointer_size    ((history_file_size-history_headoffset_len)/history_line_len)
 
 // 服务器获取历史最大的条数
@@ -25,6 +26,10 @@ typedef struct {
   u8 arry[];
 } history_head_t;
 
+extern history_head_t *history_head;
+
 s32 history_init(void);
+void history_put(history_head_t *head,  Buffer_t *buf);
+s32 history_get(history_head_t *head,  Buffer_t *buf);
 
 #endif /* _HISTORY_H_ */

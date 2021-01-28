@@ -167,7 +167,7 @@ void proc_commonServer_task(s32_t taskId) {
         
         //APP_DEBUG("\r\n-->server=%ld\r\n",server);
         //50
-        if (ret == 0xFF && relinkTime++ > 100) {   
+        if (ret == 0xFF && relinkTime++ > 70) {   
           if (server == null) {
             //for (ret = 0; ret < sizeof(serverTab) / sizeof(serverTab[0]); ret++) {
               ret=0;        //仅有国网
@@ -208,7 +208,7 @@ void proc_commonServer_task(s32_t taskId) {
         }
         else{
             //if (overtime++ > server->api->waitTime){
-            if (overtime++ > 600){
+            if (overtime++ > 660){
                 overtime = 20;
 						    //Net_close(sPort);
                 ssl_relink();

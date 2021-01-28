@@ -11,8 +11,8 @@
 #define history_file  "/history_file.ini"        //文件名
 
 s32     iFd_history = 0;                     //文件描述符
-//static char history_head_buf[history_headoffset_len];
-static char history_head_buf[history_head_len];
+static char history_head_buf[history_headoffset_len];
+//static char history_head_buf[history_head_len];
 
 history_head_t *history_head = (history_head_t *)history_head_buf;
 
@@ -117,90 +117,6 @@ s32 history_init(void)
   return history_size;
 }
 
-
-/*
-s32 history_init(void) {
-  s32_t ret = 0;
-
-  //fibo_file_delete(history_file);
-
-  s32_t history_size = fibo_file_getSize(history_file);
-  if ((fibo_file_exist(history_file)==1)&&(history_size > 0)) {
-    APP_DEBUG("found old history file!\r\n");
-    //头信息获取失败
-    if (history_head_get() != 0) {
-      APP_DEBUG("run history file head err!\r\n");
-      
-      history_size = -1;
-    } else if ((history_head->file_logw_pointer >= history_pointer_size) ||
-               (history_head->file_logr_pointer >= history_pointer_size)) {
-      //文件大小和当前读写指针不匹配
-      APP_DEBUG("history log file size err!\r\n");
-      fibo_file_delete(history_file);
-      history_size = -1;
-    }
-  }
-
-  if ((fibo_file_exist(history_file)!=1)||(history_size <= 0)) {
-    APP_DEBUG("run history file create\r\n");
-    history_head->file_logw_pointer = 0;
-    history_head->file_logr_pointer = 0;
-    iFd_history = fibo_file_open(history_file, FS_O_RDWR | FS_O_CREAT | FS_O_TRUNC);   // 读写、创建
-    if (iFd_history < 0) {
-      APP_DEBUG("history file create error\r\n");
-      return history_size;
-    }
-    ret = fibo_file_seek(iFd_history, 0, FS_SEEK_SET);
-    if (ret < 0) {
-      APP_DEBUG("history file create seek error\r\n");
-      ret = fibo_file_close(iFd_history);
-      if (ret < 0) {
-        APP_DEBUG("history file create close error\r\n");
-      }
-      return history_size;
-    }
-    ret = fibo_file_write(iFd_history, (u8_t *)history_head_buf, sizeof(history_head_buf));
-    if (ret < 0) {
-      APP_DEBUG("history file create write head error\r\n");
-      ret = fibo_file_close(iFd_history);
-      if (ret < 0) {
-        APP_DEBUG("history file create close error\r\n");
-      }
-      return history_size;
-    }
-    ret = fibo_file_fsync(iFd_history);
-    if (ret < 0) {
-      APP_DEBUG("history file create sync error\r\n");
-      ret = fibo_file_close(iFd_history);
-      if (ret < 0) {
-        APP_DEBUG("history file create close error\r\n");
-      }
-      return history_size;
-    }
-    ret = fibo_file_close(iFd_history);
-    if (ret < 0) {
-      APP_DEBUG("history file create close error\r\n");
-      return history_size;
-    }
-    history_size = fibo_file_getSize(history_file);
-  }
-
-  iFd_history = fibo_file_open(history_file, FS_O_RDONLY);
-  
-  ret = fibo_file_seek(iFd_history, 0, FS_SEEK_SET);
-  history_size=fibo_file_read(iFd_history,(u8_t *)history_head_buf,sizeof(history_head_buf));
-
-  history_size = fibo_file_getSize(history_file);
-  APP_DEBUG("\r\n-->state grid hisory init lenght:%ld",history_size);
-  
-  ret = fibo_file_fsync(iFd_history);
-  ret = fibo_file_close(iFd_history);
-
-  sw_historyhead_rp = history_head->file_logr_pointer;
-  return history_size;
-}
-*/
-
 /*******************************************************************************            
 * introduce:        
 * parameter:                       
@@ -210,10 +126,6 @@ s32 history_init(void) {
 s32 history_put(history_head_t *head,  Buffer_t *buf)
 {
   s32 ret=-1;
-  //u16 history_size;
-  //u8 len_buf[4]= {0};
-  //u8 *pdata=len_buf;
-  //u16 len=0;
 
   u8 history_buf[history_line_len]={0};
   buf_t *history_data=(buf_t *)history_buf;
@@ -222,25 +134,16 @@ s32 history_put(history_head_t *head,  Buffer_t *buf)
   //国网历史数据长度不能超过450
   if(buf->lenght>STATE_GRID_CMD_SIZE)
     return ret;
-  print_buf(buf->payload,buf->lenght);
+  //print_buf(buf->payload,buf->lenght);
 
   //若写指针超出，删除文件，指针归零
-  //if(head->file_logw_pointer>=history_pointer_size){
-  //  fibo_file_delete(history_file);
-    history_init();
-  //}
-
-  //len=buf->lenght;
-  //*pdata++=len>>24;
-  //*pdata++=len>>16;
-  //*pdata++=len>>8;
-  //*pdata=len>>0;
+  history_init();
 
   //得到国网历史数据写入BUF:history_buf
   history_data->lenght=buf->lenght;
   r_memcpy(history_data->payload,buf->payload, buf->lenght);
   history_data->size=sizeof(history_data->size)+sizeof(history_data->lenght)+history_data->lenght;
-  print_buf(history_buf,history_data->size);
+  //print_buf(history_buf,history_data->size);
 
   iFd_history = fibo_file_open(history_file, FS_O_WRONLY|FS_O_APPEND);
   if (iFd_history < 0) {
@@ -252,6 +155,8 @@ s32 history_put(history_head_t *head,  Buffer_t *buf)
   ret=fibo_file_write(iFd_history, (u8_t *)history_buf, sizeof(history_buf));
   if(ret!=sizeof(history_buf)){
     APP_DEBUG("\r\n-->state grid history write fail,ret=%ld\r\n",ret);
+    fibo_file_fsync(iFd_history);
+    fibo_file_close(iFd_history);
     return ret;
   }
 
@@ -278,12 +183,13 @@ u16 history_get(history_head_t *head,  Buffer_t *buf)
 {
   s32 ret=-1;
   u16 history_size=0xffff;
-  u8 history_buf[history_line_len];
+  u8 history_buf[history_line_len]={0};
   buf_t *history_data=(buf_t *)history_buf;
 
   history_init();
 
-  iFd_history = fibo_file_open(history_file, FS_O_RDWR|FS_O_APPEND);
+  //iFd_history = fibo_file_open(history_file, FS_O_RDWR|FS_O_APPEND);
+  iFd_history = fibo_file_open(history_file, FS_O_RDONLY);
   if (iFd_history < 0) {
     APP_DEBUG("open history file fail!\r\n");
     return history_size;
@@ -292,8 +198,9 @@ u16 history_get(history_head_t *head,  Buffer_t *buf)
   //从文件history_file读取指针head->file_logr_pointer指定的数据，存入history_buf  
   ret = fibo_file_seek(iFd_history, head->file_logr_pointer * history_line_len + history_headoffset_len, FS_SEEK_SET);
   history_size=fibo_file_read(iFd_history, (u8_t *)history_buf, sizeof(history_buf));
+  ret = fibo_file_fsync(iFd_history);
+  ret = fibo_file_close(iFd_history);
 
-  print_buf(history_buf,history_data->size);
   //得到返回数据
   history_size=history_data->lenght;
   if(history_size==0||history_size>STATE_GRID_CMD_SIZE||(history_data->size!=history_size+4)){
@@ -301,18 +208,12 @@ u16 history_get(history_head_t *head,  Buffer_t *buf)
     return history_size;
   }
   r_memcpy(buf->payload,history_data->payload,history_size);
+  //print_buf(history_buf,history_data->size);
 
-  // 读指针加1
-  //指针超出格式化文件 
   head->file_logr_pointer = (head->file_logr_pointer + 1);    //% history_pointer_size;
-  //if(head->file_logr_pointer>=history_pointer_size){
-  //  fibo_file_close(iFd_history);
-  //  fibo_file_delete(history_file);
-  //  history_init();
-  //}else{
-    ret = fibo_file_seek(iFd_history, 0, FS_SEEK_SET);
-    fibo_file_write(iFd_history,(u8_t *)history_head_buf,sizeof(history_head_buf));
- // }
+  iFd_history = fibo_file_open(history_file, FS_O_WRONLY|FS_O_APPEND);
+  ret = fibo_file_seek(iFd_history, 0, FS_SEEK_SET);
+  fibo_file_write(iFd_history,(u8_t *)history_head_buf,sizeof(history_head_buf));
   ret = fibo_file_fsync(iFd_history);
   ret = fibo_file_close(iFd_history);
 

@@ -170,7 +170,8 @@ static s8 ssl_socket(void)
         if(ssl_counter)
           break;
         
-        ssl_index=3; 
+        //ssl_index=3; 
+        ssl_counter=20;   //*500ms*20
 
         sslsock = fibo_ssl_sock_create();
         if (sslsock == -1){

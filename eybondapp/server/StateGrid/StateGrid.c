@@ -208,16 +208,16 @@ static void StateGrid_run(u8_t status)
             if (step == 0)
             {
                 stateGrid_login();
-                ret=ssl_rec();
-                if(ret>0)
-                  step=1;     
+                //ret=ssl_rec();
+                //if(ret>0)
+                //  step=1;     
             }
             else if (step == 1)
             {
                 stateGrid_register();
-                ret=ssl_rec();
-                if(ret>0)
-                  step=2;     
+                //ret=ssl_rec();
+                //if(ret>0)
+                //  step=2;     
             }
             else if ((step == 2)
                     && (++uploadDataSpace  >  (60 * 5/SEND_SPACE))
@@ -229,18 +229,18 @@ static void StateGrid_run(u8_t status)
             {
                 uploadDataSpace -= 2;
                 stateGrid_upload();
-                ret=ssl_rec();
-                if(ret>0)
-                  step=2;     
+                //ret=ssl_rec();
+                //if(ret>0)
+                //  step=2;     
             }
             else if (++heartbeatSpace > (60/SEND_SPACE))
             {
                 heartbeatSpace -= 2;
                 stateGrid_heartbeat();
-                ret=ssl_rec();
-                if(ret>0){
-                  APP_DEBUG("\r\nState Grid heartbeat OK\r\n");
-                }
+                //ret=ssl_rec();
+                //if(ret>0){
+                //  APP_DEBUG("\r\nState Grid heartbeat OK\r\n");
+                //}
                        
             }
             
@@ -1584,6 +1584,18 @@ static u8_t stateGrid_heartbeatAck(StateGrid_t *sg) {
 
   return 0;
 }
+
+/*******************************************************************************            
+* introduce:        
+* parameter:                       
+* return:                 
+* author:           Luee                                                    
+*******************************************************************************/
+void set_grid_step(u8_t grid_step)
+{
+  step=grid_step;
+}
+
 /******************************************************************************/
 
 

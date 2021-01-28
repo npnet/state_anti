@@ -125,6 +125,7 @@ void proc_commonServer_task(s32_t taskId) {
   ST_MSG msg;
   //u16_t relinkTime = 0;
   u8_t eybnet_index=0xff;
+  s32 rets32;
 
   APP_PRINT("Common server task run!!\r\n");
   r_memset(&msg, 0, sizeof(ST_MSG));
@@ -220,6 +221,7 @@ void proc_commonServer_task(s32_t taskId) {
 
         case COMMON_SERVER__DATA_PROCESS:
           if (server != null && server->api != null){
+              //rets32=ssl_rec();
               server->api->process();
             }
         break;
@@ -288,6 +290,7 @@ void CommonServerDataSend(Buffer_t *buf)
           //print_buf((UINT8 *)buf->payload, buf->lenght);
         }
         //statenet_para.send_status=false;
+        ret=ssl_rec();
 	}
 } 
 

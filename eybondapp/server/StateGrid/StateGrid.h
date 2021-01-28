@@ -53,6 +53,7 @@ int StateGrid_check(void);
 u16_t StateGrid_station(u8_t addr, u32_t *No);
 
 ServerAddr_t *state_ServerAdrrGet(u8_t num);
+void set_grid_step(u8_t grid_step);
 
 #endif //__STATE_GRID_H
 /******************************************************************************/

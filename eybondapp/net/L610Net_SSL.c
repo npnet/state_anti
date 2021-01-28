@@ -17,6 +17,7 @@
 #include "fibo_opencpu.h"
 #include "L610Net_TCP_EYB.h"
 #include "CommonServer.h"
+#include "StateGrid.h"
 
 #define LOGIN_ID      0x00
 #define REGISTER_ID   0x01
@@ -292,6 +293,7 @@ s32 ssl_rec(void)
             if(recbuf[index+1]==LOGIN_ID_ACK){
               APP_DEBUG("\r\n-->state grid login success!!!\r\n");
               ret=rec_len;
+              set_grid_step(1);
             }else{
               APP_DEBUG("\r\n-->state grid login fail\r\n");
             }
@@ -300,6 +302,7 @@ s32 ssl_rec(void)
             if(recbuf[index+1]==REGISTER_ID_ACK){
               APP_DEBUG("\r\n-->state grid register success!!!\r\n");
               ret=rec_len;
+              set_grid_step(2);
             }else{
               APP_DEBUG("\r\n-->state grid register fail\r\n");
             }

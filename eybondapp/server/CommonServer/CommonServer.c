@@ -167,7 +167,7 @@ void proc_commonServer_task(s32_t taskId) {
         
         //APP_DEBUG("\r\n-->server=%ld\r\n",server);
         //50
-        if (ret == 0xFF && relinkTime++ > 50) {   
+        if (ret == 0xFF && relinkTime++ > 100) {   
           if (server == null) {
             //for (ret = 0; ret < sizeof(serverTab) / sizeof(serverTab[0]); ret++) {
               ret=0;        //仅有国网
@@ -280,17 +280,14 @@ void CommonServerDataSend(Buffer_t *buf)
         //statenet_para.send_status=true;
         APP_DEBUG("\r\nssl sending\r\n");
         ret = fibo_ssl_sock_send(sslsock, (u8 *)buf->payload, buf->lenght);
-        //连接失败重连
-      //if(ret==-1){
-      //  ssl_relink();
-      //  SSLNet->status=L610_FAIL;
-      //}
-
-        APP_DEBUG("\r\nfibossl sys_sock_send %ld\r\n", ret);
-        //log_hex((UINT8 *)buf->payload, buf->lenght);
-        print_buf((UINT8 *)buf->payload, buf->lenght);
+        if(ret<0){
+          APP_DEBUG("\r\n-->state grid ssl send fail ret=%ld\r\n", ret);
+        }else{
+          APP_DEBUG("\r\n-->state grid ssl send success ret=%ld\r\n", ret);
+          //log_hex((UINT8 *)buf->payload, buf->lenght);
+          //print_buf((UINT8 *)buf->payload, buf->lenght);
+        }
         //statenet_para.send_status=false;
-
 	}
 } 
 

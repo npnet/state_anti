@@ -82,6 +82,7 @@ static void soft_reset_handle(void);
 void ssl_relink(void)
 {
   relinkTime=0;
+  overtime = 0;
 
   CommonServer_close();
   sPort = 0xff;  
@@ -158,8 +159,8 @@ void proc_commonServer_task(s32_t taskId) {
         soft_reset_handle();
 
         //no eybnet
-        if(m_GprsActState != STATE_DNS_READY)
-          break;
+        //if(m_GprsActState != STATE_DNS_READY)
+        //  break;
 
         ret = Net_status(sPort);
         APP_DEBUG("\r\n-->socket[%d] status %d relinkTime %d\r\n", sPort, ret, relinkTime);
@@ -207,11 +208,11 @@ void proc_commonServer_task(s32_t taskId) {
         }
         else{
             //if (overtime++ > server->api->waitTime){
-            //if (overtime++ > 280){
-            //    overtime = 20;
-						//    //Net_close(sPort);
-            //    ssl_relink();
-					  //}
+            if (overtime++ > 360){
+                overtime = 20;
+						    //Net_close(sPort);
+                ssl_relink();
+					  }
         }
         if (server != null && server->api != null){
               server->api->run(ret);
@@ -272,6 +273,7 @@ void CommonServerDataSend(Buffer_t *buf)
 	if (buf != null && buf->payload != null && buf->lenght > 0)
 	{
         s32 ret;
+        overtime=0;
         //网络空闲才发送
        //while(eybnet_para.send_status)
        //     fibo_taskSleep(200);

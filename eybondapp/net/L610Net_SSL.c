@@ -197,6 +197,7 @@ static s8 ssl_socket(void)
 
       //ssl socket connect fail,handle
       case 3: 
+        ssl_counter=20;
         ssl_index=0;
         ret=-1;
       break;

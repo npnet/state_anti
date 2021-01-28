@@ -1253,15 +1253,18 @@ static void stateGrid_historySave(void) {
 *******************************************************************************/
 static u8_t stateGrid_historyUpload(void) {
   Buffer_t pdu;
+  u16 len;
 
   pdu.size = 1024;
   pdu.lenght = 0;
   pdu.payload = memory_apply(pdu.size);
 
 //  pdu.lenght = FlashFIFO_get(&historyHead, &pdu);
-  pdu.lenght=history_get(history_head,&pdu);
-  if (pdu.lenght > 0) {
+  len=history_get(history_head,&pdu);
+  if (len > 0&&len<=STATE_GRID_CMD_SIZE) {
     Buffer_t *buf;
+
+    pdu.lenght=len;
 
     buf = StateGridCmd_create(0x05, 1, pdu);
     CommonServerDataSend(buf);

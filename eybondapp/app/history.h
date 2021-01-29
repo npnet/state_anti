@@ -27,11 +27,13 @@ typedef struct {
   u8 arry[];
 } history_head_t;
 
+#pragma pack(1)
 typedef struct {
   u16_t size;
   u16_t lenght;
   u8_t payload[];
 } buf_t;
+#pragma pack()
 
 extern history_head_t *history_head;
 

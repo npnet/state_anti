@@ -859,6 +859,8 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
   s32_t ret = 0;
   UINT8 strBuf[MAX_NET_BUFFER_LEN] = {0};
 
+  s32 relink=0;
+
   while(1) {
 //    APP_DEBUG("L610_TCP_Callback task: %d\r\n", nIndex);
     if (m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
@@ -881,9 +883,11 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
       cmdbuf.size = MAX_NET_BUFFER_LEN;
       cmdbuf.lenght = 0;
       cmdbuf.payload = memory_apply(MAX_NET_BUFFER_LEN);
-      r_memset(cmdbuf.payload, '\0', MAX_NET_BUFFER_LEN);  
+      r_memset(cmdbuf.payload, '\0', MAX_NET_BUFFER_LEN); 
+      fibo_taskSleep(500);  //Luee
       ret = fibo_sock_recv(netManage[nIndex].socketID, cmdbuf.payload, cmdbuf.size);
       if (ret > 0) {
+        relink=0;
         cmdbuf.lenght = ret;
         APP_DEBUG("IP: %s socket: %ld read %ld data!\r\n", netManage[nIndex].ipStr,netManage[nIndex].socketID, ret);
 
@@ -907,12 +911,15 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
         }
       } else if (retlen == 0) {
         APP_DEBUG("socket: %ld remote is closed!\r\n", netManage[nIndex].socketID);
-        L610Net_close(nIndex);
+        if(relink++>20){
+            relink=0;
+            L610Net_close(nIndex);
+        }
       } else {
         APP_DEBUG("socket: %ld read failt!\r\n", netManage[nIndex].socketID);
       }
     } else {
-      fibo_taskSleep(1000);
+      fibo_taskSleep(500);    //Luee
     }
   }
   fibo_thread_delete();

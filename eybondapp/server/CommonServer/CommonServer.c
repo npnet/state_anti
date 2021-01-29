@@ -288,7 +288,7 @@ void CommonServerDataSend(Buffer_t *buf)
         if(ret<0){
           APP_DEBUG("\r\n-->state grid ssl send fail ret=%ld\r\n", ret);
         }else{
-          APP_DEBUG("\r\n-->state grid ssl send success ret=%ld\r\n", ret);
+          //APP_DEBUG("\r\n-->state grid ssl send success ret=%ld\r\n", ret);
           //log_hex((UINT8 *)buf->payload, buf->lenght);
           //print_buf((UINT8 *)buf->payload, buf->lenght);
         }

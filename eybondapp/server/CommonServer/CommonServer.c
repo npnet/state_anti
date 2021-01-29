@@ -36,6 +36,9 @@
 #include "L610Net_TCP_EYB.h"
 #include "eybpub_Status.h"
 
+net_para_t eybnet_para;
+net_para_t statenet_para;
+
 typedef int (*ServerCheck)(void);
 
 typedef struct {
@@ -277,9 +280,9 @@ void CommonServerDataSend(Buffer_t *buf)
         s32 ret;
         overtime=0;
         //网络空闲才发送
-       //while(eybnet_para.send_status)
-       //     fibo_taskSleep(200);
-        //statenet_para.send_status=true;
+       while(eybnet_para.send_status)
+            fibo_taskSleep(200);
+        statenet_para.send_status=true;     //标志国网正在发送
         APP_DEBUG("\r\nssl sending\r\n");
         ret = fibo_ssl_sock_send(sslsock, (u8 *)buf->payload, buf->lenght);
         if(ret<0){
@@ -289,7 +292,7 @@ void CommonServerDataSend(Buffer_t *buf)
           //log_hex((UINT8 *)buf->payload, buf->lenght);
           //print_buf((UINT8 *)buf->payload, buf->lenght);
         }
-        //statenet_para.send_status=false;
+        statenet_para.send_status=false;    //发送结束
         ret=ssl_rec();
 	}
 } 

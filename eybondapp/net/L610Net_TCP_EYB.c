@@ -801,9 +801,15 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     if (netManage[nIndex].mode == 2) {
 //      ret = SSL_Send(netManage[nIndex].socketID, (u8_t *)data, len);
     } else {
-       ret = fibo_sock_send(netManage[nIndex].socketID, (u8_t *)data, len);       
+        while(statenet_para.send_status)    //Luee
+          fibo_taskSleep(200);
+        eybnet_para.send_status=true;      
+
+        ret = fibo_sock_send(netManage[nIndex].socketID, (u8_t *)data, len);       
       //  APP_DEBUG("socket[%d] %d send %d data ret %d\r\n", nIndex, netManage[nIndex].socketID, len, ret);  
         APP_DEBUG("ip: %s port:%d socket send OK!\r\n", netManage[nIndex].ipStr, netManage[nIndex].port);        
+
+        eybnet_para.send_status=false;
     }
   }
 //  ret = fibo_sock_send(g_socketid, (u8_t *)data, len);

@@ -19,6 +19,7 @@
 #include "eyblib_typedef.h"
 #include "eyblib_list.h"
 #include "eybpub_SysPara_File.h"
+#include "grid_tool.h"
 #define MSG_ID_USER_COMMONSERVER_START     0xA000
 #define COMMON_SERVER__DATA_PROCESS        MSG_ID_USER_COMMONSERVER_START + 0xF10
 #define COMMON_SERVER__EYBNET_READY        MSG_ID_USER_COMMONSERVER_START + 0xF11
@@ -43,6 +44,19 @@ typedef struct {
   void_fun_void sclose;    // server close
   void_fun_void clean;    // server config or log clean
 } CommonServer_t;
+
+//结构体
+//server net status
+typedef struct{
+  u8 inwork_status;   //=1 in work success
+	u8 send_status;     //=1 sending =0 send finish
+  u16 send_counter;   //send required time
+  u8 rec_status;      //=1 receiving =0 receive finish
+  u16 rec_counter;    //receiving required time
+}net_para_t;
+
+extern net_para_t eybnet_para;
+extern net_para_t statenet_para;
 
 void proc_commonServer_task(s32_t taskId);
 void CommonServerDataSend(Buffer_t *buf);

@@ -731,7 +731,7 @@ void grid_Net_manage(void)
 	s8_t ret;
 
 	//益邦云连上后才处理国网
-//	if(m_GprsActState == STATE_DNS_READY){
+	if(m_GprsActState == STATE_DNS_READY){
 		if (offset < sizeof(netManage)/sizeof(netManage[0])){
 			if (netManage[offset].flag == 1 && netManage[offset].status != L610_SUCCESS && netManage[offset].status != L610_CONNECTING){
 				if (netManage[offset].mode == 2){
@@ -751,7 +751,7 @@ void grid_Net_manage(void)
 		else{
 			offset=0;
 		}	
-//	}	
+	}	
 }
 
 

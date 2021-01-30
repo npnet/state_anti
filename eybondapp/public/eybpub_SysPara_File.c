@@ -607,6 +607,7 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
         } else {
           r_memset(databuf->payload, 0, databuf->size + 1);
           r_memcpy(databuf->payload, buf_value, databuf->lenght);
+          APP_DEBUG("\r\n-->tcp lose:get para num= %ld,value=%s,len=%d\r\n",number,databuf->payload,databuf->lenght);
         }
       } else {
         APP_DEBUG("para fail!\r\n");

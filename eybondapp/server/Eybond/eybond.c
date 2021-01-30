@@ -38,6 +38,8 @@
 #include "Modbus.h"
 #include "Sineng.h"
 
+#include "grid_tool.h"
+
 // #include "FlashFIFO.h"
 // #include "FlashEquilibria.h"
 // #include "FlashHard.h"
@@ -83,7 +85,7 @@ static u8_t devtrans(ESP_t *esp);
 static u8_t devtransAck(Device_t *dev);
 static u8_t deviceDataGet(ESP_t *esp);
 static u8_t specialData_receive(ESP_t *esp);
-// static u8_t historyData(ESP_t *esp);
+static u8_t historyData(ESP_t *esp);
 // static void historySave(void);
 #ifdef _PLATFORM_L610_
 static u8_t heartbeat(ESP_t *esp);
@@ -94,7 +96,7 @@ const funcationTab_t funTab[] = {
     {EYBOND_SET_PATA,   paraSet},
     {EYBOND_TRANS,      devtrans},
     {EYBOND_GET_DEVICE_PARA,    deviceDataGet},
-//  {EYBOND_GET_DEVICE_HISTORY, historyData},
+    {EYBOND_GET_DEVICE_HISTORY, historyData},
     {EYBOND_REPORT_SPECIAL,     specialData_receive},
     {EYBOND_GET_COMMUNICATION,  commnuicationData},
     {EYBOND_FILE_UPDATE,        Update_file},
@@ -199,9 +201,13 @@ void proc_eybond_task(s32_t taskId) {
 *******************************************************************************/
 void ESP_callback(u8_t nIndex, Buffer_t *buf) { // 网络数据解析
 //  overtime_ESP = 0;
+  APP_DEBUG("\r\n-->tcp lose:recieve tcp len=%d\r\n",buf->lenght);    //Luee
+  print_buf(buf->payload,buf->lenght);
+
   sPort = nIndex;
   ESP_cmd(buf, NetMsgAck_Eybond);
   memory_release(buf->payload);  // 释放申请的输入指令内存
+
 }
 
 /*******************************************************************************
@@ -1286,6 +1292,82 @@ static u8_t commnuicationData(ESP_t *esp) {
   memory_release(buf.payload);
   return 1;
 }
+
+//eyb history
+/*******************************************************************************
+  * @brief  
+  * @note   None
+  * @param  None
+*******************************************************************************/
+static u8_t historyData(ESP_t *esp)
+{
+#pragma pack(1)
+    typedef struct
+    {
+		u8_t flag;
+        u8_t spaceH;
+        u8_t spaceL;
+    }rcve_t;
+#pragma pack() 
+
+    Buffer_t buf;
+    EybondHeader_t *ackHead;
+	rcve_t *para = (rcve_t*)(esp->PDU);
+/*
+	if (histprySaveSpace != ((para->spaceH<<8) | para->spaceL))
+	{
+		histprySaveSpace = ((para->spaceH<<8) | para->spaceL);
+		FlashEquilibria_write(&saveSpace, &histprySaveSpace);
+	}
+	
+	buf.size = MAX_CMD_LEN;
+	buf.payload = memory_apply(buf.size);
+	ackHead = (EybondHeader_t *)buf.payload;
+	while (buf.payload)
+	{
+        buf.lenght = FlashFIFO_get(&historyHead, &buf);
+
+		if (buf.lenght) 
+		{
+			if (crc16_standard(CRC_RTU, buf.payload, buf.lenght) == 0)	 
+			{
+				ackHead->serial = esp->head.serial;
+				ackHead->func = esp->head.func;
+				buf.payload[8] = 0x01;
+				buf.lenght -= 2;
+				
+				break;
+			}
+		}
+		else
+		{
+			r_memcpy(ackHead, &esp->head, sizeof(EybondHeader_t));
+			ackHead->msgLen = ENDIAN_BIG_LITTLE_16(3);
+			buf.payload[8] = 0x00;
+			buf.lenght = sizeof(EybondHeader_t) + 1;
+            break;
+		}
+	}
+*/
+      //没有历史数据直接回复  Luee
+      buf.size = MAX_CMD_LEN;
+	    buf.payload = memory_apply(buf.size);
+	    ackHead = (EybondHeader_t *)buf.payload;
+
+      r_memcpy(ackHead, &esp->head, sizeof(EybondHeader_t));
+			ackHead->msgLen = ENDIAN_BIG_LITTLE_16(3);
+			buf.payload[8] = 0x00;
+			buf.lenght = sizeof(EybondHeader_t) + 1;
+      //以上几行为新增
+
+    esp->ack(&buf);
+	  memory_release(buf.payload);
+    return 0;
+}
+
+
+
+
 #endif
 /******************************************************************************/
 

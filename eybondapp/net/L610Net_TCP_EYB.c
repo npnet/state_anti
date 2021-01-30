@@ -807,7 +807,9 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
 
         ret = fibo_sock_send(netManage[nIndex].socketID, (u8_t *)data, len);       
       //  APP_DEBUG("socket[%d] %d send %d data ret %d\r\n", nIndex, netManage[nIndex].socketID, len, ret);  
-        APP_DEBUG("ip: %s port:%d socket send OK!\r\n", netManage[nIndex].ipStr, netManage[nIndex].port);        
+        APP_DEBUG("ip: %s port:%d socket send OK!\r\n", netManage[nIndex].ipStr, netManage[nIndex].port);  
+        APP_DEBUG("\r\n-->tcp lose:tcp send ok\r\n")
+
 
         eybnet_para.send_status=false;
     }

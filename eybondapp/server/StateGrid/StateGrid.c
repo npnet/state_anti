@@ -96,13 +96,13 @@ static void stateGrid_heartbeat(void);
 static u8_t stateGrid_heartbeatAck(StateGrid_t *sg);
 
 static const StateGridTab_t stateGridCmdTab[] = {
-  {0x00, stateGrid_loginAck},             // 登录
-  {0x01, stateGrid_registerAck},          // 注册厂站
-  {0x04, stateGrid_uploadAck},            // 上报实时数据
-  {0x05, stateGrid_historyUploadAck},     // 上报断点续传数据
+  //{0x00, stateGrid_loginAck},             // 登录
+  //{0x01, stateGrid_registerAck},          // 注册厂站
+  //{0x04, stateGrid_uploadAck},            // 上报实时数据
+  //{0x05, stateGrid_historyUploadAck},     // 上报断点续传数据
   {0x10, stateGrid_getData},              // 召测实时数据
   {0x21, stateGrid_prooftime},            // 对时
-  {0x99, stateGrid_heartbeatAck}          // 链路测试（心跳）
+  //{0x99, stateGrid_heartbeatAck}          // 链路测试（心跳）
 };
 /*******************************************************************************
   * @note   None
@@ -217,7 +217,8 @@ static void StateGrid_run(u8_t status)
                 stateGrid_register();
                 //ret=ssl_rec();
                 //if(ret>0)
-                //  step=2;     
+                //  step=2;   
+                //uploadDataSpace=0;  
             }
             else if ((step == 2)
                     && (++uploadDataSpace  >  (60 * 5/SEND_SPACE))

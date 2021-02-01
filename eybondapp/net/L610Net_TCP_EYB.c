@@ -731,7 +731,7 @@ void grid_Net_manage(void)
 	s8_t ret;
 
 	//益邦云连上后才处理国网
-	if(m_GprsActState == STATE_DNS_READY){
+//	if(m_GprsActState == STATE_DNS_READY){
 		if (offset < sizeof(netManage)/sizeof(netManage[0])){
 			if (netManage[offset].flag == 1 && netManage[offset].status != L610_SUCCESS && netManage[offset].status != L610_CONNECTING){
 				if (netManage[offset].mode == 2){
@@ -751,7 +751,7 @@ void grid_Net_manage(void)
 		else{
 			offset=0;
 		}	
-	}	
+//	}	
 }
 
 
@@ -802,7 +802,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
 //      ret = SSL_Send(netManage[nIndex].socketID, (u8_t *)data, len);
     } else {
         while(statenet_para.send_status)    //Luee
-          fibo_taskSleep(200);
+          fibo_taskSleep(50);   //200
         eybnet_para.send_status=true;      
 
         ret = fibo_sock_send(netManage[nIndex].socketID, (u8_t *)data, len);       

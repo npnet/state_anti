@@ -171,7 +171,7 @@ void proc_commonServer_task(s32_t taskId) {
         
         //APP_DEBUG("\r\n-->server=%ld\r\n",server);
         //50
-        if (ret == 0xFF && relinkTime++ > 70) {   
+        if (ret == 0xFF && relinkTime++ > 60) {   
           if (server == null) {
             //for (ret = 0; ret < sizeof(serverTab) / sizeof(serverTab[0]); ret++) {
               ret=0;        //仅有国网
@@ -281,7 +281,7 @@ void CommonServerDataSend(Buffer_t *buf)
         overtime=0;
         //网络空闲才发送
        while(eybnet_para.send_status)
-            fibo_taskSleep(200);
+            fibo_taskSleep(50);   //200
         statenet_para.send_status=true;     //标志国网正在发送
         APP_DEBUG("\r\nssl sending\r\n");
         ret = fibo_ssl_sock_send(sslsock, (u8 *)buf->payload, buf->lenght);

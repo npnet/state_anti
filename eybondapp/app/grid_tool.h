@@ -17,6 +17,9 @@
 #include "eybpub_SysPara_File.h"
 #include "eybpub_data_collector_parameter_table.h"
 
+//set will init para
+//#define PARA_INIT   1
+
 typedef signed long long   s64;                            
 typedef signed long  s32;
 typedef signed short s16;

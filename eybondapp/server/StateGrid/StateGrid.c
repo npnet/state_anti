@@ -96,13 +96,13 @@ static void stateGrid_heartbeat(void);
 static u8_t stateGrid_heartbeatAck(StateGrid_t *sg);
 
 static const StateGridTab_t stateGridCmdTab[] = {
-  //{0x00, stateGrid_loginAck},             // 登录
-  //{0x01, stateGrid_registerAck},          // 注册厂站
-  //{0x04, stateGrid_uploadAck},            // 上报实时数据
-  //{0x05, stateGrid_historyUploadAck},     // 上报断点续传数据
+  {0x00, stateGrid_loginAck},             // 登录
+  {0x01, stateGrid_registerAck},          // 注册厂站
+  {0x04, stateGrid_uploadAck},            // 上报实时数据
+  {0x05, stateGrid_historyUploadAck},     // 上报断点续传数据
   {0x10, stateGrid_getData},              // 召测实时数据
   {0x21, stateGrid_prooftime},            // 对时
-  //{0x99, stateGrid_heartbeatAck}          // 链路测试（心跳）
+  {0x99, stateGrid_heartbeatAck}          // 链路测试（心跳）
 };
 /*******************************************************************************
   * @note   None
@@ -215,6 +215,7 @@ static void StateGrid_run(u8_t status)
             else if (step == 1)
             {
                 stateGrid_register();
+                
                 //ret=ssl_rec();
                 //if(ret>0)
                 //  step=2;   
@@ -972,9 +973,11 @@ static u8_t stateGrid_loginAck(StateGrid_t *sg) {
 
     if (ack->result == 0x01) {
       log_save("State Grid login OK");
+      APP_DEBUG("\r\n-->state grid login success!!!\r\n");
       step = 1; //login success
     } else {
       log_save("State Grid login ERR:%d", ack->result);
+      APP_DEBUG("\r\n-->state grid login fail\r\n");
     }
   } else {
     log_save("State Grid login ack lenght ERR %d", sg->cmd->pdu.lenght);
@@ -1102,9 +1105,11 @@ static u8_t stateGrid_registerAck(StateGrid_t *sg) {
 
     if (ack->result == 0x01) {
       log_save("State Grid register OK!");
+      APP_DEBUG("\r\n-->state grid register success!!!\r\n");
       step = 2; //register success
     } else {
       log_save("State Grid register ERR:%d", ack->result);
+      APP_DEBUG("\r\n-->state grid register fail!!!\r\n");
     }
   } else {
     log_save("State Grid login ack register ERR %d", sg->cmd->pdu.lenght);
@@ -1192,8 +1197,10 @@ static u8_t stateGrid_uploadAck(StateGrid_t *sg) {
     if (ack->result == 0x01) {
       APP_DEBUG("State Grid upload data OK\r\n ");
       log_save("State Grid upload data OK :%d", ack->result);
+      APP_DEBUG("\r\n-->state grid upload success!!!\r\n");
     } else {
       log_save("State Grid upload data ERR:%d", ack->result);
+      APP_DEBUG("\r\n-->state grid upload fail!!!\r\n");
     }
   } else {
     log_save("State Grid upload data ERR %d", sg->cmd->pdu.lenght);
@@ -1293,8 +1300,10 @@ static u8_t stateGrid_historyUploadAck(StateGrid_t *sg) {
 
     if (ack->result == 0x01) {
       APP_DEBUG("State Grid history upload data OK\r\n ");
+      APP_DEBUG("\r\n-->state grid upload history success!!!\r\n");
     } else {
       log_save("State Grid history upload data ERR:%d", ack->result);
+      APP_DEBUG("\r\n-->state grid upload history fail!!!\r\n");
     }
   } else {
     log_save("State Grid history upload data ERR %d", sg->cmd->pdu.lenght);
@@ -1577,9 +1586,10 @@ static u8_t stateGrid_heartbeatAck(StateGrid_t *sg) {
     heartbeatAck_t *ack = (heartbeatAck_t *)sg->cmd->pdu.payload;
 
     if (ack->code == 0x02) {
-      APP_DEBUG("State Grid heartbeat OK\r\n");
+      APP_DEBUG("\r\n-->state grid heartbeat success!!!\r\n");
     } else {
       log_save("State Grid heartbeat ERR:%d", ack->code);
+      APP_DEBUG("\r\n-->state grid heartbeat fail!!!\r\n");
     }
   }
 
@@ -1595,6 +1605,11 @@ static u8_t stateGrid_heartbeatAck(StateGrid_t *sg) {
 void set_grid_step(u8_t grid_step)
 {
   step=grid_step;
+}
+
+void set_heartbeatSpace(u32 space)
+{
+  heartbeatSpace = space;
 }
 
 /******************************************************************************/

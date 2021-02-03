@@ -30,6 +30,8 @@
 #include "L610Net_SSL.h"
 #include "CommonServer.h"
 
+#include "grid_tool.h"
+
 
 #define r_in_range(c, lo, up) ((u8_t)c >= lo && (u8_t)c <= up)
 #define r_isdigit(c) r_in_range(c, '0', '9')
@@ -187,7 +189,7 @@ GSMState_e m_GprsActState = STATE_TOTAL_NUM;
 //#define NET_PING_HOSTNAME  "114.114.114.114"
 
 //#define EYB_SOCKET_COUNTS 6
-L610Net_t netManage[EYB_SOCKET_COUNTS];
+L610Net_t netManage[EYB_SOCKET_COUNTS]={0};
 
 static s32_t L610pdpCntxtId;
 static u8_t registe = 0;
@@ -238,7 +240,8 @@ void L610Net_init(void) {
 
   NetLED_Off();
   GSMLED_Off();
-  r_memset(netManage, 0, sizeof(netManage));
+  
+  //r_memset(netManage, 0, sizeof(netManage));    //Luee
   
   g_netmutex = 0;
 
@@ -264,15 +267,18 @@ void L610Net_init(void) {
  return   : connect number 0~ 5; oxFF: full no space
 *******************************************************************************/
 u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) {
-  int i = 0;
+  s32 i = 0;
 
   for (i = 0; i < sizeof(netManage) / sizeof(netManage[0]); i++) {
     if (netManage[i].flag == 1
         && netManage[i].port == port
         && 0 == r_strncmp(ip, netManage[i].ipStr, r_strlen(netManage[i].ipStr))) {
-      netManage[i].flag = 1;
-      netManage[i].mode = mode;
-      netManage[i].callback = netCallback;
+          if(netManage[i].mode==2)
+            break;
+
+          netManage[i].flag = 1;
+          netManage[i].mode = mode;
+          netManage[i].callback = netCallback;
       /*
       APP_DEBUG("\r\n-->netManage[%ld] ID:%ld status:%d flag:%d mode:%d ipStr:%s ip:%lx port:%d \r\n", \
         i, netManage[i].socketID, netManage[i].status, netManage[i].flag, netManage[i].mode, \
@@ -289,11 +295,11 @@ u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) 
       netManage[i].socketID = -1;
       netManage[i].ip = 0;  
       r_strcpy(netManage[i].ipStr, ip);
-      /*
-      APP_DEBUG("\r\n-->netManage[%ld] ID:%ld status:%d flag:%d mode:%d ipStr:%s ip:%lx port:%d \r\n", \
+      
+      APP_DEBUG("\r\n-->state grid netManage[%ld] ID:%ld status:%d flag:%d mode:%d ipStr:%s port:%d \r\n", \
         i, netManage[i].socketID, netManage[i].status, netManage[i].flag, netManage[i].mode, \
-        netManage[i].ipStr, netManage[i].ip, netManage[i].port);
-      */
+        netManage[i].ipStr, netManage[i].port);
+      
       break;
     }
   }
@@ -307,7 +313,7 @@ u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback) 
  return   :
 *******************************************************************************/
 u8_t L610Net_status(u8_t nIndex) {
-  u16_t ret = 0xff;
+  u8_t ret = 0xff;
 
   if (nIndex < sizeof(netManage) / sizeof(netManage[0])) {
     if (netManage[nIndex].flag == 1) {
@@ -316,15 +322,50 @@ u8_t L610Net_status(u8_t nIndex) {
         NetLED_On();
       } else {
         NetLED_Off();
-        //国网处理
-        //if (netManage[nIndex].mode == 2){
-        //  ssl_relink();
-        //}
       }
     }
   }
 
   return ret;
+}
+
+u8_t state_status(u8_t nIndex) {
+  u8_t ret = 0xff;
+
+  if (nIndex < sizeof(netManage) / sizeof(netManage[0])) {
+    if (netManage[nIndex].flag == 1) {
+      ret = netManage[nIndex].status;
+      if (ret == L610_SUCCESS) {
+        NetLED_On();      //网络有数据，服务器连接成功
+        GSMLED_On();      //硬件网络连接成功
+      } else {
+        NetLED_Off();
+      }
+    }
+  }
+
+  return ret;
+}
+
+/*******************************************************************************
+ Brief    : 
+ Parameter:
+ return   :
+*******************************************************************************/
+void state_close(u8_t nIndex) 
+{
+  if (nIndex < sizeof(netManage) / sizeof(netManage[0])) {
+    if (netManage[nIndex].flag != 0) {
+      APP_DEBUG("netManage[%d] sockitID(%ld) Close\r\n", nIndex, netManage[nIndex].socketID);
+      if(netManage[nIndex].mode==2){
+        NetLED_Off();
+        netManage[nIndex].flag = 0;
+        netManage[nIndex].socketID = -1;
+        netManage[nIndex].ip = 0;
+        netManage[nIndex].status = L610_CLOSE;
+      }
+    }  
+  }
 }
 
 /*******************************************************************************
@@ -375,18 +416,16 @@ void L610Net_close(u8_t nIndex) {
     if (netManage[nIndex].flag != 0) {
       APP_DEBUG("netManage[%d] sockitID(%ld) Close\r\n", nIndex, netManage[nIndex].socketID);
       if(netManage[nIndex].mode==2){
-          //close state grid 
-          //fibo_ssl_sock_close(netManage[nIndex].socketID);
       }
       else{
         fibo_sock_close(netManage[nIndex].socketID);
-      }
-      NetLED_Off();
-    }
-    netManage[nIndex].flag = 0;
-    netManage[nIndex].socketID = -1;
-    netManage[nIndex].ip = 0;
-    netManage[nIndex].status = L610_CLOSE;
+        NetLED_Off();
+        netManage[nIndex].flag = 0;
+        netManage[nIndex].socketID = -1;
+        netManage[nIndex].ip = 0;
+        netManage[nIndex].status = L610_CLOSE; 
+      }   
+    }  
   }
 }
 
@@ -731,7 +770,7 @@ void grid_Net_manage(void)
 	s8_t ret;
 
 	//益邦云连上后才处理国网
-//	if(m_GprsActState == STATE_DNS_READY){
+	if(m_GprsActState == STATE_DNS_READY){
 		if (offset < sizeof(netManage)/sizeof(netManage[0])){
 			if (netManage[offset].flag == 1 && netManage[offset].status != L610_SUCCESS && netManage[offset].status != L610_CONNECTING){
 				if (netManage[offset].mode == 2){
@@ -751,7 +790,7 @@ void grid_Net_manage(void)
 		else{
 			offset=0;
 		}	
-//	}	
+	}	
 }
 
 
@@ -801,8 +840,8 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     if (netManage[nIndex].mode == 2) {
 //      ret = SSL_Send(netManage[nIndex].socketID, (u8_t *)data, len);
     } else {
-        while(statenet_para.send_status)    //Luee
-          fibo_taskSleep(50);   //200
+        //while(statenet_para.send_status)    //Luee
+        //  fibo_taskSleep(50);   //200
         eybnet_para.send_status=true;      
 
         ret = fibo_sock_send(netManage[nIndex].socketID, (u8_t *)data, len);       

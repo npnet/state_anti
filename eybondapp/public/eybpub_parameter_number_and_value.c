@@ -28,6 +28,8 @@
 #include "eybpub_SysPara_File.h"
 #include "eybpub_run_log.h"
 
+#include "grid_tool.h"
+
 #ifndef __TEST_FOR_UFS__
 #define __TEST_FOR_UFS__
 #endif
@@ -1106,6 +1108,11 @@ void a_copy_to_c(void) {
  * @return: 
 *******************************************************************************/     
 int live_a_and_b(void) {
+#ifdef PARA_INIT
+  //初始化参数
+  fibo_file_delete(g_recName_parameter_a);
+  fibo_file_delete(g_recName_parameter_b);
+#endif
   INT32  live_a =  fibo_file_exist (g_recName_parameter_a);
   INT32  live_b =  fibo_file_exist (g_recName_parameter_b);
   s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a);

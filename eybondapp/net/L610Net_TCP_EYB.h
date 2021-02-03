@@ -82,6 +82,8 @@ int netInTest(Buffer_t *buf);
 
 //u8_t get_eybnet_index(void);
 void grid_Net_manage(void);
+u8_t state_status(u8_t nIndex);
+void state_close(u8_t nIndex);
 
 #endif  // __L610_NET_TCP_EYB_H_
 /******************************************************************************/

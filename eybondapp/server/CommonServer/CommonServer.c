@@ -84,6 +84,7 @@ static void soft_reset_handle(void);
 //ssl 重连
 void ssl_relink(void)
 {
+  sslsock=-1;
   relinkTime=0;
   overtime = 0;
 
@@ -148,41 +149,26 @@ void proc_commonServer_task(s32_t taskId) {
         //server = null;
         ssl_relink();
       case APP_MSG_TIMER_ID:
-        //APP_DEBUG("\r\n-->APP_MSG_TIMER_ID\r\n");
-        //ssl_socket();     //后续处理，Luee
-
-        //eybnet_index=get_eybnet_index();
-        //no eybnet
-        //if(eybnet_index==0xff)
-        //  break;
-        //eybnet inwork fail         
-        //if(netManage[eybnet_index].status!=L610_SUCCESS)
-        //  break;
-
         //软件复位
         soft_reset_handle();
 
-        //no eybnet
-        //if(m_GprsActState != STATE_DNS_READY)
-        //  break;
-
-        ret = Net_status(sPort);
+        //ret = Net_status(sPort);
+        ret=state_status(sPort);
         APP_DEBUG("\r\n-->socket[%d] status %d relinkTime %d\r\n", sPort, ret, relinkTime);
         
         //APP_DEBUG("\r\n-->server=%ld\r\n",server);
         //50
-        if (ret == 0xFF && relinkTime++ > 60) {   
+        if (m_GprsActState == STATE_DNS_READY&&ret == 0xFF && relinkTime++ > 50) {   
+          //if ((m_GprsActState == STATE_DNS_READY)&&(ret == 0xFF)) {   
           if (server == null) {
             //for (ret = 0; ret < sizeof(serverTab) / sizeof(serverTab[0]); ret++) {
               ret=0;        //仅有国网
-              // Select remote server
               APP_DEBUG("\r\n-->CommonServer[%d] check!!!!!\r\n", ret);
               if (serverTab[ret].check() >= 0) {
               //if (server_con.check() >= 0) {
                 APP_DEBUG("\r\n-->state grid is exist\r\n");
                 server = &serverTab[ret];
                 //server = &server_con;
-                //APP_DEBUG("\r\n-->server=%d\r\n",server);
                 break;
               }
             //}
@@ -198,6 +184,8 @@ void proc_commonServer_task(s32_t taskId) {
             APP_DEBUG("\r\n-->server init %s !\r\n", server->api->name);
             if (serverAddr != null) {
               overtime = 0;
+              APP_DEBUG("\r\n-->state grid:sPort=%d\r\n",sPort);
+              APP_DEBUG("\r\n-->state grid netManage[sPort].flag=%d\r\n",netManage[sPort].flag);
               sPort = Net_connect(serverAddr->type, serverAddr->addr, serverAddr->port, dataProcess);
               memory_release(serverAddr);
               
@@ -220,12 +208,13 @@ void proc_commonServer_task(s32_t taskId) {
         }
         if (server != null && server->api != null){
               server->api->run(ret);
+              //if(Net_status(sPort)==L610_SUCCESS)
+              //  rets32=ssl_rec();
         }
 
         case COMMON_SERVER__DATA_PROCESS:
           if (server != null && server->api != null){
-              //rets32=ssl_rec();
-              server->api->process();
+              //server->api->process();
             }
         break;
         //defualt:
@@ -251,6 +240,7 @@ void CommonServerDataSend(Buffer_t *buf) {
 */
 
 static void dataProcess(u8_t port, Buffer_t *buf) {
+  /*
   output(buf);
   overtime = 0;
   sPort = port;
@@ -263,6 +253,7 @@ static void dataProcess(u8_t port, Buffer_t *buf) {
 #endif
   }
   memory_release(buf);
+  */
 }
 
 
@@ -332,7 +323,8 @@ void CommonServer_DeviceInit(void) {
   * @param  None
 *******************************************************************************/
 void CommonServer_close(void) {
-  Net_close(sPort);
+  //Net_close(sPort);
+  state_close(sPort);
   if (server != null && server->api != null) {
     server->api->sclose();
   }

@@ -176,11 +176,10 @@ static s8 ssl_socket(void)
 
         sslsock = fibo_ssl_sock_create();
         if (sslsock == -1){
-            APP_DEBUG("\r\n-->create ssl sock failed\r\n");
-            //send_message(queue_l610net,L610NET_SSLFAIL_ID,0,0,0);
+            APP_DEBUG("\r\n-->state grid create ssl sock failed\r\n");
         }
         else{
-            APP_DEBUG("\r\n-->fibossl sslsock %ld\r\n", sslsock);
+            APP_DEBUG("\r\n-->state grid fibossl sslsock %ld\r\n", sslsock);
             SSLNet->socketID=sslsock;
             ret = fibo_ssl_sock_connect(SSLNet->socketID, SSLNet->ipStr, SSLNet->port);  
             APP_DEBUG("\r\n-->fibossl sys_sock_connect %d\r\n", ret);
@@ -261,6 +260,28 @@ s8 SSL_Open(L610Net_t *net)
     return ssl_socket();
 }
 
+/*******************************************************************************
+ Brief    : M26Socket
+ Parameter: 
+ return   : 
+*******************************************************************************/
+/*
+L610Net_t *M26Socket(s32 socketid, u8 *offset)
+{
+	int i;
+
+	for (i = 0; i < sizeof(netManage)/sizeof(netManage[0]); i++)
+	{
+		if (netManage[i].flag == 1 && netManage[i].socketID == socketid)
+		{
+			*offset = i;
+			return &netManage[i];
+		}
+	}
+	
+	return null;
+}*/
+
 /******************************************************************************                    
  * introduce:        ssl 数据接收     
  * parameter:        none                 
@@ -312,6 +333,7 @@ s32 ssl_rec(void)
             if(recbuf[index+1]==UPLOAD_ID_ACK){
               APP_DEBUG("\r\n-->state grid upload success!!!\r\n");
               ret=rec_len;    //测试SSL断网重连
+              set_grid_step(2);
             }else{
               APP_DEBUG("\r\n-->state grid upload fail\r\n");
             }
@@ -321,6 +343,7 @@ s32 ssl_rec(void)
             if(recbuf[index+1]==HISTORY_ID_ACK){
               APP_DEBUG("\r\n-->state grid upload history success!!!\r\n");
               ret=rec_len;    //测试SSL断网重连
+              set_grid_step(2);
             }else{
               APP_DEBUG("\r\n-->state grid upload history fail\r\n");
             }
@@ -330,6 +353,7 @@ s32 ssl_rec(void)
             if(recbuf[index+1]==HEARTBEAT_ID_ACK){
               APP_DEBUG("\r\n-->state grid heartbeat success!!!\r\n");
               ret=rec_len;
+              set_grid_step(2);
             }else{
               APP_DEBUG("\r\n-->state grid heartbeat fail\r\n");
             }
@@ -345,9 +369,14 @@ s32 ssl_rec(void)
       //send_message(queue_l610net,L610NET_SSLFAIL_ID,0,0,0);
         }
     }
+    //收到有效ssl数据，心跳间隔时间清0
+    //国网只需保证20分钟内有数据正确交换就不会断网
+    if(ret>0){
+      set_heartbeatSpace(0);
+    }
     //连接失败重连
-    if(ret==-1){
-      APP_DEBUG("\r\n-->ssl recieve fail times:%d\r\n",ssl_relink_times);
+    if(ret<=0){
+      APP_DEBUG("\r\n-->state grid ssl recieve fail times:%d\r\n",ssl_relink_times);
       if(ssl_relink_times++>30){
         ssl_relink_times=0;
         ssl_relink();
@@ -356,8 +385,43 @@ s32 ssl_rec(void)
     return ret;
 }
 
+/*
+s32 ssl_rec(void)
+{
+    s32 ret=-1;
+    u8 rerec=1;
+    u8 recbuf[64] = {0};
+    u8 index=0;
+    s32 rec_len=0;
+    static u16 ssl_relink_times=0;
 
+    static Buffer_t dataBuf = {0};
 
+  rec_len = fibo_ssl_sock_recv(sslsock, recbuf, sizeof(recbuf));
+  APP_DEBUG("\r\nfibossl sys_sock_recv %ld\r\n", rec_len);
+  if (rec_len > 0){
+      APP_DEBUG("\r\n-->state grid ssl receive buf:\r\n");
+      print_buf((UINT8 *)recbuf, rec_len);
+      rerec=0;
+      //得到功能码地址
+      //消息头（4）+采集终端ID（长度1+内容）+ 控制域（1）+消息体（功能码1+数据）
+      index=4+1+recbuf[4]+1;
+
+    //
+    dataBuf.size = rec_len;
+    dataBuf.lenght = rec_len;
+    dataBuf.payload = fibo_malloc(dataBuf.size);
+    r_memcpy(dataBuf.payload, recbuf, rec_len);
+
+    u8_t  port;
+
+    L610Socket(SSLNet->socketID, &port);
+    SSLNet->callback(port, &dataBuf);
+    memory_release(dataBuf.payload);
+  } 
+  return rec_len;
+}
+*/
 /*******************************************************************************
  Brief    : SSL Ca file write
  Parameter: 

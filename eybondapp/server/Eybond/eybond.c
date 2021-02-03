@@ -489,6 +489,7 @@ static u8_t paraGet(ESP_t *esp) {
 static u8_t paraSet(ESP_t *esp) {
   Buffer_t buf;
   int ret = 0, i = 0;
+  u8 err=0;
 
   EybondHeader_t *ackHead;
   u8_t *para = esp->PDU;
@@ -497,19 +498,31 @@ static u8_t paraSet(ESP_t *esp) {
   APP_DEBUG("ESP=head serail:%04X, code:%04X\r\n", esp->head.serial, esp->head.code);
   APP_DEBUG("ESP=head msg len:%04X, addr:%02X func:%02X\r\n", esp->head.msgLen, esp->head.addr, esp->head.func);
 
+  ret=0;
+  err=0;
+
   buf.lenght = ENDIAN_BIG_LITTLE_16(esp->head.msgLen) - 3;
   for (i = 0; i < (buf.lenght + 1); i++) {
     APP_DEBUG("ESP=PDU %02X\r\n", esp->PDU[i]);
+    //数据带\r \n不设置参数，返回1,不合法
+    if((esp->PDU[i]==10)||(esp->PDU[i]==13)){
+      err=1;
+      ret=1;  //返回不合法
+    }    //Luee \r=13  \n=10
+      
   }
-
-  buf.payload = memory_apply(buf.lenght + 1);
-  buf.size = buf.lenght + 1;
-  r_memcpy(buf.payload, para + 1, buf.lenght);
-  buf.payload[buf.lenght] = '\0';
-  //  buf.payload = para + 1;
-  APP_DEBUG("\r\n-->Set para: %d %s\r\n", *para, buf.payload);
-  ret = parametr_set(*para, &buf);  // 设置参数
-  memory_release(buf.payload);  // free old buf
+  if(err==0){
+    ret=0;
+    buf.payload = memory_apply(buf.lenght + 1);
+    buf.size = buf.lenght + 1;
+    r_memcpy(buf.payload, para + 1, buf.lenght);
+    buf.payload[buf.lenght] = '\0';
+    //  buf.payload = para + 1;
+    APP_DEBUG("\r\n-->Set para: %d %s\r\n", *para, buf.payload);
+    ret = parametr_set(*para, &buf);  // 设置参数
+    memory_release(buf.payload);  // free old buf
+  }
+  
 #endif
   ackHead = &esp->head;
   ackHead->msgLen = ENDIAN_BIG_LITTLE_16(4);

@@ -388,6 +388,7 @@ void proc_app_task(s32_t taskId) {
   APP_PRINT("App task run...\r\n");
   r_memset(&msg, 0, sizeof(ST_MSG));
 
+
 #ifdef __TEST_FOR_UFS__
   APP_DEBUG("FILE System TEST!\r\n");
   u32_t space = 0;      // 注意不要做%和/运算

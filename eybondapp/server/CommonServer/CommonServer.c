@@ -99,7 +99,7 @@ void ssl_relink(void)
 void soft_reset_en(void)
 {
   soft_reset_flag=1;
-  soft_reset_counter=6;   //after 3s,reset
+  soft_reset_counter=10;   //after 5s,reset
 
 }
 

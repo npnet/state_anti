@@ -925,7 +925,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
       cmdbuf.lenght = 0;
       cmdbuf.payload = memory_apply(MAX_NET_BUFFER_LEN);
       r_memset(cmdbuf.payload, '\0', MAX_NET_BUFFER_LEN); 
-      fibo_taskSleep(500);  //Luee
+      //fibo_taskSleep(500);  //Luee
       ret = fibo_sock_recv(netManage[nIndex].socketID, cmdbuf.payload, cmdbuf.size);
       if (ret > 0) {
         relink=0;
@@ -952,15 +952,15 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
         }
       } else if (retlen == 0) {
         APP_DEBUG("socket: %ld remote is closed!\r\n", netManage[nIndex].socketID);
-        if(relink++>20){
-            relink=0;
+        //if(relink++>20){
+        //    relink=0;
             L610Net_close(nIndex);
-        }
+        //}
       } else {
         APP_DEBUG("socket: %ld read failt!\r\n", netManage[nIndex].socketID);
       }
     } else {
-      fibo_taskSleep(500);    //Luee
+      fibo_taskSleep(1000);    //Luee
     }
   }
   fibo_thread_delete();

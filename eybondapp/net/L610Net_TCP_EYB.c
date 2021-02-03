@@ -241,7 +241,7 @@ void L610Net_init(void) {
   NetLED_Off();
   GSMLED_Off();
   
-  //r_memset(netManage, 0, sizeof(netManage));    //Luee
+  r_memset(netManage, 0, sizeof(netManage));    //Luee
   
   g_netmutex = 0;
 

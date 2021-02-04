@@ -471,7 +471,7 @@ void proc_app_task(s32_t taskId) {
         break;
       case NET_MSG_GSM_FAIL:
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_FAIL, 0, 0);
-        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_GSM_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_GSM_FAIL, 0, 0);
         break;
       case NET_MSG_DNS_READY:
         Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_DNS_READY, 0, 0);

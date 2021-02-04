@@ -239,7 +239,7 @@ void L610Net_init(void) {
   registe_times = 0;
 
   NetLED_Off();
-  GSMLED_Off();
+  //GSMLED_Off();
   
   r_memset(netManage, 0, sizeof(netManage));    //Luee
   

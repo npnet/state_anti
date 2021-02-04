@@ -155,6 +155,7 @@ static u8_t readyAck(DeviceAck_e e) {
     buf.payload = null;
     updateDeviceHead.callback = (void *)XmodemAck;
     updateDeviceHead.waitTime = 10000;
+    //updateDeviceHead.waitTime = 15000;		//Luee_d
     updateDeviceHead.buf = memory_apply(sizeof(Buffer_t));
     updateDeviceHead.buf->size = 512;
     updateDeviceHead.buf->lenght = 0;
@@ -164,6 +165,7 @@ static u8_t readyAck(DeviceAck_e e) {
     DeviceIO_write(&updateDeviceHead, buf.payload, buf.lenght);
     log_save("Device Update in X-modem.");
   } else if (cmd == null || cnt++ > 10) {
+    //} else if (cmd == null || cnt++ > 20) {
     Update_end();
     updateState = 0xFE;
   } else {
@@ -205,6 +207,7 @@ static u8_t XmodemAck(DeviceAck_e e) {
     cnt = 0;
   } else if (e == DEVICE_ACK_OVERTIME) {
     if (cnt++ > 10) {
+    //if (cnt++ > 20) {   //Luee_d
       log_save("Device update wati overtime!!");
       updateState = 0xFE;
       goto END;

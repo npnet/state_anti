@@ -50,6 +50,7 @@
 #define DEVICE_UNLOCK   (0x00)
 
 #define DEVICE_MAX_OVERTIME 300
+//#define DEVICE_MAX_OVERTIME 360   //Luee_d
 ListHandler_t DeviceList;  //
 
 static DeviceCmd_t *currentCmd;     //
@@ -347,6 +348,7 @@ static void deviceCmdSend(void) {
         }
         APP_DEBUG("currentDevice is null,DeviceOvertime:%d!!\r\n", DeviceOvertime);
         watiTime = 1;
+        //watiTime = 2;   //Luee_d
       }
       else if (DeviceIO_lockState() == null) {
         APP_DEBUG("DeviceIO_lockState is null!!Step from 1 to 3!!\r\n");
@@ -424,6 +426,7 @@ static void deviceCmdSend(void) {
 //        }
 
         if (++DeviceOvertime > 180) {
+          //if (++DeviceOvertime > 380) {   //Luee_d
 #ifdef _PLATFORM_BC25_
           Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif

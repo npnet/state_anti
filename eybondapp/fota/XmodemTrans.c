@@ -107,6 +107,7 @@ int Xmodem_ack(Buffer_t *sendBuf, Buffer_t *ack)
 			break;
 		case NAK: // 不认可响应
 			if (cnt++ > 10)
+			//if (cnt++ > 20)
 			{
 				i = -2;
 			}

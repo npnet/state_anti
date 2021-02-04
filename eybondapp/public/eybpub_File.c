@@ -312,11 +312,97 @@ s16_t File_read(File_t *file, u8_t *data, u16_t len) {
   INT32 iFd_File = 0;
   s32_t ret = 0;
 
+  if (nfile_size <=0) {   // 文件不存在
+    APP_DEBUG("File %s is not existing\r\n", file->name);
+    readenLen = -1;
+    return readenLen;
+  }
+
+  if (file->seat == file->size) {   // 已经读完一次，再读需要先重置一下
+    APP_DEBUG("finish reading %s file,reset file->seat\r\n", file->name);
+    file->seat = 0;
+    readenLen = 0;
+    return readenLen;
+  }
+
+//  APP_DEBUG("Begin read File %s, size:%ld seat:%ld\r\n", file->name, file->size, file->seat);
+  iFd_File = fibo_file_open(file->name, FS_O_RDONLY);
+  if (iFd_File <= 0) {
+    APP_DEBUG("Open %s file fail\r\n", file->name);
+    readenLen = -1;
+    return readenLen;
+  }
+  if (file->seat == 0) {
+    r_memset(&file_md5, 0, sizeof(MD5_t));
+    Hash_MD5Init(&file_md5);
+    APP_DEBUG("File Start read\r\n");
+  }
+  ret = fibo_file_seek(iFd_File, file->seat, FS_SEEK_SET);
+  if (ret < 0) {
+    APP_DEBUG("seek %s file to begin fail\r\n", file->name);
+    readenLen = -1;
+    ret = fibo_file_close(iFd_File);
+    if (ret < 0) {
+      APP_DEBUG("Close %s file fail\r\n", file->name);
+    }
+    return readenLen;
+  }
+  readLen = (file->size - file->seat) > len ? len : (file->size - file->seat);
+  readenLen = fibo_file_read(iFd_File, data, readLen);
+  if (readenLen != readLen) {
+    APP_DEBUG("read %s file %d len data fail:%d\r\n", file->name, readLen, readenLen);
+    readenLen = -1;
+    ret = fibo_file_close(iFd_File);
+    if (ret < 0) {
+      APP_DEBUG("Close %s file fail\r\n", file->name);
+    }
+    return readenLen;
+  }
+  ret = fibo_file_close(iFd_File);
+  if (ret < 0) {
+    APP_DEBUG("Close %s file fail\r\n", file->name);
+    readenLen = -1;
+    return readenLen;
+  }
+//  x25Qxx_read(file->addr + file->seat, readLen, data);
+  file->seat += readenLen;
+//  APP_DEBUG("End read File %s %d len, size:%ld seat:%ld\r\n", file->name, readenLen, file->size, file->seat);
+  
+  Hash_MD5Update(&file_md5, data, readenLen);
+  if (file->size == file->seat) {
+    //readenLen=0;
+    r_memset(file_md5_value, '\0', sizeof(file_md5_value));
+    Hash_MD5Final(file_md5_value, &file_md5);
+    APP_DEBUG("File read md5 %s, source md5 %s \r\n", file_md5_value, file->md5);
+    if (r_memcmp(file_md5_value, file->md5, 16) != 0) {
+      readenLen = -1;
+      APP_DEBUG("File read rusult fail\r\n");
+      log_save("File read rusult fail");
+    }
+  }
+  if (0 == (file->seat & 0x001FFFF)) {
+//  Watchdog_feed();
+  }
+
+  return readenLen;
+}
+
+/*
+s16_t File_read(File_t *file, u8_t *data, u16_t len) {
+  static MD5_t file_md5;
+  u8_t file_md5_value[16 + 1] = {0};
+  u16_t readLen = 0;
+  s16_t readenLen = 0;
+  s32_t nfile_size = fibo_file_getSize(file->name);
+  INT32 iFd_File = 0;
+  s32_t ret = 0;
+
   if (nfile_size <= 0) {   // 文件不存在或长度为0
     APP_DEBUG("File %s is not existing\r\n", file->name);
     readenLen = -1;
     return readenLen;
   }
+
   if (file->seat == file->size) {   // 已经读完一次，再读需要先重置一下
     APP_DEBUG("finish reading %s file,reset file->seat\r\n", file->name);
     file->seat = 0;
@@ -382,7 +468,7 @@ s16_t File_read(File_t *file, u8_t *data, u16_t len) {
 
   return readenLen;
 }
-
+*/
 /*******************************************************************************
   * @brief
   * @note   None

@@ -20,4 +20,6 @@ void b_copy_to_a(void);
 void a_copy_to_c(void);
 void rm_file_A (void);
 
+void para_init(void);
+
 #endif

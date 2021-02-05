@@ -685,6 +685,10 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
               log_save("System Hardware Reset!");
               Watchdog_stop();
               break;
+            case '6':  
+              para_init();    //Luee 参数初始化
+              soft_reset_en();
+              break;
             #if 0
             case '4':  // 删除a文件测试
               log_save("delete a file success!");

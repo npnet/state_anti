@@ -1099,7 +1099,12 @@ void a_copy_to_c(void) {
 //   }
 // }
 
-
+void para_init(void)
+{
+  //初始化参数
+  fibo_file_delete(g_recName_parameter_a);
+  fibo_file_delete(g_recName_parameter_b);
+}
 /*******************************************************************************
  * @name:   live_a_and_b
  * @Author: liu ying long 
@@ -1110,9 +1115,9 @@ void a_copy_to_c(void) {
 int live_a_and_b(void) {
 #ifdef PARA_INIT
   //初始化参数
-  fibo_file_delete(g_recName_parameter_a);
-  fibo_file_delete(g_recName_parameter_b);
+  void para_init(void);
 #endif
+    
   INT32  live_a =  fibo_file_exist (g_recName_parameter_a);
   INT32  live_b =  fibo_file_exist (g_recName_parameter_b);
   s32_t file_a_size = fibo_file_getSize(g_recName_parameter_a);

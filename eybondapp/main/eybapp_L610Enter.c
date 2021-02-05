@@ -112,7 +112,7 @@ static void sig_res_callback(GAPP_SIGNAL_ID_T sig, va_list arg) {
       UINT8 cid = (UINT8)va_arg(arg, int);
       APP_DEBUG("GAPP_SIG_PDP_DEACTIVE_ABNORMALLY_IND cid = %d\r\n", cid);
       va_end(arg);
-      //Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0);   //Luee
+      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0);   //Luee
 //    fibo_taskSleep(1000);
 //	  UINT8 ip[50];	
 //	  int ret;

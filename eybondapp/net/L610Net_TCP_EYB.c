@@ -337,7 +337,7 @@ u8_t state_status(u8_t nIndex) {
       ret = netManage[nIndex].status;
       if (ret == L610_SUCCESS) {
         NetLED_On();      //网络有数据，服务器连接成功
-        GSMLED_On();      //硬件网络连接成功
+        //GSMLED_On();      //硬件网络连接成功
       } else {
         NetLED_Off();
       }
@@ -902,8 +902,8 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
 
   s32 relink=0;
 
-  if (netManage[nIndex].mode==2)
-    fibo_thread_delete();
+  //if (netManage[nIndex].mode==2)
+  //  fibo_thread_delete();
 
 
   while(1) {
@@ -912,6 +912,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     //if (m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       if (netManage[nIndex].mode!=2&&m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       
+      fibo_taskSleep(1000);    //Luee
 
 	#if 0
       r_memset(strBuf, '\0', sizeof(strBuf));

@@ -137,7 +137,7 @@ void L610Net_MQTT_ALI_manage(void) {
   reg_info_t sim_reg_info;
   fibo_getRegInfo(&sim_reg_info, 0);
   if (1 != sim_reg_info.nStatus) {
-    Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0);
+    //Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0); //Luee
     m_OCActState = STATE_TOTAL_NUM;
   }
   switch (m_OCActState) {
@@ -165,7 +165,7 @@ void L610Net_MQTT_ALI_manage(void) {
       } else {
         APP_DEBUG("sim no checked, please insert sim & retry\r\n");
         Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_FAIL, 0, 0);
-        Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0);
+        //Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0);   //Luee
       }
       break;
     }

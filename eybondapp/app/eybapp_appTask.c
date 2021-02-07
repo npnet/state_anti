@@ -51,6 +51,8 @@
 #include "Device.h"
 // #include "DeviceIO.h"
 #include "eybond.h"
+
+#include "grid_tool.h"
 // #include "x25Qxx.h"  // mike 20200805
 // #include "Eybond.h"  // mike 20200805
 // #include "CommonServer.h"  // mike 20200805
@@ -451,7 +453,7 @@ void proc_app_task(s32_t taskId) {
         //Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_UART_READY, 0, 0);
         APP_timer = fibo_timer_period_new(APP_time_Interval, UserTimerAPPscallback, &m_timeCnt);    // 注册APPTimer
         if (APP_timer == 0) {
-          log_save("Register app timer(%d) fail", APP_timer);
+          log_save("Register app timer(%ld) fail", APP_timer);
         }
         break;
       case NET_MSG_SIM_READY:   // SIM卡插入了

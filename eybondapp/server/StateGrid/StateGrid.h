@@ -7,6 +7,7 @@
 #define __STATE_GRID_H
 
 #include "CommonServer.h"
+#include "grid_tool.h"
 
 #define STATE_GRID_ACK_OVERTIME        (30000)
 #define STATE_GRID_CNT            (SERVER_PROCESS_FREP/STATE_GRID_ACK_OVERTIME)

@@ -18,6 +18,7 @@ void *r_memfind(void *trg, u32_t trgLen, const void *src, u32_t srcLen);
 u32_t r_strlen(const char *src);
 // u32_t r_strcpy(char *trg, const char *src);
 char *r_strcpy(char *trg, const char *src);
+u32_t r_strcpy_len(char *trg, const char *src);
 char *r_strncpy(char *trg, const char *src, u32_t srcLen);
 u32_t r_stradd(char *trg, const char *src);
 char *r_strcat(char *trg, const char *src);

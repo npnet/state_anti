@@ -13,7 +13,7 @@
 #include "eyblib_swap.h"
 #include "eybpub_utility.h"
 #include "eybpub_Debug.h"
-#include "eybpub_run_log.h"
+//#include "log.h"
 #include "eybpub_SysPara_File.h"
 #include "eybpub_data_collector_parameter_table.h"
 #include "eybpub_parameter_number_and_value.h"

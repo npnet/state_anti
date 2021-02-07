@@ -1,3 +1,165 @@
+/******************************************************************************           
+* name:             eybpub_run_log.c           
+* introduce:        log save & read
+* author:           Luee                                     
+******************************************************************************/ 
+#include "eybpub_run_log.h"
+#include "grid_tool.h"
+
+#define log_file  "/log_file.ini"        //文件名
+
+s32 iFd_log = 0;                     //文件描述符
+static char log_head_buf[log_headoffset_len];
+log_head_t *log_head = (log_head_t *)log_head_buf;
+u16 sw_loghead_rp;
+
+static s32 log_head_get(void);
+
+/*******************************************************************************            
+* introduce:        
+* parameter:                       
+* return:                 
+* author:           Luee                                                    
+*******************************************************************************/
+static s32 log_head_get(void)
+{
+  s32 ret=0;
+  s32 readlen=-1;
+
+  iFd_log = fibo_file_open(log_file, FS_O_RDONLY);
+  if (iFd_log >= 0) {
+    ret = fibo_file_seek(iFd_log, 0, FS_SEEK_SET);
+    readlen = fibo_file_read(iFd_log, (u8_t *)log_head_buf, sizeof(log_head_buf));
+    ret = fibo_file_fsync(iFd_log);
+    ret = fibo_file_close(iFd_log);
+  }else{
+    ret=-1;
+  }
+  return ret;
+}
+
+/*******************************************************************************            
+* introduce:        
+* parameter:                       
+* return:                 
+* author:           Luee                                                    
+*******************************************************************************/
+s32 log_init(void)
+{
+  s32 ret = 0;
+
+  //fibo_file_delete(log_file);
+
+  s32 log_size = fibo_file_getSize(log_file);
+  if (log_size > 0) {
+    //头信息获取失败
+    if (log_head_get() != 0) {
+      APP_DEBUG("run history file head err!\r\n");
+      fibo_file_delete(log_file);
+      log_size = -1;
+    } else if ((log_head->file_logw_pointer >= log_pointer_size) ||
+               (log_head->file_logr_pointer >= log_pointer_size)) {
+      //文件大小和当前读写指针不匹配
+      APP_DEBUG("logtory log file size err!\r\n");
+      fibo_file_delete(log_file);
+      log_size = -1;
+    }
+  }
+
+  if ((fibo_file_exist(log_file)!=1)||(log_size <= 0)) {
+    log_head->file_logw_pointer = 0;
+    log_head->file_logr_pointer = 0;
+    iFd_log = fibo_file_open(log_file, FS_O_RDWR|FS_O_CREAT|FS_O_APPEND);//读写、创建、追加
+    ret = fibo_file_seek(iFd_log, 0, FS_SEEK_SET);
+    log_size = fibo_file_write(iFd_log, (u8_t *)log_head_buf, sizeof(log_head_buf));
+    ret = fibo_file_fsync(iFd_log);
+    ret = fibo_file_close(iFd_log);
+  } 
+
+  iFd_log = fibo_file_open(log_file, FS_O_RDONLY);
+  ret = fibo_file_seek(iFd_log, 0, FS_SEEK_SET);
+  ret = fibo_file_read(iFd_log, (u8_t *)log_head_buf, sizeof(log_head_buf));
+  ret = fibo_file_fsync(iFd_log);
+  ret = fibo_file_close(iFd_log);
+  log_size = fibo_file_getSize(log_file);
+  APP_DEBUG("\r\n-->state grid:log file read pointer = %d,write pointer = %d,lenght = %ld\r\n", \
+              log_head->file_logr_pointer, log_head->file_logw_pointer, log_size);
+    
+  return log_size;
+}
+
+
+
+void log_save(char *str, ...) 
+{
+  s32 ret;
+  Buffer_t buf;
+
+  // 该函数用于获取本地时间
+  hal_rtc_time_t time;
+  ret = fibo_getRTC(&time);
+  if (ret < 0) {
+    time.year = 2015;
+    time.month = 1;
+    time.day = 1;
+    time.hour = 0;
+    time.min = 0;
+    time.sec = 0;
+    time.wDay = 4;
+  }
+
+  u16_t offset = r_strlen(str);
+  buf.lenght=offset;
+  buf.payload=fibo_malloc(buf.lenght+32);
+  //if (buf.lenght < 64 && null != (buf.payload = memory_apply(offset + 32)))
+  if(buf.payload!=null){
+      //Clock_t clock;
+	    //Clock_timeZone(&clock);
+      r_memset(buf.payload,'\0',buf.lenght);
+      offset = Swap_numChar((char *)buf.payload, time.year);
+      buf.payload[offset++] = '-';
+      offset += Swap_numChar((char *)&buf.payload[offset], time.month);
+      buf.payload[offset++] = '-';
+      offset += Swap_numChar((char *)&buf.payload[offset], time.day);
+      buf.payload[offset++] = ' ';
+      
+      offset += Swap_numChar((char *)&buf.payload[offset], time.hour);
+      buf.payload[offset++] = ':';
+      offset += Swap_numChar((char *)&buf.payload[offset], time.min);
+      buf.payload[offset++] = ':';
+      offset += Swap_numChar((char *)&buf.payload[offset], time.sec);
+      buf.payload[offset++] = '>';
+      buf.payload[offset++] = ' ';
+      
+      offset += r_strcpy_len((char *)&buf.payload[offset], str);
+	
+      buf.lenght = offset + 1;
+	//FlashFIFO_put(&s_logeHead, &buf);
+      APP_DEBUG("Log:  %s\r\n", buf.payload);
+	memory_release(buf.payload);
+  }
+	else 
+	{
+    //    buf.lenght = offset;
+    //    buf.payload = (u8_t*)note;
+		//FlashFIFO_put(&s_logeHead, &buf);
+	}
+
+
+
+
+}
+
+u16 log_get(Buffer_t *buf) 
+{
+  u16 ret=0;
+  return ret;
+}
+
+
+
+
+
 /*******************************************************************************
  * @Author       : Chen Zhu Liang
  * @Date         : 2020-06-22 11:45:09
@@ -7,6 +169,7 @@
  * @FilePath     : public\run_log.c
  * @可以输入预定的版权声明、个性签名、空行等
 *******************************************************************************/
+/*
 #ifdef _PLATFORM_BC25_
 #include "ql_fs.h"
 #include "ql_error.h"
@@ -251,14 +414,7 @@ u16_t log_get(Buffer_t *buf) {
     APP_DEBUG("log save buf is null\r\n");
     return 0;
   }
-  /*  check_a = Ql_FS_Check(run_log_a);       // mike 20200903
-    //文件不存在
-    if (check_a < 0) {
-      APP_DEBUG("run log file is null\r\n");
-      log_clean();
-      return 0;
-    } */
-
+  
   log_size_a = Ql_FS_GetSize(run_log_a);
   if (log_size_a <= 0) {
     APP_DEBUG("run log file is null\r\n");
@@ -576,4 +732,6 @@ void log_reset(void) {
     sw_loghead_rp = log_head->file_logr_pointer;
   }
 }
+
+*/
 

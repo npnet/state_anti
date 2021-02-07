@@ -1,9 +1,54 @@
+/******************************************************************************           
+* name:             eybpub_run_log.h           
+* introduce:        头文件
+* author:           Luee                                     
+******************************************************************************/ 
+#ifndef _EYBPUB_RUN_LOG_H_
+#define _EYBPUB_RUN_LOG_H_
+
+#include "grid_tool.h"
+#include "history.h"
+
+#define log_headoffset_len      64   
+#define log_head_len            4   
+
+// log行长度
+#define log_line_len            64     
+// 历史文件大小
+#define log_file_size           ((100)*(log_line_len)+(log_headoffset_len))
+#define log_pointer_size    ((log_file_size-log_headoffset_len)/log_line_len)
+
+typedef struct {
+  u16 file_logw_pointer;
+  u16 file_logr_pointer;
+  u8 arry[];
+}log_head_t;
+
+extern u16 sw_loghead_rp;
+
+
+//extern log_head_t *log_head;
+
+s32 log_init(void);
+void log_save(char *str, ...);
+void log_clean(void);
+u16_t log_get(Buffer_t *buf);
+void log_reset(void);
+void print_log_size(void);
+
+#endif /* _EYBPUB_RUN_LOG_H_ */
+
+
+
+
+
 /********************** COPYRIGHT 2014-2100, eybond ***************************
  * @File    : eybpub_run_log.h
  * @Author  : 
  * @Date    : 2020-08-20
  * @Brief   :
  ******************************************************************************/
+/*
 #ifndef __EYBPUB_RUN_LOG_H__
 #define __EYBPUB_RUN_LOG_H__
 
@@ -38,3 +83,4 @@ void log_reset(void);
 void print_log_size(void);
 
 #endif  // __EYBPUB_RUN_LOG_H__
+*/

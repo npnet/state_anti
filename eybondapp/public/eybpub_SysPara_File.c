@@ -44,6 +44,8 @@
 #include "eybond.h"
 #include "CommonServer.h"
 
+#include "grid_tool.h"
+
 
 #ifdef _PLATFORM_BC25_
 #include "NB_net.h"
@@ -512,6 +514,8 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
 void parametr_get(u32_t number, Buffer_t *databuf) {
   char *buf_value = NULL;
   u16_t len = 0;
+  Buffer_t *logbuf=null;
+
   if (databuf == NULL) {
     return;
   }
@@ -561,7 +565,10 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             PDT[j].wFunc(&PDT[j], MAKE_TIME2, &len);
             break;
           case 54:  // 获取日志
-            return;
+            logbuf->payload=fibo_malloc(128);
+            log_get(logbuf);
+            r_memcpy(buf_value, logbuf->payload, 64);
+            fibo_free(logbuf->payload);
             break;
           case 55:  {  // 获取CSQ值
             s8_t nrssi = 0, nber = 0;

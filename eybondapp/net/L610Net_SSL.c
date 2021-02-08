@@ -313,6 +313,7 @@ s32 ssl_rec(void)
           case LOGIN_ID:
             if(recbuf[index+1]==LOGIN_ID_ACK){
               APP_DEBUG("\r\n-->state grid login success!!!\r\n");
+              log_save("\r\n-->state grid login success!!!\r\n");
               ret=rec_len;
               set_grid_step(1);
             }else{
@@ -322,6 +323,7 @@ s32 ssl_rec(void)
           case REGISTER_ID:
             if(recbuf[index+1]==REGISTER_ID_ACK){
               APP_DEBUG("\r\n-->state grid register success!!!\r\n");
+              log_save("\r\n-->state grid register success!!!\r\n");
               ret=rec_len;
               set_grid_step(2);
             }else{
@@ -332,6 +334,7 @@ s32 ssl_rec(void)
           case UPLOAD_ID:
             if(recbuf[index+1]==UPLOAD_ID_ACK){
               APP_DEBUG("\r\n-->state grid upload success!!!\r\n");
+              log_save("\r\n-->state grid upload success!!!\r\n");
               ret=rec_len;    //测试SSL断网重连
               set_grid_step(2);
             }else{
@@ -342,6 +345,7 @@ s32 ssl_rec(void)
           case HISTORY_ID:
             if(recbuf[index+1]==HISTORY_ID_ACK){
               APP_DEBUG("\r\n-->state grid upload history success!!!\r\n");
+              log_save("\r\n-->state grid upload history success!!!\r\n");
               ret=rec_len;    //测试SSL断网重连
               set_grid_step(2);
             }else{
@@ -352,6 +356,7 @@ s32 ssl_rec(void)
           case HEARTBEAT_ID:
             if(recbuf[index+1]==HEARTBEAT_ID_ACK){
               APP_DEBUG("\r\n-->state grid heartbeat success!!!\r\n");
+              log_save("\r\n-->state grid heartbeat success!!!\r\n");
               ret=rec_len;
               set_grid_step(2);
             }else{
@@ -377,6 +382,7 @@ s32 ssl_rec(void)
     //连接失败重连
     if(ret<=0){
       APP_DEBUG("\r\n-->state grid ssl recieve fail times:%d\r\n",ssl_relink_times);
+      log_save("\r\n-->state grid ssl recieve fail times:%d\r\n",ssl_relink_times);
       if(ssl_relink_times++>30){
         ssl_relink_times=0;
         ssl_relink();

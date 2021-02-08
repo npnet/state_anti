@@ -28,7 +28,8 @@
 #include "fibo_opencpu.h"
 #define g_recName_parameter_aa  "/paraconfig_file_a.ini"
 #define g_recName_parameter_ab  "/paraconfig_file_b.ini"
-#define run_log_aa  "/run_log_a.ini"
+//#define run_log_aa  "/run_log_a.ini"
+#define run_log_aa  "/log_file.ini"
 #endif
 #include "eybpub_Debug.h"
 #include "eybpub_Status.h"

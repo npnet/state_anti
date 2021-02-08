@@ -514,7 +514,7 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
 void parametr_get(u32_t number, Buffer_t *databuf) {
   char *buf_value = NULL;
   u16_t len = 0;
-  Buffer_t *logbuf=null;
+  Buffer_t logbuf;
 
   if (databuf == NULL) {
     return;
@@ -565,10 +565,18 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             PDT[j].wFunc(&PDT[j], MAKE_TIME2, &len);
             break;
           case 54:  // 获取日志
-            logbuf->payload=fibo_malloc(128);
-            log_get(logbuf);
-            r_memcpy(buf_value, logbuf->payload, 64);
-            fibo_free(logbuf->payload);
+            logbuf.payload=fibo_malloc(64);
+            len=log_get(&logbuf);
+            if(len==0){
+              APP_DEBUG("\r\n-->log:get log fail\r\n");
+              fibo_free(logbuf.payload);
+              break;
+            }
+            r_memcpy(buf_value, logbuf.payload, len);
+            fibo_free(logbuf.payload);
+            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+            len = r_strlen(buf_value);
+            PDT[j].wFunc(&PDT[j], buf_value, &len);
             break;
           case 55:  {  // 获取CSQ值
             s8_t nrssi = 0, nber = 0;
@@ -695,6 +703,9 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
             case '6':  
               para_init();    //Luee 参数初始化
               soft_reset_en();
+              break;
+            case '7':  
+              log_clean();    //Luee 日志清除
               break;
             #if 0
             case '4':  // 删除a文件测试

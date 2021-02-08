@@ -33,8 +33,8 @@ s32 log_init(void);
 void log_save(char *str, ...);
 void log_clean(void);
 u16_t log_get(Buffer_t *buf);
-void log_reset(void);
-void print_log_size(void);
+//void log_reset(void);
+//void print_log_size(void);
 
 #endif /* _EYBPUB_RUN_LOG_H_ */
 

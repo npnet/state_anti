@@ -27,7 +27,9 @@ typedef struct {
   u8 arry[];
 } history_head_t;
 
-#pragma pack(1)
+//size=size占用字节数+lenght占用字数+payload[]占用字节数
+//lenght=payload[]占用字节数
+#pragma pack(1)       //按1字节对齐，保证结构体数据可用数列代替
 typedef struct {
   u16_t size;
   u16_t lenght;

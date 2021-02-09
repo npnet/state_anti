@@ -12,6 +12,8 @@ s32 iFd_log = 0;                     //文件描述符
 static char log_head_buf[log_headoffset_len];
 log_head_t *log_head = (log_head_t *)log_head_buf;
 u16 sw_loghead_rp;
+static u8 log_writeing=0;    //=1 writing =0 write finish
+static u8 log_reading=0;    //=1 readng =0 read finish
 
 static s32 log_head_get(void);
 static s32 log_write(log_head_t *head,  Buffer_t *buf);
@@ -182,10 +184,10 @@ static u16 log_read(log_head_t *head,  Buffer_t *buf)
     return log_size;
   }
   r_memcpy(buf->payload,log_data->payload,log_size);
-  print_buf(log_buf,log_data->size);
+  //print_buf(log_buf,log_data->size);
 
   //循环读取日志
-  head->file_logr_pointer = (head->file_logr_pointer + 1)% history_pointer_size;
+  head->file_logr_pointer = (head->file_logr_pointer + 1)% log_pointer_size;
   iFd_log = fibo_file_open(log_file, FS_O_WRONLY|FS_O_APPEND);
   ret = fibo_file_seek(iFd_log, 0, FS_SEEK_SET);
   fibo_file_write(iFd_log,(u8_t *)log_head_buf,sizeof(log_head_buf));
@@ -212,6 +214,12 @@ void log_save(char *str, ...)
   Buffer_t write_buf;      //待写入结构体
 
   va_list args;
+
+//日志读完才写文件 
+  if(log_reading)
+    return;
+
+  log_writeing=1;
 
   // 该函数用于获取本地时间
   hal_rtc_time_t time;
@@ -301,7 +309,7 @@ void log_save(char *str, ...)
 
 	    fibo_free(buf.payload);
   }
-  
+  log_writeing=0;
 }
 
 /*******************************************************************************            
@@ -314,12 +322,14 @@ u16 log_get(Buffer_t *buf)
 {
   u16 ret=0;
   
+  //if(buf->payload==null||log_writeing){
   if(buf->payload==null){
     APP_DEBUG("\r\n-->log:buf->lenght=null\r\n");
     return ret;
   }
-    
+  log_reading=1;  
   ret=log_read(log_head,buf);
+  log_reading=0;
   if(ret==0xffff){
     ret=0;
   }

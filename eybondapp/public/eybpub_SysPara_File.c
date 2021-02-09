@@ -515,14 +515,18 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
   char *buf_value = NULL;
   u16_t len = 0;
   Buffer_t logbuf;
+  u8 parageting=0;    //=0 got para finish =1 get paraing
 
   if (databuf == NULL) {
+    parageting=0;   //参数获取完成
     return;
   }
 //  APP_DEBUG("para_meter get begin:%d!\r\n", number);
   int j = 0;
   for (j = 0; j < number_of_array_elements; j++) {
     if (number == PDT[j].num) {
+      
+
       APP_DEBUG("para_meter[%d]num = %ld \r\n", j, number);
       buf_value = memory_apply(sizeof(char) * 64);
       if (buf_value == NULL) {
@@ -565,19 +569,26 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             PDT[j].wFunc(&PDT[j], MAKE_TIME2, &len);
             break;
           case 54:  // 获取日志
-            logbuf.payload=fibo_malloc(64);
-            len=log_get(&logbuf);
-            if(len==0){
-              APP_DEBUG("\r\n-->log:get log fail\r\n");
+            if(parageting==0){
+              parageting=1;
+              logbuf.payload=fibo_malloc(64);
+              len=log_get(&logbuf);
+              if(len==0){
+                APP_DEBUG("\r\n-->log:get log fail\r\n");
+                fibo_free(logbuf.payload);
+                break;
+              }
+              r_memcpy(buf_value, logbuf.payload, len);
               fibo_free(logbuf.payload);
+              //r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
+              len = r_strlen(buf_value);
+              //PDT[j].wFunc(&PDT[j], buf_value, &len);
               break;
-            }
-            r_memcpy(buf_value, logbuf.payload, len);
-            fibo_free(logbuf.payload);
-            r_memset((&PDT[j])->a, 0, sizeof((&PDT[j])->a));
-            len = r_strlen(buf_value);
-            PDT[j].wFunc(&PDT[j], buf_value, &len);
-            break;
+            }else{
+              r_strcpy(buf_value,"system busying!!!\r\n");
+              len = r_strlen(buf_value);
+              break;
+            }  
           case 55:  {  // 获取CSQ值
             s8_t nrssi = 0, nber = 0;
             fibo_get_csq((INT32 *)&nrssi, (INT32 *)&nber);
@@ -608,9 +619,20 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             break;
         }
       }
+      //获取日志,从日志中读取，不需从参数中读取
+      if(number==54){
+        
+      }
+      //其它从参数文件中读取
+      else{        
+        r_memset(buf_value, 0, sizeof(char) * 64);    
+        PDT[j].rFunc(&PDT[j], buf_value, &len);
+      }
+      if(len==0){
+        r_strcpy(buf_value,"para get fail!\r\n");
+        len = r_strlen(buf_value);
+      }
 
-      r_memset(buf_value, 0, sizeof(char) * 64);
-      PDT[j].rFunc(&PDT[j], buf_value, &len);
 //      APP_DEBUG("%d=%s len=%d\r\n", PDT[j].num, buf_value, len);
       if (len > 0) {
 //      APP_DEBUG("%d=%s len %d\r\n", PDT[j].num, buf_value, len);
@@ -628,10 +650,12 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
         APP_DEBUG("para fail!\r\n");
       }
       memory_release(buf_value);
+      parageting=0;   //参数获取完成
       break;
     }
+    
   }
-
+  parageting=0;   //参数获取完成
 //  APP_DEBUG("index: %d totle: %d\r\n", j, number_of_array_elements);
   if (j >= number_of_array_elements) {
     databuf->size = 0;

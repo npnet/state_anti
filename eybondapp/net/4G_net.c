@@ -80,6 +80,7 @@ void proc_net_task(s32_t taskId) {
         APP_DEBUG("Net task APP_MSG_UART_READY\r\n");
         L610Net_init();
         Beep_On(1); // 上电后响1声
+        //ssl_relink();
         break;
       case NET_MSG_SIM_INSERTED:
         APP_DEBUG("Net task NET_MSG_SIM_INSERTED\r\n");

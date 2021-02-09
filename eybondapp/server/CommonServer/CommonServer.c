@@ -87,7 +87,7 @@ void ssl_relink(void)
   sslsock=-1;
   relinkTime=0;
   overtime = 0;
-
+  sPort=0;
   CommonServer_close();
   sPort = 0xff;  
   server = null;
@@ -116,6 +116,10 @@ static void soft_reset_handle(void)
       fibo_softReset();
     }
   }
+}
+
+void clear_overtime(void){
+  overtime=0;
 }
 
 /*******************************************************************************
@@ -158,7 +162,8 @@ void proc_commonServer_task(s32_t taskId) {
         
         //APP_DEBUG("\r\n-->server=%ld\r\n",server);
         //50
-        if (m_GprsActState == STATE_DNS_READY&&ret == 0xFF && relinkTime++ > 50) {   
+        if (m_GprsActState == STATE_DNS_READY&&ret == 0xFF && relinkTime++ > 50) {
+        //if (ret == 0xFF && relinkTime++ > 50) {   
           //if ((m_GprsActState == STATE_DNS_READY)&&(ret == 0xFF)) {   
           if (server == null) {
             //for (ret = 0; ret < sizeof(serverTab) / sizeof(serverTab[0]); ret++) {
@@ -269,7 +274,7 @@ void CommonServerDataSend(Buffer_t *buf)
 	if (buf != null && buf->payload != null && buf->lenght > 0)
 	{
         s32 ret;
-        overtime=0;
+        //overtime=0;
         //网络空闲才发送
        while(eybnet_para.send_status)
             fibo_taskSleep(50);   //200

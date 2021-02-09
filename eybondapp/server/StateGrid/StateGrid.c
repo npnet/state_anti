@@ -231,6 +231,7 @@ static void StateGrid_run(u8_t status)
             {
                 uploadDataSpace -= 2;
                 stateGrid_upload();
+                clear_overtime();
                 //ret=ssl_rec();
                 //if(ret>0)
                 //  step=2;     

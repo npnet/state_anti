@@ -365,7 +365,8 @@ void state_close(u8_t nIndex)
         netManage[nIndex].ip = 0;
         netManage[nIndex].status = L610_CLOSE;
       }
-    }  
+    } 
+    nIndex++; 
   }
 }
 

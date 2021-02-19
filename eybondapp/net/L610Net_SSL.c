@@ -488,5 +488,40 @@ void SSLHandler_DataRcve(const char* strURC, void* reserved) {
   int offset = 0;
   APP_DEBUG("%s\r\n", strURC);
 }
+
+/******************************************************************************                    
+ * introduce:        ssl 数据接收任务     
+ * parameter:        none                 
+ * return:           返回ret,=-1接收失败，否则返回数据长度       
+ * author:           Luee                                              
+ *****************************************************************************/
+static Buffer_t recbuf;
+static u8 sslbuf[64]={0};
+
+s32 sslrec_task(void)
+{
+  s32 len;
+
+  recbuf.payload=sslbuf;
+
+  while(1){
+    fibo_taskSleep(500);
+    len = fibo_ssl_sock_recv(sslsock, recbuf.payload, sizeof(sslbuf));
+    if(len>0){
+      recbuf.lenght=len;
+      recbuf.size=len+4;
+    }
+    return len;
+  }
+}
+
+//fibo_thread_create(netrecv_task,      "NET RECV TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
+//    fibo_thread_create_ex(L610_TCP_Callback, (INT8 *)strTaskname, 1024*8*2, (void *)&nIndex, OSI_PRIORITY_NORMAL, &l610tcp_thread_id[nIndex]);
+//void L610_TCP_Callback(u8_t *param) 
+//void netrecv_task(void *param)
+
+
+
+
 /*********************************FILE END*************************************/
 

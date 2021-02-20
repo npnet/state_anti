@@ -23,6 +23,8 @@
 #define REGISTER_ID   0x01
 #define UPLOAD_ID     0x04
 #define HISTORY_ID    0x05
+#define GETDATA_ID    0x10
+#define PROOFTIME_ID  0x21
 #define HEARTBEAT_ID  0x99
 
 #define LOGIN_ID_ACK      1
@@ -306,6 +308,10 @@ s32 ssl_rec(void)
         APP_DEBUG("\r\n-->ssl receive buf:\r\n");
         print_buf((UINT8 *)recbuf, rec_len);
         rerec=0;
+
+        StateGrid_t sgt;
+        sgt.cmd=(StateGridCmd_t*)recbuf;
+
         //得到功能码地址
         //消息头（4）+采集终端ID（长度1+内容）+ 控制域（1）+消息体（功能码1+数据）
         index=4+1+recbuf[4]+1;
@@ -363,6 +369,15 @@ s32 ssl_rec(void)
               APP_DEBUG("\r\n-->state grid heartbeat fail\r\n");
             }
           break;
+
+          case GETDATA_ID:
+            stateGrid_getData(&sgt);
+          break;
+
+          case PROOFTIME_ID:
+            stateGrid_prooftime(&sgt);
+          break;
+
           default:
           break;
         }
@@ -488,43 +503,6 @@ void SSLHandler_DataRcve(const char* strURC, void* reserved) {
   int offset = 0;
   APP_DEBUG("%s\r\n", strURC);
 }
-
-/******************************************************************************                    
- * introduce:        ssl 数据接收任务     
- * parameter:        none                 
- * return:           返回ret,=-1接收失败，否则返回数据长度       
- * author:           Luee                                              
- *****************************************************************************/
-//static Buffer_t recbuf;
-//static u8 sslbuf[64]={0};
-
-s32 sslrec_task(void *param)
-{
-  s32 len;
-  Buffer_t recbuf;
-  //u8 sslbuf[64]={0};
-
-  //recbuf.payload=sslbuf;
-
-  while(1){
-    fibo_taskSleep(500);
-    recbuf.payload=fibo_malloc(100);
-    r_memset(recbuf.payload, '\0', sizeof(recbuf.payload)); 
-    len = fibo_ssl_sock_recv(sslsock, recbuf.payload, sizeof(recbuf.payload));
-    if(len>0){
-      recbuf.lenght=len;
-      recbuf.size=len+4;
-      state_rec_process(&recbuf);
-    }
-    fibo_free(recbuf.payload);
-    return len;
-  }
-}
-
-//fibo_thread_create(netrecv_task,      "NET RECV TASK",     1024*8*2, NULL, OSI_PRIORITY_NORMAL);
-//    fibo_thread_create_ex(L610_TCP_Callback, (INT8 *)strTaskname, 1024*8*2, (void *)&nIndex, OSI_PRIORITY_NORMAL, &l610tcp_thread_id[nIndex]);
-//void L610_TCP_Callback(u8_t *param) 
-//void netrecv_task(void *param)
 
 
 

@@ -90,8 +90,8 @@ static u8_t stateGrid_uploadAck(StateGrid_t *sg);
 static void stateGrid_historySave(void);
 static u8_t stateGrid_historyUpload(void);
 static u8_t stateGrid_historyUploadAck(StateGrid_t *sg);
-static u8_t stateGrid_getData(StateGrid_t *sg);
-static u8_t stateGrid_prooftime(StateGrid_t *sg);
+//static u8_t stateGrid_getData(StateGrid_t *sg);
+//static u8_t stateGrid_prooftime(StateGrid_t *sg);
 static void stateGrid_heartbeat(void);
 static u8_t stateGrid_heartbeatAck(StateGrid_t *sg);
 
@@ -537,6 +537,7 @@ static Buffer_t  *StateGrid_create(StateGridCmd_t *st)
   * @param  None
   * @retval None
 *******************************************************************************/
+/*
 static StateGridCmd_t *stateGrid_parse(Buffer_t *data) {
 //  int i = 0;
   s32_t i = 0;
@@ -579,6 +580,56 @@ END1:
 END:
   return null;
 }
+*/
+
+/*******************************************************************************
+  * @note   None
+  * @param  None
+  * @retval None
+*******************************************************************************/
+static StateGridCmd_t *stateGrid_parse(Buffer_t *data)
+{
+    int i=0;
+    StateGridCmd_t *st = null;
+    u8_t *pData = data->payload;
+
+    ERRR ((data == null || data->lenght < 8 || pData == null), goto END);
+    //i =  ((*pData++)<<24) | ((*pData++)<<16) | ((*pData++)<<8) | (*pData++);
+    i=*pData++;
+    i|=(*pData++)<<8;
+    i|=(*pData++)<<16;
+    i|=(*pData++)<<24;
+    ERRR (((i + 4) != data->lenght) , goto END);
+
+    st = memory_apply(sizeof(StateGridCmd_t));
+    ERRR((st == null), goto END);
+
+    st->lenght = i;
+    st->nameLen = *pData++;
+    st->name = memory_apply(st->nameLen + 1);
+    ERRR (st->name == null, goto END1);
+    
+    r_memcpy(st->name, pData, st->nameLen);
+    st->name[st->nameLen] = '\0';
+    pData += st->nameLen;
+    r_memcpy(&st->ctr, pData++, 1);
+    st->func = *pData++;
+    st->pdu.size = data->lenght - (pData - data->payload);
+    st->pdu.payload = memory_apply(st->pdu.size);
+    ERRR (st->pdu.payload == null, goto END2);
+
+    r_memcpy(st->pdu.payload, pData, st->pdu.size);
+    st->pdu.lenght = st->pdu.size;
+    return st;
+
+END2:
+    memory_release(st->name);
+END1:
+    memory_release(st);
+END:
+    return null;
+}
+
 /*******************************************************************************
   * @note   None
   * @param  None
@@ -1342,7 +1393,7 @@ END:
   * @param  None
   * @retval None
 *******************************************************************************/
-static u8_t stateGrid_getData(StateGrid_t *sg) {
+u8_t stateGrid_getData(StateGrid_t *sg) {
 #pragma pack(1)
   typedef struct {
     u8_t code;
@@ -1439,7 +1490,7 @@ ERR:
   * @param  None
   * @retval None
 *******************************************************************************/
-static u8_t stateGrid_prooftime(StateGrid_t *sg) {
+u8_t stateGrid_prooftime(StateGrid_t *sg) {
 #pragma pack(1)
   typedef struct {
     u8_t timer[8];

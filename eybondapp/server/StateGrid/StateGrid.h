@@ -57,6 +57,10 @@ ServerAddr_t *state_ServerAdrrGet(u8_t num);
 void set_grid_step(u8_t grid_step);
 void set_heartbeatSpace(u32 space);
 
+u8_t stateGrid_prooftime(StateGrid_t *sg);
+u8_t stateGrid_getData(StateGrid_t *sg);
+
+
 #endif //__STATE_GRID_H
 /******************************************************************************/
 

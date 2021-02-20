@@ -65,6 +65,7 @@ static int overtime;
 static CommonServerTab_t *server;
 
 static u16_t relinkTime = 0;
+static u8 state_send_flag=0;
 
 
 static void output(Buffer_t *buf);
@@ -120,6 +121,61 @@ static void soft_reset_handle(void)
 
 void clear_overtime(void){
   overtime=0;
+}
+
+/******************************************************************************                    
+ * introduce:        ssl 数据接收任务     
+ * parameter:        none                 
+ * return:           返回ret,=-1接收失败，否则返回数据长度       
+ * author:           Luee                                              
+ *****************************************************************************/
+void sslrec_task(void *param)
+{
+  s32 len;
+  Buffer_t recbuf;
+  u16 ssl_relink_times=0;
+  //u8 sslbuf[64]={0};
+
+  //recbuf.payload=sslbuf;
+
+  while(1){
+    fibo_taskSleep(500);
+
+    if((state_status(sPort)==L610_SUCCESS)&&state_send_flag){
+      state_send_flag=0;
+      ssl_rec();
+/*
+      recbuf.payload=fibo_malloc(100);
+      r_memset(recbuf.payload, '\0', sizeof(recbuf.payload)); 
+      len = fibo_ssl_sock_recv(sslsock, recbuf.payload, sizeof(recbuf.payload));
+      if(len>0){
+        recbuf.lenght=len;
+        recbuf.size=len+4;
+        state_rec_process(&recbuf);
+      }
+      fibo_free(recbuf.payload);
+
+      //收到有效ssl数据，心跳间隔时间清0
+      //国网只需保证20分钟内有数据正确交换就不会断网
+      if(len>0){
+        set_heartbeatSpace(0);
+      }
+      //连接失败重连
+      if(len<=0){
+        APP_DEBUG("\r\n-->state grid ssl recieve fail times:%d\r\n",ssl_relink_times);
+        log_save("\r\n-->state grid ssl recieve fail times:%d\r\n",ssl_relink_times);
+        if(ssl_relink_times++>30){
+          ssl_relink_times=0;
+          ssl_relink();
+        }
+      }
+*/
+    }
+    else{
+      //fibo_taskSleep(500);
+    }
+    
+  }
 }
 
 /*******************************************************************************
@@ -213,8 +269,6 @@ void proc_commonServer_task(s32_t taskId) {
         }
         if (server != null && server->api != null){
               server->api->run(ret);
-              //if(Net_status(sPort)==L610_SUCCESS)
-              //  rets32=ssl_rec();
         }
 
         case COMMON_SERVER__DATA_PROCESS:
@@ -299,6 +353,10 @@ void CommonServerDataSend(Buffer_t *buf)
 	if (buf != null && buf->payload != null && buf->lenght > 0)
 	{
         s32 ret;
+
+        s32 len;
+        Buffer_t recbuf;
+        u16 ssl_relink_times=0;
         //overtime=0;
         //网络空闲才发送
        while(eybnet_para.send_status)
@@ -309,12 +367,41 @@ void CommonServerDataSend(Buffer_t *buf)
         if(ret<0){
           APP_DEBUG("\r\n-->state grid ssl send fail ret=%ld\r\n", ret);
         }else{
+          state_send_flag=1;
           //APP_DEBUG("\r\n-->state grid ssl send success ret=%ld\r\n", ret);
           //log_hex((UINT8 *)buf->payload, buf->lenght);
           //print_buf((UINT8 *)buf->payload, buf->lenght);
         }
         statenet_para.send_status=false;    //发送结束
         //ret=ssl_rec();
+    /*
+        ////////////////////////////////////////////////////////////////
+        //接收
+        recbuf.payload=fibo_malloc(100);
+        r_memset(recbuf.payload, '\0', sizeof(recbuf.payload)); 
+        len = fibo_ssl_sock_recv(sslsock, recbuf.payload, sizeof(recbuf.payload));
+        if(len>0){
+          recbuf.lenght=len;
+          recbuf.size=len+4;
+          state_rec_process(&recbuf);
+        }
+        fibo_free(recbuf.payload);
+
+        //收到有效ssl数据，心跳间隔时间清0
+        //国网只需保证20分钟内有数据正确交换就不会断网
+        if(len>0){
+          set_heartbeatSpace(0);
+        }
+        //连接失败重连
+        if(len<=0){
+          APP_DEBUG("\r\n-->state grid ssl recieve fail times:%d\r\n",ssl_relink_times);
+          log_save("\r\n-->state grid ssl recieve fail times:%d\r\n",ssl_relink_times);
+          if(ssl_relink_times++>30){
+            ssl_relink_times=0;
+            ssl_relink();
+          }
+        }
+      */
 	}
 } 
 

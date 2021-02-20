@@ -69,6 +69,7 @@ void soft_reset_en(void);
 void clear_overtime(void);
 
 void state_rec_process(Buffer_t *buf);
+void sslrec_task(void *param);
 
 #endif //__COMMON_SERVER_H
 /******************************************************************************/

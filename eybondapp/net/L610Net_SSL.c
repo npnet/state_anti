@@ -495,22 +495,28 @@ void SSLHandler_DataRcve(const char* strURC, void* reserved) {
  * return:           返回ret,=-1接收失败，否则返回数据长度       
  * author:           Luee                                              
  *****************************************************************************/
-static Buffer_t recbuf;
-static u8 sslbuf[64]={0};
+//static Buffer_t recbuf;
+//static u8 sslbuf[64]={0};
 
-s32 sslrec_task(void)
+s32 sslrec_task(void *param)
 {
   s32 len;
+  Buffer_t recbuf;
+  //u8 sslbuf[64]={0};
 
-  recbuf.payload=sslbuf;
+  //recbuf.payload=sslbuf;
 
   while(1){
     fibo_taskSleep(500);
-    len = fibo_ssl_sock_recv(sslsock, recbuf.payload, sizeof(sslbuf));
+    recbuf.payload=fibo_malloc(100);
+    r_memset(recbuf.payload, '\0', sizeof(recbuf.payload)); 
+    len = fibo_ssl_sock_recv(sslsock, recbuf.payload, sizeof(recbuf.payload));
     if(len>0){
       recbuf.lenght=len;
       recbuf.size=len+4;
+      state_rec_process(&recbuf);
     }
+    fibo_free(recbuf.payload);
     return len;
   }
 }

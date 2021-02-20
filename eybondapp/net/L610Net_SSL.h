@@ -25,7 +25,7 @@ int  SSL_Send(s32_t socketId, u8_t* pData, s32_t dataLen);
 void SSLHandler_DataRcve(const char* strURC, void* reserved);
 
 s32 ssl_rec(void);
-s32 sslrec_task(void);
+s32 sslrec_task(void *param);
 
 
 

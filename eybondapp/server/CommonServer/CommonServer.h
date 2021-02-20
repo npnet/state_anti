@@ -68,6 +68,8 @@ void ssl_relink(void);
 void soft_reset_en(void);
 void clear_overtime(void);
 
+void state_rec_process(Buffer_t *buf);
+
 #endif //__COMMON_SERVER_H
 /******************************************************************************/
 

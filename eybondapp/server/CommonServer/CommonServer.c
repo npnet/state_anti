@@ -219,7 +219,7 @@ void proc_commonServer_task(s32_t taskId) {
 
         case COMMON_SERVER__DATA_PROCESS:
           if (server != null && server->api != null){
-              //server->api->process();
+              server->api->process();
             }
         break;
         //defualt:
@@ -244,7 +244,22 @@ void CommonServerDataSend(Buffer_t *buf) {
 
 */
 
+/******************************************************************************                    
+ * introduce:           
+ * parameter:                      
+ * return:                
+ * author:           Luee                                              
+ *****************************************************************************/
 static void dataProcess(u8_t port, Buffer_t *buf) {
+  output(buf);
+	overtime = 0;
+	sPort = port;
+	if (server->api->add(buf, CommonServerDataSend) == 0)
+    {
+        Eybpub_UT_SendMessage(COMMON_SERVER_TASK, COMMON_SERVER__DATA_PROCESS, 0, 0);
+    }
+    memory_release(buf);
+
   /*
   output(buf);
   overtime = 0;
@@ -261,7 +276,17 @@ static void dataProcess(u8_t port, Buffer_t *buf) {
   */
 }
 
+/******************************************************************************                    
+ * introduce:           
+ * parameter:                      
+ * return:                
+ * author:           Luee                                              
+ *****************************************************************************/
+void state_rec_process(Buffer_t *buf)
+{
+  dataProcess(sPort,buf);
 
+}
 
 /******************************************************************************                     
 * introduce:        向服务器发送数据通用接口       
@@ -289,7 +314,7 @@ void CommonServerDataSend(Buffer_t *buf)
           //print_buf((UINT8 *)buf->payload, buf->lenght);
         }
         statenet_para.send_status=false;    //发送结束
-        ret=ssl_rec();
+        //ret=ssl_rec();
 	}
 } 
 

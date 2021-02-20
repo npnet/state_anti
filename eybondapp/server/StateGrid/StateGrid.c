@@ -207,19 +207,11 @@ static void StateGrid_run(u8_t status)
             space = 0;
             if (step == 0)
             {
-                stateGrid_login();
-                //ret=ssl_rec();
-                //if(ret>0)
-                //  step=1;     
+                stateGrid_login();  
             }
             else if (step == 1)
             {
-                stateGrid_register();
-                
-                //ret=ssl_rec();
-                //if(ret>0)
-                //  step=2;   
-                //uploadDataSpace=0;  
+                stateGrid_register(); 
             }
             else if ((step == 2)
                     && (++uploadDataSpace  >  (60 * 5/SEND_SPACE))
@@ -231,20 +223,12 @@ static void StateGrid_run(u8_t status)
             {
                 uploadDataSpace -= 2;
                 stateGrid_upload();
-                clear_overtime();
-                //ret=ssl_rec();
-                //if(ret>0)
-                //  step=2;     
+                clear_overtime();   
             }
             else if (++heartbeatSpace > (60/SEND_SPACE))
             {
                 heartbeatSpace -= 2;
-                stateGrid_heartbeat();
-                //ret=ssl_rec();
-                //if(ret>0){
-                //  APP_DEBUG("\r\nState Grid heartbeat OK\r\n");
-                //}
-                       
+                stateGrid_heartbeat();         
             }
             
         }
@@ -1428,6 +1412,7 @@ NEXT:
   } else if (e != FS_ONCE) {
     e = FS_END;
   }
+  APP_DEBUG("\r\n-->state grid get data success!!!\r\n");
 
   pdu.lenght = pointBuf.lenght + sizeof(ack_t);
 
@@ -1483,6 +1468,8 @@ static u8_t stateGrid_prooftime(StateGrid_t *sg) {
   CommonServerDataSend(buf);
   memory_release(buf);
   sg->cmd = null;
+
+  APP_DEBUG("\r\n-->state grid prooftime success!!!\r\n");
 
   return 0;
 }

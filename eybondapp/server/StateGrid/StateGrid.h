@@ -50,6 +50,8 @@ typedef struct {
 } StateGridTab_t;
 
 extern const CommonServer_t  StateGrid_API;
+extern ListHandler_t sslrecList;  // ssl Net data receive list
+
 int StateGrid_check(void);
 u16_t StateGrid_station(u8_t addr, u32_t *No);
 
@@ -59,6 +61,7 @@ void set_heartbeatSpace(u32 space);
 
 u8_t stateGrid_prooftime(StateGrid_t *sg);
 u8_t stateGrid_getData(StateGrid_t *sg);
+u8_t StateGrid_cmd2(Buffer_t *buf);
 
 
 #endif //__STATE_GRID_H

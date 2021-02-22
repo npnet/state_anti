@@ -45,6 +45,7 @@ typedef struct {
 
 static const char stateGridServerAddr[] = "gfyfront.esgcc.com.cn:19020:SSL";  // "cie-bj.tpddns.cn:19020:SSL";//
 static ListHandler_t rcveList;  // Net data receive list
+ListHandler_t sslrecList;  // Net data receive list
 static u8_t step;  // connext server step
 static int heartbeatSpace;  // heartbeat sapce;
 static int uploadDataSpace; // upload data space
@@ -305,6 +306,32 @@ static u8_t StateGrid_cmd(Buffer_t *buf, DataAck ch) {
       sg->waitCnt = 0;
       sg->ack = ch;
       list_topInsert(&rcveList, sg);
+    }
+  }
+
+  return e;
+}
+
+u8_t StateGrid_cmd2(Buffer_t *buf) 
+{
+  u8_t e = 0;
+  StateGridCmd_t *cmd = null;
+
+  if (buf == null || buf->payload == null || buf->lenght <= 0 ) {
+    e = 1;
+  } else if (null == (cmd = stateGrid_parse(buf))) {
+    e = 2;
+  } else {
+    StateGrid_t *sg = list_nodeApply(sizeof(StateGrid_t));
+
+    if (sg == null) {
+      e = 3;
+      log_save("stateGrid memory apply fail!");
+    } else {
+      sg->cmd = cmd;
+      sg->waitCnt = 0;
+      //sg->ack = ch;
+      list_topInsert(&sslrecList, sg);
     }
   }
 

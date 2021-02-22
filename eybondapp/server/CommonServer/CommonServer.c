@@ -141,8 +141,9 @@ void sslrec_task(void *param)
   while(1){
     fibo_taskSleep(500);
 
-    if((state_status(sPort)==L610_SUCCESS)&&state_send_flag){
-      state_send_flag=0;
+    //if((state_status(sPort)==L610_SUCCESS)&&state_send_flag){
+    if(state_status(sPort)==L610_SUCCESS){
+      //state_send_flag=0;
       ssl_rec();
 /*
       recbuf.payload=fibo_malloc(100);
@@ -272,9 +273,9 @@ void proc_commonServer_task(s32_t taskId) {
         }
 
         case COMMON_SERVER__DATA_PROCESS:
-          if (server != null && server->api != null){
-              server->api->process();
-            }
+          //if (server != null && server->api != null){
+          //    server->api->process();
+          //  }
         break;
         //defualt:
         //break;

@@ -39,6 +39,7 @@
 #include "Sineng.h"
 
 #include "grid_tool.h"
+#include "L610Net_TCP_EYB.h"
 
 // #include "FlashFIFO.h"
 // #include "FlashEquilibria.h"
@@ -1160,7 +1161,7 @@ void proc_eybond_task(s32_t taskId) {
         break;
       case SYS_PARA_CHANGE:
         Net_close(sPort);
-	    sPort = 0xff;
+	      sPort = 0xff;
       case APP_MSG_DEVTIMER_ID: {
         ret = Net_status(sPort);
 //        APP_DEBUG("socket[%d] status %d overtime_ESP %d\r\n", sPort, ret, overtime_ESP);
@@ -1180,6 +1181,8 @@ void proc_eybond_task(s32_t taskId) {
             parametr_set(EYBOND_SERVER_ADDR, &buf);
           }
         }
+        //益邦云连接失败计数  Luee
+        //if(ret != L610_SUCCESS){     
         if (overtime_ESP++ > (75 * 2)) {
           relinkCnt++;
           overtime_ESP = 0;
@@ -1192,6 +1195,7 @@ void proc_eybond_task(s32_t taskId) {
           Watchdog_stop();
           relinkCnt = 0;
         }
+      //}    
 //      if ((runTimeCheck(4, 19) == 0 ) &&(0 >= (historySaveCnt--))) {
 //        historySave();
 //      }

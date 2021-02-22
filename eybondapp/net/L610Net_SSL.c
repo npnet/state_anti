@@ -299,6 +299,7 @@ s32 ssl_rec(void)
     u8 index=0;
     s32 rec_len=0;
     static u16 ssl_relink_times=0;
+    Buffer_t sslrec_buf;
 
     while(rerec){
     APP_DEBUG("\r\nssl receiving\r\n");
@@ -309,8 +310,16 @@ s32 ssl_rec(void)
         print_buf((UINT8 *)recbuf, rec_len);
         rerec=0;
 
-        StateGrid_t sgt;
-        sgt.cmd=(StateGridCmd_t*)recbuf;
+        //StateGrid_t sgt;
+        //sgt.cmd=(StateGridCmd_t*)recbuf;
+
+        //ssl接收recbuf转为结构体sp
+        sslrec_buf.lenght= rec_len;
+        sslrec_buf.size=rec_len+4;
+        sslrec_buf.payload=recbuf;
+        StateGrid_cmd2(&sslrec_buf);   //接收到数据转换后，存在链表
+        StateGrid_t *sp = (StateGrid_t *)list_nextData(&sslrecList, null);
+        //StateGrid_process()
 
         //得到功能码地址
         //消息头（4）+采集终端ID（长度1+内容）+ 控制域（1）+消息体（功能码1+数据）
@@ -371,11 +380,13 @@ s32 ssl_rec(void)
           break;
 
           case GETDATA_ID:
-            stateGrid_getData(&sgt);
+            APP_DEBUG("\r\n-->state grid :stateGrid_getData process");
+            stateGrid_getData(sp);
           break;
 
           case PROOFTIME_ID:
-            stateGrid_prooftime(&sgt);
+            APP_DEBUG("\r\n-->state grid :stateGrid_prooftime process");
+            stateGrid_prooftime(sp);
           break;
 
           default:

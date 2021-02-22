@@ -129,15 +129,13 @@ void clear_overtime(void){
  * return:           返回ret,=-1接收失败，否则返回数据长度       
  * author:           Luee                                              
  *****************************************************************************/
+#ifndef SSLREC_M26
 void sslrec_task(void *param)
 {
   s32 len;
   Buffer_t recbuf;
   u16 ssl_relink_times=0;
-  //u8 sslbuf[64]={0};
-
-  //recbuf.payload=sslbuf;
-
+  
   while(1){
     fibo_taskSleep(500);
 
@@ -145,7 +143,21 @@ void sslrec_task(void *param)
     if(state_status(sPort)==L610_SUCCESS){
       //state_send_flag=0;
       ssl_rec();
-/*
+    }   
+  }
+}
+#else
+
+void sslrec_task(void *param)
+{
+  s32 len;
+  Buffer_t recbuf;
+  u16 ssl_relink_times=0;
+
+  while(1){
+    fibo_taskSleep(500);
+
+    if(state_status(sPort)==L610_SUCCESS){
       recbuf.payload=fibo_malloc(100);
       r_memset(recbuf.payload, '\0', sizeof(recbuf.payload)); 
       len = fibo_ssl_sock_recv(sslsock, recbuf.payload, sizeof(recbuf.payload));
@@ -170,15 +182,10 @@ void sslrec_task(void *param)
           ssl_relink();
         }
       }
-*/
-    }
-    else{
-      //fibo_taskSleep(500);
-    }
-    
-  }
-}
-
+    } 
+  }   //while end
+}   //end
+#endif
 /*******************************************************************************
   * @brief
   * @note   None
@@ -273,9 +280,11 @@ void proc_commonServer_task(s32_t taskId) {
         }
 
         case COMMON_SERVER__DATA_PROCESS:
-          //if (server != null && server->api != null){
-          //    server->api->process();
-          //  }
+        #ifdef SSLREC_M26
+          if (server != null && server->api != null){
+              server->api->process();
+            }
+        #endif
         break;
         //defualt:
         //break;

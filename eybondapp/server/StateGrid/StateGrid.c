@@ -622,10 +622,11 @@ static StateGridCmd_t *stateGrid_parse(Buffer_t *data)
 
     ERRR ((data == null || data->lenght < 8 || pData == null), goto END);
     //i =  ((*pData++)<<24) | ((*pData++)<<16) | ((*pData++)<<8) | (*pData++);
-    i=*pData++;
-    i|=(*pData++)<<8;
+    i=(*pData++)<<24;
     i|=(*pData++)<<16;
-    i|=(*pData++)<<24;
+    i|=(*pData++)<<8;
+    i|=(*pData++)<<0;
+    APP_DEBUG("\r\n-->state grid ssl recbuf lenght=%x",i);
     ERRR (((i + 4) != data->lenght) , goto END);
 
     st = memory_apply(sizeof(StateGridCmd_t));

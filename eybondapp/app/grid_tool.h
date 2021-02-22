@@ -20,6 +20,7 @@
 
 //set will init para
 //#define PARA_INIT   1
+//#define SSLREC_M26  1
 
 typedef signed long long   s64;                            
 typedef signed long  s32;

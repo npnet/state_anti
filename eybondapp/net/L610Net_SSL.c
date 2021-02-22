@@ -306,7 +306,7 @@ s32 ssl_rec(void)
     rec_len = fibo_ssl_sock_recv(sslsock, recbuf, sizeof(recbuf));
     APP_DEBUG("\r\nfibossl sys_sock_recv %ld\r\n", rec_len);
     if (rec_len > 0){
-        APP_DEBUG("\r\n-->ssl receive buf:\r\n");
+        APP_DEBUG("\r\n-->state grid ssl receive buf:\r\n");
         print_buf((UINT8 *)recbuf, rec_len);
         rerec=0;
 

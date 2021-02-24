@@ -615,7 +615,9 @@ void L610Net_manage(void) {
         for (nIndex = 0; nIndex < sizeof(netManage) / sizeof(netManage[0]); nIndex++) {
           if (netManage[nIndex].flag == 1 && netManage[nIndex].status != L610_SUCCESS && netManage[nIndex].status != L610_CONNECTING) {
             if (netManage[nIndex].socketID < 0) {
-              if (netManage[nIndex].mode == 1 || netManage[nIndex].mode == 2) {
+              //Luee mode=2为ssl国网专用，在国网处理
+              //if (netManage[nIndex].mode == 1 || netManage[nIndex].mode == 2) {
+                if (netManage[nIndex].mode == 1) {          
                   netManage[nIndex].socketID = fibo_sock_create(GAPP_IPPROTO_TCP);
               } else {
                   netManage[nIndex].socketID = fibo_sock_create(GAPP_IPPROTO_UDP);
@@ -773,6 +775,7 @@ void grid_Net_manage(void)
 
 	//益邦云连上后才处理国网
 	if(m_GprsActState == STATE_DNS_READY){
+  //if(registe==1){
 		if (offset < sizeof(netManage)/sizeof(netManage[0])){
 			if (netManage[offset].flag == 1 && netManage[offset].status != L610_SUCCESS && netManage[offset].status != L610_CONNECTING){
 				if (netManage[offset].mode == 2){

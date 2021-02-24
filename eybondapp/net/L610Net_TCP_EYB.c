@@ -201,6 +201,7 @@ static s32_t customPara = 0;
 // fd_set g_writefds;
 u32_t g_SemFlag = 0;
 static u32_t g_netmutex = 0;
+static u8 ssl_neting=0;     //国网结束后，才能重新调用
 
 /************************************************************************/
 /* Definition for GPRS PDP context                                      */
@@ -773,6 +774,10 @@ void grid_Net_manage(void)
 	static s32 offset = 0;
 	s8_t ret;
 
+  if(ssl_neting)
+    return;
+  ssl_neting=1;     //国网结束后，才能重新调用
+
 	//益邦云连上后才处理国网
 	if(m_GprsActState == STATE_DNS_READY){
   //if(registe==1){
@@ -782,8 +787,8 @@ void grid_Net_manage(void)
 					APP_DEBUG("\r\n-->ready open ssl\r\n");
 					ret = SSL_Open(&netManage[offset]);
 					if (0 == ret){
-                        APP_DEBUG("\r\n-->connet ssl server SUCCESS ret=%d\r\n", ret);
-                        netManage[offset].status = L610_SUCCESS;	
+                APP_DEBUG("\r\n-->connet ssl server SUCCESS ret=%d\r\n", ret);
+                netManage[offset].status = L610_SUCCESS;	
 			        }
 					else{
 						netManage[offset].status = L610_WAIT;	
@@ -796,6 +801,7 @@ void grid_Net_manage(void)
 			offset=0;
 		}	
 	}	
+  ssl_neting=0;   //国网结束后，才能重新调用
 }
 
 

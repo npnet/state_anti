@@ -1251,12 +1251,11 @@ static u8_t heartbeat(ESP_t *esp) {
   ack = memory_apply(sizeof(EybondHeader_t) + 18);
   r_memset(ack, 0, sizeof(EybondHeader_t) + 18);
   if (ack != null) {
-    r_memcpy(ack, &esp->head, sizeof(EybondHeader_t));
+    r_memcpy(ack, &esp->head, sizeof(EybondHeader_t));    //得到回复头
     if (buf.payload == null || (buf.lenght != 14 &&  buf.lenght != 18)) {
       APP_DEBUG("PN ERR: %d, %s\r\n", buf.lenght, buf.payload);
       buf.lenght = 14;
       r_memcpy(ack + 1, "EYBONDERR00000", 14);
-      // SysPara_auth();    // mike 00号参数?
     } else {
       r_memcpy(ack + 1, buf.payload,  buf.lenght);
     }

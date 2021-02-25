@@ -70,8 +70,8 @@ u8_t Update_file(ESP_t *esp) {  // 升级CA、电表文件
   Ack_t *ackPara = (Ack_t *)(ackHead + 1);
 
   updateID = 0;
-  blockNum = (rcvePara->sliceCntH << 8) | rcvePara->sliceCntL;
-  i = rcvePara->sizeHH << 24 | rcvePara->sizeHL << 16 | rcvePara->sizeLH << 8 | rcvePara->sizeLL;
+  blockNum = (rcvePara->sliceCntH << 8) | rcvePara->sliceCntL;    //得到数据块数量
+  i = rcvePara->sizeHH << 24 | rcvePara->sizeHL << 16 | rcvePara->sizeLH << 8 | rcvePara->sizeLL; //文件总大小
   APP_DEBUG("fiile Size %x \r\n", i);
   if (blockNum == 0) {
     ackPara->state = 0;

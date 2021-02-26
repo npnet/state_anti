@@ -99,22 +99,22 @@ int Update_Self(File_t *file){
   s16_t ret = -1;
   s16_t len = 0;
   APP_DEBUG("Update_Self\r\n");
-  s32_t nfile_size = fibo_file_getSize(file->name);
+  s32_t nfile_size = fibo_file_getSize(file->name);   //得到升级文件大小
 
-  if (nfile_size <= 0) {   // 文件存在或长度为0
+  if (nfile_size <= 0) {   // 文件不存在或长度为0
     APP_DEBUG("File %s is not existing\r\n", file->name);
     return ret;
   }
 
   APP_DEBUG("File %s size get: %ld file->size: %ld\r\n", file->name, nfile_size, file->size);
 
-  u8_t *buffer = memory_apply(SELF_BUFFE_SIZE);
+  u8_t *buffer = memory_apply(SELF_BUFFE_SIZE);   //申请buffer数列512字节
   if (buffer == NULL) {
     APP_DEBUG("memory_apply fail\r\n");
     return ret;
   }
-  u8_t *data = memory_apply(file->size);
-  u8_t *pdata = data;
+  u8_t *data = memory_apply(file->size);          //data数列地址
+  u8_t *pdata = data;                             //pdata数列地址=data
   if (data == NULL) {
     memory_release(buffer);
     APP_DEBUG("memory_apply fail\r\n");
@@ -125,22 +125,25 @@ int Update_Self(File_t *file){
 
   do {
     r_memset(buffer, 0, SELF_BUFFE_SIZE);
-    len = File_read(file, buffer, SELF_BUFFE_SIZE);
-//    APP_DEBUG("Read %s file len %d data\r\n", file->name, len);
+    len = File_read(file, buffer, SELF_BUFFE_SIZE);   //读取升级文件512字节
     if (len <= 0) {
       break;
     }
-    nfile_read = nfile_read + len;
+    nfile_read = nfile_read + len;    //得到读取文件总长度nfile_read
     r_memcpy(pdata, buffer, len);
     pdata = pdata + len;
   } while (len == SELF_BUFFE_SIZE);
   memory_release(buffer);
   APP_DEBUG("Get %s file data len %ld\r\n", file->name, nfile_read);
+  //读取的长度与升级文件长度相等 
   if (nfile_read == file->size) {
+    //=0升级包数据检测通过
     if(0 == fibo_app_check((INT8*)data, file->size)) {
+      //一次性升级，完成后底层自动重启
       ret = fibo_ota_handle((INT8*)data, file->size);
       APP_DEBUG("app ota_ret is %d\r\n", ret);
     } else {
+      //差分升级
       ret = fibo_firmware_handle((INT8*)data, file->size);
       APP_DEBUG("sdk ota_ret is %d\r\n", ret);
     }

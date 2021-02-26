@@ -117,19 +117,19 @@ u8_t Update_file(ESP_t *esp) {  // 升级CA、电表文件
 *******************************************************************************/
 u8_t Update_soft(ESP_t *esp) {  // 升级数采器固件
   APP_DEBUG("Update_soft\r\n");
-#pragma pack(1)
+#pragma pack(1)       //一个字节对齐
   typedef struct {
-    u16_t sliceCnt;
-    u16_t sliceSize;
+    u16_t sliceCnt;   //数据块数
+    u16_t sliceSize;  //每个数据块长度
   } Rcve_t;
   typedef struct {
     u8_t state;
-  } Ack_t;
+  } Ack_t;            //回复结构体
 #pragma pack()
   Buffer_t buf;
-  Rcve_t *rcvePara = (Rcve_t *)esp->PDU;
-  EybondHeader_t *ackHead = &esp->head;
-  Ack_t *ackPara = (Ack_t *)(ackHead + 1);
+  Rcve_t *rcvePara = (Rcve_t *)esp->PDU;    //得到接收数据区
+  EybondHeader_t *ackHead = &esp->head;     //得到回复头
+  Ack_t *ackPara = (Ack_t *)(ackHead + 1);  //得到回复数据区第一个地址
 
   APP_DEBUG("ESP=pdu len:%04X, waitCnt:%04X\r\n", esp->PDULen, esp->waitCnt);
   APP_DEBUG("ackHead serail:%04X, code:%04X\r\n", ackHead->serial, ackHead->code);
@@ -137,7 +137,7 @@ u8_t Update_soft(ESP_t *esp) {  // 升级数采器固件
   APP_DEBUG("ackPara state :%04X\r\n", ackPara->state);
   
   updateID = SELF_UPDATE_ID;
-  Swap_bigSmallShort(&rcvePara->sliceCnt);
+  Swap_bigSmallShort(&rcvePara->sliceCnt);   //高低8位互换
 
   if (rcvePara->sliceCnt == 0) {
     if ((update != null) && (update->area == 0) && (0 == File_validCheck(update))) {

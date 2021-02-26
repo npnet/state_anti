@@ -91,7 +91,8 @@ File_t *File_init(u32_t addr, u16_t sliceCnt, u16_t sliceSize) {
   * @retval None
 *******************************************************************************/
 u8_t File_validCheck(File_t *file) {
-  if ((file != null) && (file->flag == FILE_FLAG) && (file->size < 0x400000)) {
+  if ((file != null) && (file->flag == FILE_FLAG) && (file->size < 0x400000)) {     //文件尺寸小于4MB有效
+  //if ((file != null) && (file->flag == FILE_FLAG) && (file->size < 0xf0000)) {     //文件尺寸小于1MB有效,升级文件136KB只能升级到91%，之后无法再升级
     return 0;
   }
   return 1;
@@ -320,13 +321,13 @@ s16_t File_read(File_t *file, u8_t *data, u16_t len) {
 
   if (file->seat == file->size) {   // 已经读完一次，再读需要先重置一下
     APP_DEBUG("finish reading %s file,reset file->seat\r\n", file->name);
-    file->seat = 0;
+    file->seat = 0;                 //seat 读升级文件指针
     readenLen = 0;
     return readenLen;
   }
 
 //  APP_DEBUG("Begin read File %s, size:%ld seat:%ld\r\n", file->name, file->size, file->seat);
-  iFd_File = fibo_file_open(file->name, FS_O_RDONLY);
+  iFd_File = fibo_file_open(file->name, FS_O_RDONLY);   //读取升级文件
   if (iFd_File <= 0) {
     APP_DEBUG("Open %s file fail\r\n", file->name);
     readenLen = -1;
@@ -337,7 +338,7 @@ s16_t File_read(File_t *file, u8_t *data, u16_t len) {
     Hash_MD5Init(&file_md5);
     APP_DEBUG("File Start read\r\n");
   }
-  ret = fibo_file_seek(iFd_File, file->seat, FS_SEEK_SET);
+  ret = fibo_file_seek(iFd_File, file->seat, FS_SEEK_SET);    //设置文件读取指针
   if (ret < 0) {
     APP_DEBUG("seek %s file to begin fail\r\n", file->name);
     readenLen = -1;
@@ -347,7 +348,7 @@ s16_t File_read(File_t *file, u8_t *data, u16_t len) {
     }
     return readenLen;
   }
-  readLen = (file->size - file->seat) > len ? len : (file->size - file->seat);
+  readLen = (file->size - file->seat) > len ? len : (file->size - file->seat);  //读取文件到数列data
   readenLen = fibo_file_read(iFd_File, data, readLen);
   if (readenLen != readLen) {
     APP_DEBUG("read %s file %d len data fail:%d\r\n", file->name, readLen, readenLen);

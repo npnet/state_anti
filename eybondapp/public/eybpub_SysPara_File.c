@@ -694,7 +694,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
         case 27:
         case 28:
         case 49:
-        case 50:
+        //case 50:
         case 51:
         case 52:
         case 55:

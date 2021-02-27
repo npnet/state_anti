@@ -19,6 +19,8 @@
 #include "eyblib_memory.h"
 #include "eybpub_watchdog.h"
 
+#include "grid_tool.h"
+
 #define SELF_BUFFE_SIZE   (0x200)
 
 #ifdef _PLATFORM_M26_
@@ -90,6 +92,11 @@ ERR:
 #endif
 
 #ifdef _PLATFORM_L610_
+#define POWEROFF "8"
+#define DEF_0    "0"
+
+#include "grid_tool.h"
+
 /*******************************************************************************
  Brief    : void
  Parameter:
@@ -137,6 +144,18 @@ int Update_Self(File_t *file){
   APP_DEBUG("Get %s file data len %ld\r\n", file->name, nfile_read);
   //读取的长度与升级文件长度相等 
   if (nfile_read == file->size) {
+  /*
+    //升级后断电，设参数50='8’
+    Buffer_t parabuf;
+    parabuf.payload=null;
+    parabuf.payload=memory_apply(sizeof(char)*64);
+    r_memset(parabuf.payload,0,64);
+    parabuf.lenght=64;
+    r_memset(parabuf.payload,'8',64);
+    parametr_set(50,&parabuf);
+    memory_release(parabuf.payload);
+  */
+
     //=0升级包数据检测通过
     if(0 == fibo_app_check((INT8*)data, file->size)) {
       //一次性升级，完成后底层自动重启

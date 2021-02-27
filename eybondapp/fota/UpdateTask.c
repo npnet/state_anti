@@ -79,6 +79,9 @@ void proc_update_task(s32_t taskId)
 #endif
 
 #ifdef _PLATFORM_L610_
+
+#include "grid_tool.h"
+#include "eybpub_watchdog.h"
 /*******************************************************************************
  Brief    : void
  Parameter:
@@ -89,6 +92,8 @@ void proc_update_task(s32_t taskId) {
   int ret = 0;
   ST_MSG msg;
   r_memset(&msg, 0, sizeof(ST_MSG));
+
+
 
   while (1) {
     fibo_queue_get(UPDATE_TASK, (void *)&msg, 0);

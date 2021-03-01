@@ -120,7 +120,7 @@ int Update_Self(File_t *file){
     APP_DEBUG("memory_apply fail\r\n");
     return ret;
   }
-  u8_t *data = memory_apply(file->size);          //data数列地址
+  u8_t *data = memory_apply(file->size);          //data数列地址  
   u8_t *pdata = data;                             //pdata数列地址=data
   if (data == NULL) {
     memory_release(buffer);
@@ -143,7 +143,7 @@ int Update_Self(File_t *file){
   memory_release(buffer);
   APP_DEBUG("Get %s file data len %ld\r\n", file->name, nfile_read);
   //读取的长度与升级文件长度相等 
-  if (nfile_read == file->size) {
+  if ((nfile_read == file->size)&&(nfile_read!=0)) {
   /*
     //升级后断电，设参数50='8’
     Buffer_t parabuf;
@@ -152,25 +152,49 @@ int Update_Self(File_t *file){
     r_memset(parabuf.payload,0,64);
     parabuf.lenght=64;
     r_memset(parabuf.payload,'8',64);
-    parametr_set(50,&parabuf);
+    parametr_set(1,&parabuf);
     memory_release(parabuf.payload);
   */
 
+    //for (int i = 0; i < 5; i++){
+    //    APP_DEBUG("\r\n-->app updata:before fibo_ota_handle %d", i);
+    //    fibo_taskSleep(2000);
+    //}
+
     //=0升级包数据检测通过
     if(0 == fibo_app_check((INT8*)data, file->size)) {
-      //一次性升级，完成后底层自动重启
+      //APP升级，完成后底层自动重启
       ret = fibo_ota_handle((INT8*)data, file->size);
-      APP_DEBUG("app ota_ret is %d\r\n", ret);
+      APP_DEBUG("-->app updata:ota_ret is %d\r\n", ret);
     } else {
-      //差分升级
+      //主固件SDK升级
       ret = fibo_firmware_handle((INT8*)data, file->size);
-      APP_DEBUG("sdk ota_ret is %d\r\n", ret);
+      APP_DEBUG("-->app updata sdk ota_ret is %d\r\n", ret);
     }
+    if (file != NULL) {   // 升级失败把传入的指针释放掉
+      memory_release(file);
+    }
+    memory_release(data);
+
+    if(ret < 0){
+		APP_DEBUG("-->app updata:fibo_ota_handle failed.");
+	  }
+
+    Watchdog_stop();    //断电
+	
+	  for (int i = 0; i < 1000000; i++){
+        APP_DEBUG("-->app updata:after fibo_ota_handle %d", i);
+        fibo_taskSleep(2000);
+    }
+
   }
-  if (file != NULL) {   // 升级失败把传入的指针释放掉
+  else{
+    if (file != NULL) {   // 升级失败把传入的指针释放掉
     memory_release(file);
-  }
-  memory_release(data);
+    }
+    memory_release(data);
+  
+    }
   return ret;
 }
 #endif

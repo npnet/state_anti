@@ -93,7 +93,26 @@ void proc_update_task(s32_t taskId) {
   ST_MSG msg;
   r_memset(&msg, 0, sizeof(ST_MSG));
 
-
+/*
+	Buffer_t parabuf;
+	u8 paradata[64]={0};
+    parabuf.payload=null;
+    parabuf.payload=memory_apply(sizeof(char)*64);
+	parametr_get(1,&parabuf);
+	r_memcpy(paradata,parabuf.payload,64);
+	APP_DEBUG("-->state grid power off paradata=%d",paradata[0]);
+	if(paradata[0]==0x38){
+		Watchdog_stop();
+	}
+    r_memset(parabuf.payload,0,64);
+    parabuf.lenght=64;
+    r_memset(parabuf.payload,'0',64);
+    parametr_set(1,&parabuf);
+	parametr_get(1,&parabuf);
+	r_memcpy(paradata,parabuf.payload,64);
+	APP_DEBUG("-->state grid power off paradata=%d",paradata[0]);
+    memory_release(parabuf.payload);
+*/
 
   while (1) {
     fibo_queue_get(UPDATE_TASK, (void *)&msg, 0);

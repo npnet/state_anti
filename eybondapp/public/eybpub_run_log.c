@@ -25,6 +25,64 @@ static u16 log_read(log_head_t *head,  Buffer_t *buf);
 * return:                 
 * author:           Luee                                                    
 *******************************************************************************/
+s32 logpara_write(u8 index,u16 data)
+{
+  s32 ret=-1;
+  iFd_log = fibo_file_open(log_file, FS_O_WRONLY|FS_O_APPEND);
+  if (iFd_log < 0) {
+    APP_DEBUG("\r\n-->log:open log file fail\r\n");
+    return ret;
+  }
+
+  ret=0;
+  // 写指针加1并写入文件
+  fibo_file_seek(iFd_log, 0, FS_SEEK_SET);
+  log_head->log_para[index]=data;
+  fibo_file_write(iFd_log,(u8_t *)log_head_buf,sizeof(log_head_buf));
+
+  APP_DEBUG("\r\n-->log para write index=%d,log para data=%d",index,log_head->log_para[index]); 
+  fibo_file_fsync(iFd_log);
+  fibo_file_close(iFd_log);
+  return ret;
+}
+
+/*******************************************************************************            
+* introduce:        
+* parameter:                       
+* return:                 
+* author:           Luee                                                    
+*******************************************************************************/
+u16 logpara_read(u8 index)
+{
+  s32 ret=-1;
+  u16 data;
+  iFd_log = fibo_file_open(log_file, FS_O_RDONLY);
+  if (iFd_log < 0) {
+    APP_DEBUG("\r\n-->log:open log file fail!\r\n");
+    return ret;
+  }
+
+  ret=0;
+  // 写指针加1并写入文件
+  fibo_file_seek(iFd_log, 0, FS_SEEK_SET);
+  ret = fibo_file_read(iFd_log, (u8_t *)log_head_buf, sizeof(log_head_buf));
+  data=log_head->log_para[index];
+
+  APP_DEBUG("\r\n-->log para read index=%d,log para data=%d",index,log_head->log_para[index]); 
+  fibo_file_fsync(iFd_log);
+  fibo_file_close(iFd_log);
+  return data;
+}
+
+
+
+
+/*******************************************************************************            
+* introduce:        
+* parameter:                       
+* return:                 
+* author:           Luee                                                    
+*******************************************************************************/
 static s32 log_head_get(void)
 {
   s32 ret=0;
@@ -51,6 +109,7 @@ static s32 log_head_get(void)
 s32 log_init(void)
 {
   s32 ret = 0;
+  u8 i;
 
   //fibo_file_delete(log_file);
 
@@ -71,8 +130,13 @@ s32 log_init(void)
   }
 
   if ((fibo_file_exist(log_file)!=1)||(log_size <= 0)) {
+    //初始化头参数
     log_head->file_logw_pointer = 0;
     log_head->file_logr_pointer = 0;
+    for(i=0;i<LOG_PARA_LEN;i++){
+      log_head->log_para[i]=0;
+    }
+
     iFd_log = fibo_file_open(log_file, FS_O_RDWR|FS_O_CREAT|FS_O_APPEND);//读写、创建、追加
     ret = fibo_file_seek(iFd_log, 0, FS_SEEK_SET);
     log_size = fibo_file_write(iFd_log, (u8_t *)log_head_buf, sizeof(log_head_buf));

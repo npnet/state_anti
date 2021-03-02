@@ -20,6 +20,7 @@
 #include "eybpub_watchdog.h"
 
 #include "grid_tool.h"
+#include "eybpub_run_log.h"
 
 #define SELF_BUFFE_SIZE   (0x200)
 
@@ -96,6 +97,7 @@ ERR:
 #define DEF_0    "0"
 
 #include "grid_tool.h"
+#include "eybpub_run_log.h"
 
 /*******************************************************************************
  Brief    : void
@@ -144,22 +146,8 @@ int Update_Self(File_t *file){
   APP_DEBUG("Get %s file data len %ld\r\n", file->name, nfile_read);
   //读取的长度与升级文件长度相等 
   if ((nfile_read == file->size)&&(nfile_read!=0)) {
-  /*
-    //升级后断电，设参数50='8’
-    Buffer_t parabuf;
-    parabuf.payload=null;
-    parabuf.payload=memory_apply(sizeof(char)*64);
-    r_memset(parabuf.payload,0,64);
-    parabuf.lenght=64;
-    r_memset(parabuf.payload,'8',64);
-    parametr_set(1,&parabuf);
-    memory_release(parabuf.payload);
-  */
-
-    //for (int i = 0; i < 5; i++){
-    //    APP_DEBUG("\r\n-->app updata:before fibo_ota_handle %d", i);
-    //    fibo_taskSleep(2000);
-    //}
+    //APP升级写标志到文件
+    logpara_write(APP_UPDATA,1);
 
     //=0升级包数据检测通过
     if(0 == fibo_app_check((INT8*)data, file->size)) {
@@ -177,15 +165,15 @@ int Update_Self(File_t *file){
     memory_release(data);
 
     if(ret < 0){
-		APP_DEBUG("-->app updata:fibo_ota_handle failed.");
+		APP_DEBUG("-->app updata:fibo_ota_handle fail.");
 	  }
 
-    Watchdog_stop();    //断电
+    //Watchdog_stop();    //断电
 	
-	  for (int i = 0; i < 1000000; i++){
-        APP_DEBUG("-->app updata:after fibo_ota_handle %d", i);
-        fibo_taskSleep(2000);
-    }
+	  //for (int i = 0; i < 1000000; i++){
+    //    APP_DEBUG("-->app updata:after fibo_ota_handle %d", i);
+    //    fibo_taskSleep(2000);
+    //}
 
   }
   else{

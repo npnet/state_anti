@@ -913,17 +913,12 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
 
   s32 relink=0;
 
-  //if (netManage[nIndex].mode==2)
-  //  fibo_thread_delete();
-
-
   while(1) {
-//    APP_DEBUG("L610_TCP_Callback task: %d\r\n", nIndex);
-  //Luee
+    //Luee
     //if (m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       if (netManage[nIndex].mode!=2&&m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       
-      fibo_taskSleep(1000);    //Luee
+      //fibo_taskSleep(1000);    //Luee
 
 	#if 0
       r_memset(strBuf, '\0', sizeof(strBuf));

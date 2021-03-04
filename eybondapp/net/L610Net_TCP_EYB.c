@@ -611,10 +611,12 @@ void L610Net_manage(void) {
       m_GprsActState = STATE_GSM_QUERY_STATE;
       break;
     case STATE_DNS_READY: {
+      //DNS ready 才执行
       if (registe == 1) {
         u8_t nIndex = 0;
         for (nIndex = 0; nIndex < sizeof(netManage) / sizeof(netManage[0]); nIndex++) {
-          if (netManage[nIndex].flag == 1 && netManage[nIndex].status != L610_SUCCESS && netManage[nIndex].status != L610_CONNECTING) {
+          //国网不在此处处理
+          if (netManage[nIndex].mode != 2 && netManage[nIndex].flag == 1 && netManage[nIndex].status != L610_SUCCESS && netManage[nIndex].status != L610_CONNECTING) {
             if (netManage[nIndex].socketID < 0) {
               //Luee mode=2为ssl国网专用，在国网处理
               //if (netManage[nIndex].mode == 1 || netManage[nIndex].mode == 2) {
@@ -624,13 +626,14 @@ void L610Net_manage(void) {
                   netManage[nIndex].socketID = fibo_sock_create(GAPP_IPPROTO_UDP);
               }
               fibo_taskSleep((UINT32)1000);
+              //socket 建立失败
               if (netManage[nIndex].socketID < 0) {
   		        netManage[nIndex].status = L610_SOCKET_FAIL;
                 APP_DEBUG("Fail to create socket, ret = %ld\r\n", netManage[nIndex].socketID);
 //              Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_RESTART_ID, 0, 1);   // mike需要修改逻辑?
+                //退出前，需g_netmutex = 0;
                 g_netmutex = 0;
 		        return;
-
               }
 
               APP_DEBUG("nIndex %d socketID %ld mode %d\r\n", nIndex, netManage[nIndex].socketID, netManage[nIndex].mode);
@@ -657,6 +660,7 @@ void L610Net_manage(void) {
 //			  fibo_sock_lwip_fcntl(socketid, F_SETFL, fibo_sock_lwip_fcntl(socketid, F_GETFL, 0) & ~O_NONBLOCK );
               
               // DNS做判断
+          //得到IP
 		      if (netManage[nIndex].ip == 0 && netManage[nIndex].status != L610_DNS_FAIL) {
                 ret = fibo_getHostByName(netManage[nIndex].ipStr, &addr_para, 1, SINGLE_SIM);  // 0成功 小于0失败
                 if (ret < 0) {
@@ -669,7 +673,7 @@ void L610Net_manage(void) {
                   netManage[nIndex].status = L610_IP_OK;
                 }
               }
-
+              //TCP连接
               if (netManage[nIndex].status == L610_IP_OK) {
                 if (netManage[nIndex].mode == 1) {
                   r_memset(&addr, 0, sizeof(GAPP_TCPIP_ADDR_T));
@@ -689,11 +693,13 @@ void L610Net_manage(void) {
                       (addr.sin_addr.u_addr.ip4.addr >> 24) & 0x000000FF, \
                       netManage[nIndex].port, addr.sin_port, ret);
                   if (ret == 0) {
+                    //TCP连接成功
                     netManage[nIndex].status = L610_SUCCESS;
 //                  FD_SET(netManage[nIndex].socketID, &g_readfds);
 //                	FD_SET(netManage[nIndex].socketID, &g_errorfds);
 //                  FD_SET(netManage[nIndex].socketID, &g_writefds);
                   } else {
+                    //TCP连接失败
                     netManage[nIndex].status = L610_CONNECT_FAIL;
                     log_save("Fail to connect to %s server, port %d ret= %ld", netManage[nIndex].ipStr, netManage[nIndex].port, ret);
                     L610Net_close(nIndex);
@@ -707,7 +713,8 @@ void L610Net_manage(void) {
 //          APP_DEBUG("nIndex %d socketID %ld is not ready\r\n", nIndex, netManage[nIndex].socketID);
           }
         }
-      }
+      }       //if (registe == 1) end
+      //实时每30秒检测PDP
       if (registe_times == 0) {
         r_memset(&ip, 0, sizeof(ip));
         if (0 == fibo_PDPStatus(1, ip, &cid_status, SINGLE_SIM)) {

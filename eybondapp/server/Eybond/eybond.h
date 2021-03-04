@@ -88,6 +88,7 @@ void TEST_esp_callback(u8_t nIndex, Buffer_t *buf);
 u8_t ESP_check(Buffer_t *buf);
 void HistoryDataClean(void);
 void specialData_send(void);
+void tcp_relink(void);
 #endif //__EYBOND_H
 /******************************************************************************/
 

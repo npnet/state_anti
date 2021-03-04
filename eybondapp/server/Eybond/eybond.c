@@ -1142,6 +1142,13 @@ static u8_t specialData_receive(ESP_t *esp) {
 }
 
 #ifdef _PLATFORM_L610_
+
+void tcp_relink(void)
+{
+  Net_close(sPort);
+	sPort = 0xff;
+}
+
 void proc_eybond_task(s32_t taskId) {
   ST_MSG msg;
   u8_t ret = 0;

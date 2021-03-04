@@ -742,6 +742,9 @@ void L610Net_manage(void) {
       APP_DEBUG("fibo_PDPRelease ret = %ld\r\n", ret);
       m_GprsActState = STATE_GSM_QUERY_STATE;
       Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_DNS_FAIL, 0, 0);
+
+      tcp_relink();     //立即重连TCP Luee
+      
       registe = 0;
       break;
     }

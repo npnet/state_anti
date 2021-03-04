@@ -918,7 +918,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     //if (m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       if (netManage[nIndex].mode!=2&&m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       
-      //fibo_taskSleep(1000);    //Luee
+      fibo_taskSleep(500);    //Luee
 
 	#if 0
       r_memset(strBuf, '\0', sizeof(strBuf));
@@ -939,7 +939,6 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
       cmdbuf.lenght = 0;
       cmdbuf.payload = memory_apply(MAX_NET_BUFFER_LEN);
       r_memset(cmdbuf.payload, '\0', MAX_NET_BUFFER_LEN); 
-      //fibo_taskSleep(500);  //Luee
       ret = fibo_sock_recv(netManage[nIndex].socketID, cmdbuf.payload, cmdbuf.size);
       if (ret > 0) {
         relink=0;

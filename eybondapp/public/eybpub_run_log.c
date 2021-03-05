@@ -244,13 +244,14 @@ static u16 log_read(log_head_t *head,  Buffer_t *buf)
   //得到返回数据
   log_size=log_data->lenght;
   //if(log_size==0||log_size>log_line_len||(log_data->size!=log_size+4)){
-  if(log_size>log_line_len||(log_data->size!=log_size+4)){
+  //  APP_DEBUG("\r\n-->log: read fail,log_size=%d\r\n",log_size);
+  //  return log_size;
+  //}
+  if(log_size==0||log_size>log_line_len||(log_data->size!=log_size+4)){
     APP_DEBUG("\r\n-->log: read fail,log_size=%d\r\n",log_size);
-    return log_size;
-  }
-  if(log_size==0){
     //读到空数据，读指针归0,重头再读
     head->file_logr_pointer=0;
+    log_size=0;
   }
   else{
     r_memcpy(buf->payload,log_data->payload,log_size);

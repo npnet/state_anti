@@ -455,7 +455,7 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
     }
     else{
       APP_DEBUG("\r\n-->UART1 get %d data!!!\r\n", len);
-      print_buf(data, len);
+      //print_buf(data, len);
     }
     if (rcveBuf.payload != null) {
       // 设备串口接收的数据统一在这里释放内存

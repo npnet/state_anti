@@ -203,7 +203,7 @@ void proc_eybond_task(s32_t taskId) {
 void ESP_callback(u8_t nIndex, Buffer_t *buf) { // 网络数据解析
 //  overtime_ESP = 0;
   APP_DEBUG("\r\n-->tcp lose:recieve tcp len=%d\r\n",buf->lenght);    //Luee
-  print_buf(buf->payload,buf->lenght);
+//  print_buf(buf->payload,buf->lenght);
 
   sPort = nIndex;
   ESP_cmd(buf, NetMsgAck_Eybond);

@@ -243,15 +243,22 @@ static u16 log_read(log_head_t *head,  Buffer_t *buf)
 
   //得到返回数据
   log_size=log_data->lenght;
-  if(log_size==0||log_size>log_line_len||(log_data->size!=log_size+4)){
+  //if(log_size==0||log_size>log_line_len||(log_data->size!=log_size+4)){
+  if(log_size>log_line_len||(log_data->size!=log_size+4)){
     APP_DEBUG("\r\n-->log: read fail,log_size=%d\r\n",log_size);
     return log_size;
   }
-  r_memcpy(buf->payload,log_data->payload,log_size);
+  if(log_size==0){
+    //读到空数据，读指针归0,重头再读
+    head->file_logr_pointer=0;
+  }
+  else{
+    r_memcpy(buf->payload,log_data->payload,log_size);
   //print_buf(log_buf,log_data->size);
-
   //循环读取日志
   head->file_logr_pointer = (head->file_logr_pointer + 1)% log_pointer_size;
+  }
+  
   iFd_log = fibo_file_open(log_file, FS_O_WRONLY|FS_O_APPEND);
   ret = fibo_file_seek(iFd_log, 0, FS_SEEK_SET);
   fibo_file_write(iFd_log,(u8_t *)log_head_buf,sizeof(log_head_buf));

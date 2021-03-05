@@ -662,19 +662,19 @@ void L610Net_manage(void) {
               }
 
               APP_DEBUG("nIndex %d socketID %ld mode %d\r\n", nIndex, netManage[nIndex].socketID, netManage[nIndex].mode);
-              //Luee 删除下面设置
-              //int NODELAY = 1;
-              //ret = fibo_sock_setOpt(netManage[nIndex].socketID, IPPROTO_TCP, TCP_NODELAY, &NODELAY, sizeof(NODELAY));
-              //if (ret < 0) {
-              //  APP_DEBUG("fibo_sock_setOpt %d socket %ld opt fail\r\n", nIndex, netManage[nIndex].socketID);
-              //}
-              //fibo_taskSleep((UINT32)1000);
-              //int opt = 1;
-              //ret = fibo_sock_setOpt(netManage[nIndex].socketID, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(int));
-              //if (ret < 0) {
-              //  APP_DEBUG("fibo_sock_setOpt %d socket %ld opt fail\r\n", nIndex, netManage[nIndex].socketID);
-              //}
-              //fibo_taskSleep((UINT32)1000);
+              
+              int NODELAY = 1;
+              ret = fibo_sock_setOpt(netManage[nIndex].socketID, IPPROTO_TCP, TCP_NODELAY, &NODELAY, sizeof(NODELAY));
+              if (ret < 0) {
+                APP_DEBUG("fibo_sock_setOpt %d socket %ld opt fail\r\n", nIndex, netManage[nIndex].socketID);
+              }
+              fibo_taskSleep((UINT32)1000);
+              int opt = 1;
+              ret = fibo_sock_setOpt(netManage[nIndex].socketID, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(int));
+              if (ret < 0) {
+                APP_DEBUG("fibo_sock_setOpt %d socket %ld opt fail\r\n", nIndex, netManage[nIndex].socketID);
+              }
+              fibo_taskSleep((UINT32)1000);
 
 //            INT32 socket_block = fibo_sock_lwip_fcntl(netManage[nIndex].socketID, F_GETFL,0);
 	          // default block
@@ -954,7 +954,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     //if (m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       if (netManage[nIndex].mode!=2&&m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       
-      fibo_taskSleep(500);    //Luee
+      fibo_taskSleep(800);    //Luee
 
 	#if 0
       r_memset(strBuf, '\0', sizeof(strBuf));

@@ -69,6 +69,7 @@ extern GSMState_e m_GprsActState;
 extern u32_t g_SemFlag;
 
 void L610Net_init(void);
+void L610Net_init2(void);
 u8_t L610Net_open(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback);
 void L610Net_close(u8_t nIndex);
 int  L610Net_send(u8_t nIndex, u8_t* data, u16_t len);

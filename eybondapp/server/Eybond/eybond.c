@@ -1145,6 +1145,9 @@ static u8_t specialData_receive(ESP_t *esp) {
 
 void tcp_relink(void)
 {
+  L610Net_init2();
+  relinkCnt=0;
+  overtime_ESP = 0;
   Net_close(sPort);
 	sPort = 0xff;
 }
@@ -1167,11 +1170,11 @@ void proc_eybond_task(s32_t taskId) {
         APP_DEBUG("Get APP_CMD_UART_READY MSG\r\n");
         break;
       case SYS_PARA_CHANGE:
-        Net_close(sPort);
-	      sPort = 0xff;
+        //Net_close(sPort);
+	      //sPort = 0xff;
+        tcp_relink();
       case APP_MSG_DEVTIMER_ID: {
         ret = Net_status(sPort);
-//        APP_DEBUG("socket[%d] status %d overtime_ESP %d\r\n", sPort, ret, overtime_ESP);
         if (ret == 0xFF) {
           APP_DEBUG("Eybond start relink socket: %d times\r\n", relinkCnt);
           ServerAddr_t *eybondServer = ServerAdrrGet(EYBOND_SERVER_ADDR);
@@ -1188,24 +1191,21 @@ void proc_eybond_task(s32_t taskId) {
             parametr_set(EYBOND_SERVER_ADDR, &buf);
           }
         }
-        //益邦云连接失败计数  Luee
-        //if(ret != L610_SUCCESS){     
-        if (overtime_ESP++ > (75 * 2)) {
+        //益邦云连接失败计数  Luee  
+        //if (overtime_ESP++ > (75 * 2)) {  
+        if (overtime_ESP++ > (60 * 4)) {
           relinkCnt++;
           overtime_ESP = 0;
-          Net_close(sPort);
+          tcp_relink();
+          //Net_close(sPort);
           APP_DEBUG("Eybond Close socket %d, relinkCnt = %d\r\n", sPort, relinkCnt);
-          sPort = 0xFF;
+          //sPort = 0xFF;
         }
-        if (relinkCnt > 10) {
+        if (relinkCnt > 5) {
           log_save("relinkCont over and reboot!!!!!!!!!!!!!!!!\r\n");
           Watchdog_stop();
           relinkCnt = 0;
         }
-      //}    
-//      if ((runTimeCheck(4, 19) == 0 ) &&(0 >= (historySaveCnt--))) {
-//        historySave();
-//      }
       } 
       case EYBOND_DATA_PROCESS:
 //        APP_DEBUG("Get EYBOND_DATA_PROCESS!!\r\n");

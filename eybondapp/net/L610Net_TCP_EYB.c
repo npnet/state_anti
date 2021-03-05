@@ -240,7 +240,7 @@ void L610Net_init(void) {
   registe_times = 0;
 
   NetLED_Off();
-  //GSMLED_Off();
+  GSMLED_Off();
   
   r_memset(netManage, 0, sizeof(netManage));    //Luee
   
@@ -261,6 +261,31 @@ void L610Net_init(void) {
     fibo_taskSleep(1000);
     APP_PRINT("L610 TCP Callback %X\r\n", l610tcp_thread_id); */
 }
+
+void L610Net_init2(void) {
+  Buffer_t buf;
+  parametr_get(GPRS_APN_ADDR, &buf);
+
+  if (buf.lenght > 2 && buf.payload != null) {
+    r_strcpy((char *)m_GprsConfig.apnName, (char *)buf.payload);
+  }
+  memory_release(buf.payload);
+
+  APP_DEBUG("APN:%s\r\n", (char *)m_GprsConfig.apnName);  
+
+  m_GprsActState = STATE_GSM_QUERY_STATE;
+  L610pdpCntxtId = 0;
+  registe = 0;
+  registe_times = 0;
+
+  NetLED_Off();
+  GSMLED_Off();
+  
+  r_memset(netManage, 0, sizeof(netManage));    //Luee
+  
+  g_netmutex = 0;
+}
+
 
 /*******************************************************************************
  Brief    : L610Net_open
@@ -861,8 +886,8 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     if (netManage[nIndex].mode == 2) {
 //      ret = SSL_Send(netManage[nIndex].socketID, (u8_t *)data, len);
     } else {
-        //while(statenet_para.send_status)    //Luee
-        //  fibo_taskSleep(50);   //200
+        while(statenet_para.send_status)    //Luee
+          fibo_taskSleep(50);   //200
         eybnet_para.send_status=true;      
 
         ret = fibo_sock_send(netManage[nIndex].socketID, (u8_t *)data, len);       

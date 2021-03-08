@@ -92,7 +92,7 @@ void Key_scan(void) {
   if (nKey_Level == 0) {
     if (++cnt > 5) {			
       APP_DEBUG("Reset key user.\r\n");
-      log_save("Reset key user.");
+ //     log_save("Reset key user.");
       Beep_On(1);
 //	  SysPara_default();      //mike 20200824
       parametr_default();

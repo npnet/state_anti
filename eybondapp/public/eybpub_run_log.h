@@ -15,7 +15,7 @@
 // log行长度
 #define log_line_len            64     
 // 历史文件大小
-#define log_file_size           ((100)*(log_line_len)+(log_headoffset_len))
+#define log_file_size           ((200)*(log_line_len)+(log_headoffset_len))
 #define log_pointer_size    ((log_file_size-log_headoffset_len)/log_line_len)
 
 #define LOG_PARA_LEN  8

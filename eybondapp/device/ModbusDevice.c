@@ -363,7 +363,7 @@ static void onlineDeviceAddr(Device_t *dev) {
       head->code = exp->code;
       list_init(&head->cmdList);
       APP_DEBUG("Device online: %d\r\n", exp->addr);
-      log_save("Device online: %d", exp->addr);
+  //    log_save("Device online: %d", exp->addr);
 #ifdef _PLATFORM_BC25_
       Ql_OS_SendMessage(EYBOND_TASK, EYBOND_CMD_REPORT, 0, 0);  // mike Report first message when device online
 #endif

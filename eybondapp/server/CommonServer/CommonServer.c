@@ -273,6 +273,7 @@ void proc_commonServer_task(s32_t taskId) {
                 overtime = 20;
 						    //Net_close(sPort);
                 ssl_relink();
+                log_save("state grid relink over and relink\r\n");
 					  }
         }
         if (server != null && server->api != null){

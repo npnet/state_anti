@@ -440,7 +440,7 @@ void proc_app_task(s32_t taskId) {
 
   WDG_timer = fibo_timer_period_new(WDG_time_Interval, UserTimerWDGcallback, NULL);  // 注册外部看门狗Timer
   if (WDG_timer == 0) {
-    log_save("Register WGD timer(%d) failed!!\r\n");
+    log_save("Register hard wdt timer(%d) failed!!\r\n");
   }
 
   while (1) {

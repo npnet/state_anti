@@ -510,6 +510,7 @@ void L610Net_manage(void) {
         }
         ret = fibo_get_curr_prior_RAT(SINGLE_SIM);
         APP_DEBUG("sim RAT mode after SIM inserted:%ld\r\n", ret);
+        log_save("SIM inserted!!!");
         Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_INSERTED, 0, 0);
         m_GprsActState = STATE_SIM_INSERTED;
       } else {
@@ -518,6 +519,7 @@ void L610Net_manage(void) {
         if (registe_times >= SIM_REGISTER_TIMES) {
           registe_times = 0;
           m_GprsActState = STATE_SIM_NOT_INSERTED;
+          log_save("SIM no insert!!!");
         }
       }
       break;
@@ -529,6 +531,7 @@ void L610Net_manage(void) {
 //      APP_DEBUG("sim getRegInfo ret:%d, reg_state = %d, curr_rat=%d\r\n", ret, sim_reg_info.nStatus ,sim_reg_info.curr_rat);
 	  if(1 == sim_reg_info.nStatus || 5 == sim_reg_info.nStatus) { // SIM卡已注册
         APP_DEBUG("sim regitster success\r\n");
+        log_save("sim register success!!!");
         if(sim_reg_info.curr_rat == 4 || sim_reg_info.curr_rat ==7) {
           APP_DEBUG("sim regitster, LTE tac = %ld ,cell id = %ld\r\n", sim_reg_info.lte_scell_info.tac, sim_reg_info.lte_scell_info.cell_id);
         } else {
@@ -543,6 +546,7 @@ void L610Net_manage(void) {
           Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_READY, 0, 0);
           m_GprsActState = STATE_SIM_READY;
           registe_times = 0;
+          log_save("pdp success & sim ready!!!");
         } else {
           APP_DEBUG("sim PDPActive APN %s fail\r\n", m_GprsConfig.apnName);
           log_save("sim PDPActive APN %s fail", m_GprsConfig.apnName);
@@ -550,6 +554,7 @@ void L610Net_manage(void) {
           if (registe_times >= SIM_REGISTER_TIMES) { // 确认sim注册失败
             registe_times = 0;
             m_GprsActState = STATE_SIM_NOT_READY;
+            log_save("sim pdp fail & sim no ready!!!");
           }
         }
       } else {
@@ -558,6 +563,7 @@ void L610Net_manage(void) {
         if (registe_times >= SIM_REGISTER_TIMES) { // 确认sim注册失败
           registe_times = 0;
           m_GprsActState = STATE_SIM_NOT_READY;
+          log_save("sim regitser fail!!!");
         }
       }
       break;
@@ -582,6 +588,7 @@ void L610Net_manage(void) {
              APP_DEBUG("sim try %d times to get IP fail\r\n", registe_times);
              registe_times = 0;             
              m_GprsActState = STATE_GSM_NOT_READY;
+             log_save("realtime check sim no ready!!!");
            }
          }
       } else {
@@ -590,6 +597,7 @@ void L610Net_manage(void) {
           APP_DEBUG("can't get sim PDP status and try fibo_PDPStatus %d times\r\n", registe_times);
           registe_times = 0;
           m_GprsActState = STATE_GSM_NOT_READY;
+          log_save("realtime check sim no ready!!!");
         }
       }
       break;
@@ -954,7 +962,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     //if (m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       if (netManage[nIndex].mode!=2&&m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       
-      fibo_taskSleep(800);    //Luee
+      fibo_taskSleep(1000);    //Luee
 
 	#if 0
       r_memset(strBuf, '\0', sizeof(strBuf));

@@ -163,16 +163,16 @@ static u8_t readyAck(DeviceAck_e e) {
     DeviceIO_init(updateCfg);
     DeviceIO_lock(&updateDeviceHead);
     DeviceIO_write(&updateDeviceHead, buf.payload, buf.lenght);
-    log_save("Device Update in X-modem.");
+//    log_save("Device Update in X-modem.");
   } else if (cmd == null || cnt++ > 10) {
     //} else if (cmd == null || cnt++ > 20) {
     Update_end();
     updateState = 0xFE;
   } else {
     int ret;
-    log_save("Update Ack : %d", e);
+//    log_save("Update Ack : %d", e);
     if (e == DEVICE_ACK_FINISH) {
-      log_save("%s", &cmd->ack.payload);
+//      log_save("%s", &cmd->ack.payload);
     }
     ret = DeviceIO_write(&updateDeviceHead, cmd->cmd.payload, cmd->cmd.lenght);
     if (ret != 0) {

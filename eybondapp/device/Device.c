@@ -338,7 +338,7 @@ static void deviceCmdSend(void) {
       if (currentDevice == null || currentDevice->lock == DEVICE_LOCK) {
         if (++DeviceOvertime >= DEVICE_MAX_OVERTIME) {
           APP_DEBUG("Device no command in %d sec(DeviceOvertime), reset!!\r\n", DeviceOvertime);
-          log_save("Device no command in %d sec, reset!!", DeviceOvertime);
+          //log_save("Device no command in %d sec, reset!!", DeviceOvertime);
 #ifdef _PLATFORM_BC25_
           Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
@@ -543,7 +543,7 @@ void proc_device_task (s32_t taskId) {
           APP_DEBUG("Device no command ack, reboot!!\r\n");
           log_save("Device no command ack, reboot!!");
           Watchdog_stop();
-          fibo_softReset();
+          //fibo_softReset();
           break;
         } else {
           log_save("Device modular reset!!");

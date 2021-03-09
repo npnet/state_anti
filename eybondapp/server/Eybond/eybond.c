@@ -1150,6 +1150,7 @@ void tcp_relink(void)
   overtime_ESP = 0;
   Net_close(sPort);
 	sPort = 0xff;
+  log_save("tcp relink!!!\r\n");
 }
 
 void proc_eybond_task(s32_t taskId) {

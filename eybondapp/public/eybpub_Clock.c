@@ -243,7 +243,7 @@ void Clock_init(void) {
   Clock_save();
   APP_DEBUG("System clock init(%d.%02d.%02d %02d:%02d:%02d week:%02d)\r\n",
     local_clock.year, local_clock.month, local_clock.day, local_clock.hour, local_clock.min, local_clock.secs, local_clock.week);
-//  log_save("System clock init...");
+  log_save("System clock init...");
 }
 
 /*******************************************************************************

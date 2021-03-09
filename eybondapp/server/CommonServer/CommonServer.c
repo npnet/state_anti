@@ -95,6 +95,7 @@ void ssl_relink(void)
   SSL_init();
 
   APP_DEBUG("\r\n-->state grid relink!!!\r\n");
+  log_save("state grid relink!!!\r\n");
 }
 
 void soft_reset_en(void)

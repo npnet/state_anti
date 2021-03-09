@@ -19,6 +19,7 @@
 #include "eybpub_watchdog.h"
 #include "eybpub_Clock.h"
 #include "eybapp_appTask.h"
+#include "eybpub_run_log.h"
 
 u8_t FeedFlag;
 
@@ -124,8 +125,8 @@ void Watchdog_stop(void) {
   s32_t ret = 0;
   ret = fibo_gpio_set(WATCHDOG_PIN,PINLEVEL_HIGH);
   Clock_save();
-//  Ql_OS_SendMessage(EYBAPP_TASK, APP_CMD_WDG_ID, 0, 0);
   APP_DEBUG("feed stop!!\r\n");
+  log_save("wdt feed stop!!!\r\n");
 }
 #endif
 

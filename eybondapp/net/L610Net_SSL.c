@@ -152,9 +152,10 @@ static s8 ssl_socket(void)
         }else
           fibo_write_ssl_file("TRUSTFILE", STATEGRID_CA_FILE, sizeof(STATEGRID_CA_FILE) - 1);
         //执行后需延时10S
-        ssl_counter=20;   //*500ms*20
+        ssl_counter=0;   //*500ms*20
+        fibo_taskSleep(10000);
         ssl_index=1;
-        break;
+        //break;
 
       case 1:
         if(ssl_counter)

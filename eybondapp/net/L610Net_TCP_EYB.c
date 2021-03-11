@@ -1010,7 +1010,9 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
         }
       } else {
         APP_DEBUG("socket: %ld read failt!\r\n", netManage[nIndex].socketID);
-        if(relink++>20){
+        log_save("TCP rec fail!!!");
+        
+        if(relink++>60){
             relink=0;
             //L610Net_close(nIndex);
             netManage[nIndex].status = L610_CONNECT_FAIL;
@@ -1018,6 +1020,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
             //m_GprsActState = STATE_DNS_NOT_READY;
           //tcp_relink();
         }
+        
       }
     } else {
       fibo_taskSleep(600);    //Luee

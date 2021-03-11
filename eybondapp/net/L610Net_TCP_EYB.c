@@ -735,8 +735,9 @@ void L610Net_manage(void) {
                   } else {
                     //TCP连接失败
                     netManage[nIndex].status = L610_CONNECT_FAIL;
+                    fibo_sock_close(netManage[nIndex].socketID);
                     log_save("Fail to connect to %s server, port %d ret= %ld", netManage[nIndex].ipStr, netManage[nIndex].port, ret);
-                    L610Net_close(nIndex);
+                    //L610Net_close(nIndex);
                   }
                 }
               }
@@ -895,8 +896,8 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     if (netManage[nIndex].mode == 2) {
 //      ret = SSL_Send(netManage[nIndex].socketID, (u8_t *)data, len);
     } else {
-        while(statenet_para.send_status)    //Luee
-          fibo_taskSleep(50);   
+    //    while(statenet_para.send_status)    //Luee
+    //      fibo_taskSleep(50);   
         eybnet_para.send_status=true;      
 
         ret = fibo_sock_send(netManage[nIndex].socketID, (u8_t *)data, len);       
@@ -962,7 +963,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     //if (m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       if (netManage[nIndex].mode!=2&&m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       
-      fibo_taskSleep(500);    //Luee
+      fibo_taskSleep(600);    //Luee
 
 	#if 0
       r_memset(strBuf, '\0', sizeof(strBuf));
@@ -1007,18 +1008,19 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
         } else {
           memory_release(cmdbuf.payload);   // mike 20201210 可能会引起死机问题
         }
-      } else if (retlen == 0) {
-        APP_DEBUG("socket: %ld remote is closed!\r\n", netManage[nIndex].socketID);
-        if(relink++>60){
-            relink=0;
-            L610Net_close(nIndex);
-            tcp_relink();
-        }
       } else {
         APP_DEBUG("socket: %ld read failt!\r\n", netManage[nIndex].socketID);
+        if(relink++>20){
+            relink=0;
+            //L610Net_close(nIndex);
+            netManage[nIndex].status = L610_CONNECT_FAIL;
+            fibo_sock_close(netManage[nIndex].socketID);
+            //m_GprsActState = STATE_DNS_NOT_READY;
+          //tcp_relink();
+        }
       }
     } else {
-      fibo_taskSleep(1000);    //Luee
+      fibo_taskSleep(600);    //Luee
     }
   }
   fibo_thread_delete();

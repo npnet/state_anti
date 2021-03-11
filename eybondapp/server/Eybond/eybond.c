@@ -644,8 +644,8 @@ static u8_t deviceDataGet(ESP_t *esp) {
 
   tail = onlineDeviceList.node;
 
-//  if (tail != null && buf.payload != null) {
-    if (tail != null) {
+  if (tail != null && buf.payload != null) {
+//    if (tail != null) {
     APP_DEBUG("enter the upload device data\r\n");
     do {
       Node_t *node;

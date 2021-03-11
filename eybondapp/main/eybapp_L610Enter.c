@@ -255,15 +255,15 @@ void * appimg_enter(void *param) {
   UPDATE_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   COMMON_SERVER_TASK = fibo_queue_create(10, sizeof(ST_MSG));
 
-  fibo_thread_create_ex(proc_app_task,          "Eybond APP TASK",     1024*8*3, NULL, OSI_PRIORITY_REALTIME, &app_thread_id);
+  fibo_thread_create_ex(proc_app_task,          "Eybond APP TASK",     1024*8*2, NULL, OSI_PRIORITY_REALTIME, &app_thread_id);
   fibo_taskSleep(100);
-  fibo_thread_create_ex(proc_net_task,          "Eybond NET TASK",     1024*8*4, NULL, OSI_PRIORITY_NORMAL,   &net_thread_id);
+  fibo_thread_create_ex(proc_net_task,          "Eybond NET TASK",     1024*8*3, NULL, OSI_PRIORITY_ABOVE_NORMAL,   &net_thread_id);
   fibo_taskSleep(100);
   fibo_thread_create(sslrec_task,      "SSL RECV TASK",     1024*8*3, NULL, OSI_PRIORITY_NORMAL);
   fibo_taskSleep(100);
-  fibo_thread_create_ex(proc_device_task,       "Eybond DEVICE TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &dev_thread_id);
+  fibo_thread_create_ex(proc_device_task,       "Eybond DEVICE TASK",  1024*8*5, NULL, OSI_PRIORITY_LOW,      &dev_thread_id);
   fibo_taskSleep(100);
-  fibo_thread_create_ex(proc_eybond_task,       "Eybond CMD TASK",     1024*8*4, NULL, OSI_PRIORITY_LOW,      &eyb_thread_id);
+  fibo_thread_create_ex(proc_eybond_task,       "Eybond CMD TASK",     1024*8*6, NULL, OSI_PRIORITY_LOW,      &eyb_thread_id);
   fibo_taskSleep(100);
   fibo_thread_create_ex(proc_update_task,       "Eybond UPDATE TASK",  1024*8*3, NULL, OSI_PRIORITY_NORMAL,   &upd_thread_id);
   fibo_taskSleep(100);

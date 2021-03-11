@@ -371,8 +371,8 @@ void CommonServerDataSend(Buffer_t *buf)
         u16 ssl_relink_times=0;
         //overtime=0;
         //网络空闲才发送
-       while(eybnet_para.send_status)
-            fibo_taskSleep(50);   
+    //   while(eybnet_para.send_status)
+    //        fibo_taskSleep(50);   
         statenet_para.send_status=true;     //标志国网正在发送
         APP_DEBUG("\r\nssl sending\r\n");
         ret = fibo_ssl_sock_send(sslsock, (u8 *)buf->payload, buf->lenght);

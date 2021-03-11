@@ -1009,10 +1009,11 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
         }
       } else if (retlen == 0) {
         APP_DEBUG("socket: %ld remote is closed!\r\n", netManage[nIndex].socketID);
-        //if(relink++>20){
-        //    relink=0;
+        if(relink++>60){
+            relink=0;
             L610Net_close(nIndex);
-        //}
+            tcp_relink();
+        }
       } else {
         APP_DEBUG("socket: %ld read failt!\r\n", netManage[nIndex].socketID);
       }

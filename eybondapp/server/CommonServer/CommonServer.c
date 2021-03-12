@@ -146,6 +146,7 @@ void sslrec_task(void *param)
       ssl_rec();
     }   
   }
+  fibo_thread_delete();
 }
 #else
 

@@ -63,7 +63,7 @@ typedef struct {
 }L610Net_t;
 
 //#define EYB_SOCKET_COUNTS 6
-#define EYB_SOCKET_COUNTS 3
+#define EYB_SOCKET_COUNTS 2
 extern L610Net_t netManage[];
 
 extern GSMState_e m_GprsActState;

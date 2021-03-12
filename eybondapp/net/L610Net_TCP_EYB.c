@@ -252,7 +252,7 @@ void L610Net_init(void) {
   for(nIndex = 0; nIndex < EYB_SOCKET_COUNTS; nIndex ++) {
     r_memset(strTaskname, '\0', sizeof(strTaskname));
     snprintf(strTaskname, 32, "L610 TCP rev Callback %d", nIndex);
-    fibo_thread_create_ex(L610_TCP_Callback, (INT8 *)strTaskname, 1024*8*4, (void *)&nIndex, OSI_PRIORITY_NORMAL, &l610tcp_thread_id[nIndex]);
+    fibo_thread_create_ex(L610_TCP_Callback, (INT8 *)strTaskname, 1024*8*3, (void *)&nIndex, OSI_PRIORITY_NORMAL, &l610tcp_thread_id[nIndex]);
     fibo_taskSleep(1000);
     APP_DEBUG("L610 TCP Callback[%d] %X\r\n", nIndex, l610tcp_thread_id[nIndex]);
   }  

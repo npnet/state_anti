@@ -55,6 +55,9 @@
 static char EybondServer[] = "www.shinemonitor.com:502";
 #endif
 
+ u8_t device_data_geting=0;
+
+
 static ListHandler_t rcveList;
 static u8_t sPort;  // index of scocket
 static u16_t overtime_ESP;  // mike 20200918
@@ -615,6 +618,7 @@ static u8_t devtransAck(Device_t *dev) {
   return 0;
 }
 
+
 /*******************************************************************************
   * @brief
   * @note   2018.12.28 CGQ add,overTime, 防止设备采集模块无有效采集命令导致平台设备不上线。
@@ -623,6 +627,9 @@ static u8_t devtransAck(Device_t *dev) {
 //TODO 数据过滤功能需要继续了解
 static u8_t deviceDataGet(ESP_t *esp) {
   static u8_t overTime = 0;
+
+  device_data_geting=1;
+
 
   u8_t *ackBuf;
   Buffer_t buf;
@@ -639,8 +646,11 @@ static u8_t deviceDataGet(ESP_t *esp) {
   buf.payload = memory_apply(buf.size);
   if (buf.payload == NULL) {
     APP_DEBUG("buf malloc failed!!\r\n");
-    return -1;
+    log_save("deviceDataGet lenght=0xa00 buf malloc fail!!!");
+    //return -1;
   }
+
+  //fibo_taskSleep(500);      //Luee给其它程序空出时间
 
   tail = onlineDeviceList.node;
 
@@ -743,8 +753,9 @@ static u8_t deviceDataGet(ESP_t *esp) {
           buf.lenght = para - buf.payload;
         }
 
-        if (buf.lenght > 800) {
-          //if (buf.lenght > 600) {
+        //800容易离线
+        //if (buf.lenght > 800) {
+          if (buf.lenght > 600) {
           esp->ack(&buf);
           buf.lenght = 0;
         }
@@ -779,6 +790,7 @@ static u8_t deviceDataGet(ESP_t *esp) {
 #endif
     overTime = 0;
   }
+  device_data_geting=0;
   return 0;
 }
 /*******************************************************************************

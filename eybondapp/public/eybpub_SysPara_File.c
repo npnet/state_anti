@@ -517,12 +517,16 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
   Buffer_t logbuf;
   u8 parageting=0;    //=0 got para finish =1 get paraing
 
-  if (databuf == NULL) {
-    parageting=0;   //参数获取完成
-    return;
+  int j = 0;
+
+  if (databuf == NULL||device_data_geting) {
+    //parageting=0;   //参数获取完成
+    //return;
+    len=0;
+    goto GETFAIL;
   }
 //  APP_DEBUG("para_meter get begin:%d!\r\n", number);
-  int j = 0;
+  
   for (j = 0; j < number_of_array_elements; j++) {
     if (number == PDT[j].num) {
       
@@ -628,6 +632,7 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
         r_memset(buf_value, 0, sizeof(char) * 64);    
         PDT[j].rFunc(&PDT[j], buf_value, &len);
       }
+GETFAIL:
       if(len==0){
         r_strcpy(buf_value,"para get fail!\r\n");
         len = r_strlen(buf_value);

@@ -382,7 +382,7 @@ s32 ssl_rec(void)
       if(ssl_relink_times++>30){
         ssl_relink_times=0;
         ssl_relink();
-        log_save("-->state grid ssl recieve fail overtimes:%d\r\n",ssl_relink_times);
+        log_save("-->state grid ssl recieve fail\r\n");
       }
     }
     return ret;

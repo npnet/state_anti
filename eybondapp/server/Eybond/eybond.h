@@ -34,6 +34,8 @@
 #define EPS_ACK_OVERTIME        (15000)
 #define ESP_WAIT_CNT            (EPS_ACK_OVERTIME/ESP_PROCESS_FREP)
 
+extern  u8_t device_data_geting;
+
 typedef enum {
   EYBOND_HEARTBEAT = 0x01,
   EYBOND_GET_PARA  = 0x02,

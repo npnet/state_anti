@@ -261,7 +261,7 @@ void * appimg_enter(void *param) {
   fibo_taskSleep(100);
   fibo_thread_create(sslrec_task,      "SSL RECV TASK",     1024*8*3, NULL, OSI_PRIORITY_NORMAL);
   fibo_taskSleep(100);
-  fibo_thread_create_ex(proc_device_task,       "Eybond DEVICE TASK",  1024*8*5, NULL, OSI_PRIORITY_LOW,      &dev_thread_id);
+  fibo_thread_create_ex(proc_device_task,       "Eybond DEVICE TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &dev_thread_id);
   fibo_taskSleep(100);
   fibo_thread_create_ex(proc_eybond_task,       "Eybond CMD TASK",     1024*8*6, NULL, OSI_PRIORITY_LOW,      &eyb_thread_id);
   fibo_taskSleep(100);

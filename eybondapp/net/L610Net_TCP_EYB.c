@@ -252,7 +252,7 @@ void L610Net_init(void) {
   for(nIndex = 0; nIndex < EYB_SOCKET_COUNTS; nIndex ++) {
     r_memset(strTaskname, '\0', sizeof(strTaskname));
     snprintf(strTaskname, 32, "L610 TCP rev Callback %d", nIndex);
-    fibo_thread_create_ex(L610_TCP_Callback, (INT8 *)strTaskname, 1024*8*2, (void *)&nIndex, OSI_PRIORITY_NORMAL, &l610tcp_thread_id[nIndex]);
+    fibo_thread_create_ex(L610_TCP_Callback, (INT8 *)strTaskname, 1024*8*4, (void *)&nIndex, OSI_PRIORITY_NORMAL, &l610tcp_thread_id[nIndex]);
     fibo_taskSleep(1000);
     APP_DEBUG("L610 TCP Callback[%d] %X\r\n", nIndex, l610tcp_thread_id[nIndex]);
   }  
@@ -735,9 +735,12 @@ void L610Net_manage(void) {
                   } else {
                     //TCP连接失败
                     netManage[nIndex].status = L610_CONNECT_FAIL;
-                    fibo_sock_close(netManage[nIndex].socketID);
+                    //fibo_sock_close(netManage[nIndex].socketID);
                     log_save("Fail to connect to %s server, port %d ret= %ld", netManage[nIndex].ipStr, netManage[nIndex].port, ret);
                     //L610Net_close(nIndex);
+                    netManage[nIndex].status = L610_DNS_FAIL;
+                    fibo_sock_close(netManage[nIndex].socketID);
+                    netManage[nIndex].socketID = -1;
                   }
                 }
               }
@@ -896,8 +899,8 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     if (netManage[nIndex].mode == 2) {
 //      ret = SSL_Send(netManage[nIndex].socketID, (u8_t *)data, len);
     } else {
-    //    while(statenet_para.send_status)    //Luee
-    //      fibo_taskSleep(50);   
+        while(statenet_para.send_status)    //Luee
+          fibo_taskSleep(20);   
         eybnet_para.send_status=true;      
 
         ret = fibo_sock_send(netManage[nIndex].socketID, (u8_t *)data, len);       
@@ -949,6 +952,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
   }
   fibo_thread_delete();
 } */
+
 
  void L610_TCP_Callback(u8_t *param) {
   s16_t retlen = 0;
@@ -1012,11 +1016,12 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
         APP_DEBUG("socket: %ld read failt!\r\n", netManage[nIndex].socketID);
         log_save("TCP rec fail!!!");
         
-        if(relink++>60){
+        if(relink++>1){
             relink=0;
             //L610Net_close(nIndex);
             netManage[nIndex].status = L610_CONNECT_FAIL;
             fibo_sock_close(netManage[nIndex].socketID);
+            netManage[nIndex].socketID = -1;
             //m_GprsActState = STATE_DNS_NOT_READY;
           //tcp_relink();
         }

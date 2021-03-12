@@ -152,10 +152,10 @@ static s8 ssl_socket(void)
         }else
           fibo_write_ssl_file("TRUSTFILE", STATEGRID_CA_FILE, sizeof(STATEGRID_CA_FILE) - 1);
         //执行后需延时10S
-        ssl_counter=20;   //*500ms*20
-        fibo_taskSleep(1000);
+        ssl_counter=0;   //*500ms*20
+        fibo_taskSleep(10000);
         ssl_index=1;
-        break;
+        //break;
 
       case 1:
         if(ssl_counter)
@@ -264,10 +264,10 @@ s32 ssl_rec(void)
     u8 recbuf[64] = {0};
     u8 index=0;
     s32 rec_len=0;
-    static u16 ssl_relink_times=0;
+    static u8 ssl_relink_times=0;
     Buffer_t sslrec_buf;
 
-    while(rerec){
+    //while(rerec){
     APP_DEBUG("\r\nssl receiving\r\n");
     rec_len = fibo_ssl_sock_recv(sslsock, recbuf, sizeof(recbuf));
     APP_DEBUG("\r\nfibossl sys_sock_recv %ld\r\n", rec_len);
@@ -275,6 +275,9 @@ s32 ssl_rec(void)
         APP_DEBUG("\r\n-->state grid ssl receive buf:\r\n");
         print_buf((UINT8 *)recbuf, rec_len);
         rerec=0;
+        ssl_relink_times=0;
+        set_heartbeatSpace(0);
+        ret=rec_len;
 
         //StateGrid_t sgt;
         //sgt.cmd=(StateGridCmd_t*)recbuf;
@@ -346,11 +349,13 @@ s32 ssl_rec(void)
           break;
 
           case GETDATA_ID:
+            ret=rec_len;
             APP_DEBUG("\r\n-->state grid :stateGrid_getData process");
             stateGrid_getData(sp);
           break;
 
           case PROOFTIME_ID:
+            ret=rec_len;
             APP_DEBUG("\r\n-->state grid :stateGrid_prooftime process");
             stateGrid_prooftime(sp);
           break;
@@ -365,20 +370,19 @@ s32 ssl_rec(void)
        rerec=0;
       //send_message(queue_l610net,L610NET_SSLFAIL_ID,0,0,0);
         }
-    }
+    //}
     //收到有效ssl数据，心跳间隔时间清0
     //国网只需保证20分钟内有数据正确交换就不会断网
-    if(ret>0){
-      set_heartbeatSpace(0);
-    }
+    //if(ret>0){
+    //  set_heartbeatSpace(0);
+    //}
     //连接失败重连
-    if(ret<=0){
+    if(rec_len<=0){
       APP_DEBUG("\r\n-->state grid ssl recieve fail times:%d\r\n",ssl_relink_times);
-    //  log_save("\r\n-->state grid ssl recieve fail times:%d\r\n",ssl_relink_times);
       if(ssl_relink_times++>30){
         ssl_relink_times=0;
         ssl_relink();
-        log_save("\r\n-->state grid ssl recieve fail overtimes:%d\r\n",ssl_relink_times);
+        log_save("-->state grid ssl recieve fail overtimes:%d\r\n",ssl_relink_times);
       }
     }
     return ret;

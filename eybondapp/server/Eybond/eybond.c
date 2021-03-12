@@ -743,8 +743,8 @@ static u8_t deviceDataGet(ESP_t *esp) {
           buf.lenght = para - buf.payload;
         }
 
-        //if (buf.lenght > 800) {
-          if (buf.lenght > 600) {
+        if (buf.lenght > 800) {
+          //if (buf.lenght > 600) {
           esp->ack(&buf);
           buf.lenght = 0;
         }

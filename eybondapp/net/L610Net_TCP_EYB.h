@@ -62,7 +62,8 @@ typedef struct {
     NetDataCallback callback;  //rcveData callback fun
 }L610Net_t;
 
-#define EYB_SOCKET_COUNTS 6
+//#define EYB_SOCKET_COUNTS 6
+#define EYB_SOCKET_COUNTS 3
 extern L610Net_t netManage[];
 
 extern GSMState_e m_GprsActState;

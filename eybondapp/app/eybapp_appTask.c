@@ -533,9 +533,12 @@ void proc_app_task(s32_t taskId) {
         if (logGetFlag == 0x5AA5) { // 按条显示log信息
           Buffer_t log;
           int logIndex = 0;
-          while (logIndex < 100) {
+          logGetFlag = 0;
+          while (logIndex < 50) {
             r_memset(&log, 0, sizeof(Buffer_t));
-            logGet(&log);
+            //logGet(&log);
+            log.payload=fibo_malloc(64);
+            log_get(&log);
             if (log.lenght == 0 || log.payload == null) {  // 读完log后就不再显示了
               logGetFlag = 0;
               memory_release(log.payload);

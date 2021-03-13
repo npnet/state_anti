@@ -562,6 +562,7 @@ void proc_device_task (s32_t taskId) {
             DeviceIO_reset();   // save
             Protocol_clean();   // save
             Device_clear();
+            CommonServer_DeviceInit();
             Protocol_init();
             deviceLEDOff();     // save
         }

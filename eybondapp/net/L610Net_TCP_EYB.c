@@ -899,8 +899,8 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     if (netManage[nIndex].mode == 2) {
 //      ret = SSL_Send(netManage[nIndex].socketID, (u8_t *)data, len);
     } else {
-        while(statenet_para.send_status)    //Luee
-          fibo_taskSleep(20);   
+    //    while(statenet_para.send_status)    //Luee
+    //      fibo_taskSleep(20);   
         eybnet_para.send_status=true;      
 
         ret = fibo_sock_send(netManage[nIndex].socketID, (u8_t *)data, len);       

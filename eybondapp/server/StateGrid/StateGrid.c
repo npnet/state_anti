@@ -222,12 +222,14 @@ static void StateGrid_run(u8_t status)
                     )
                 )
             {
+            //    uploadDataSpace -= 2;
                 uploadDataSpace -= 2;
                 stateGrid_upload();
                 clear_overtime();   
             }
             else if (++heartbeatSpace > (60/SEND_SPACE))
             {
+            //    heartbeatSpace -= 2;
                 heartbeatSpace -= 2;
                 stateGrid_heartbeat();         
             }

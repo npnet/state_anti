@@ -519,7 +519,9 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
 
   int j = 0;
 
-  if (databuf == NULL||device_data_geting) {
+ // if (databuf == NULL||device_data_geting) {
+  if (databuf == NULL) {
+
     //parageting=0;   //参数获取完成
     //return;
     len=0;

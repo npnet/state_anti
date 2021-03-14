@@ -206,8 +206,8 @@ static u8_t XmodemAck(DeviceAck_e e) {
     }
     cnt = 0;
   } else if (e == DEVICE_ACK_OVERTIME) {
-    if (cnt++ > 10) {
-    //if (cnt++ > 20) {   //Luee_d
+    //if (cnt++ > 10) {
+    if (cnt++ > 20) {   //Luee_d
       log_save("Device update wati overtime!!");
       updateState = 0xFE;
       goto END;

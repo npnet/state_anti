@@ -650,8 +650,6 @@ static u8_t deviceDataGet(ESP_t *esp) {
     //return -1;
   }
 
-  //fibo_taskSleep(500);      //Luee给其它程序空出时间
-
   tail = onlineDeviceList.node;
 
   if (tail != null && buf.payload != null) {
@@ -673,6 +671,7 @@ static u8_t deviceDataGet(ESP_t *esp) {
 
         ackBuf = &buf.payload[buf.lenght];
         do {
+          
           cmd = (CmdBuf_t *)node->payload;
           node = node->next;
 
@@ -756,6 +755,10 @@ static u8_t deviceDataGet(ESP_t *esp) {
         //800容易离线
         //if (buf.lenght > 800) {
           if (buf.lenght > 600) {
+          device_data_geting=0;
+          fibo_taskSleep(500);    //给其它发送留出时间
+          device_data_geting=1;
+
           esp->ack(&buf);
           buf.lenght = 0;
         }
@@ -777,6 +780,11 @@ static u8_t deviceDataGet(ESP_t *esp) {
     para[0] = 2;
     para[1] = 0;
   }
+
+  device_data_geting=0;
+  fibo_taskSleep(500);    //给其它发送留出时间
+  device_data_geting=1;
+
   esp->ack(&buf);
   memory_release(buf.payload);
   if (overTime > 5) {

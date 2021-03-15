@@ -1214,8 +1214,8 @@ void proc_eybond_task(s32_t taskId) {
           }
         }
         //益邦云连接失败计数  Luee  
-        if (overtime_ESP++ > (75 * 2)) {  
-        //if (overtime_ESP++ > (60 * 8)) {
+        if (overtime_ESP++ > (75 * 4)) {  
+        //if (overtime_ESP++ > (60 * 4)) {
           relinkCnt++;
           overtime_ESP = 0;
           tcp_relink();
@@ -1224,7 +1224,7 @@ void proc_eybond_task(s32_t taskId) {
           //sPort = 0xFF;
         }
         //if (relinkCnt > 2) {
-        if (relinkCnt >= 10) {
+        if (relinkCnt >= 5) {
           log_save("relinkCont over and reboot!!!!!!!!!!!!!!!!\r\n");
           Watchdog_stop();
           relinkCnt = 0;

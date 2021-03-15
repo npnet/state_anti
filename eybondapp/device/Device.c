@@ -347,8 +347,8 @@ static void deviceCmdSend(void) {
 #endif
         }
         APP_DEBUG("currentDevice is null,DeviceOvertime:%d!!\r\n", DeviceOvertime);
-      //  watiTime = 1;
-        watiTime = 2;   //Luee_d
+        watiTime = 1;
+      //  watiTime = 2;   //Luee_d
       }
       else if (DeviceIO_lockState() == null) {
         APP_DEBUG("DeviceIO_lockState is null!!Step from 1 to 3!!\r\n");

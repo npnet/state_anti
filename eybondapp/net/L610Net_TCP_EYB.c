@@ -1022,7 +1022,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
         APP_DEBUG("socket: %ld read failt!\r\n", netManage[nIndex].socketID);
         log_save("TCP rec fail!!!");
         
-        if(relink++>1){
+        if(relink++>30){
             relink=0;
             //L610Net_close(nIndex);
             netManage[nIndex].status = L610_CONNECT_FAIL;

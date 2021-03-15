@@ -37,6 +37,9 @@ u8_t Net_connect(u8_t mode, char *ip, u16_t port, NetDataCallback netCallback);
 void Net_close(u8_t nIndex);
 void Net_send(u8_t nIndex, u8_t * pData, u16_t len);
 u8_t Net_status(u8_t nIndex);
+
+void tcp_send_counter_clear(void);
+void tcp_send_init(void);
 #endif  // __4G_NET_H
 /******************************************************************************/
 

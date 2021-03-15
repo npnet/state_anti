@@ -38,10 +38,17 @@ typedef struct {
 static u32_t NetOvertime = 0;
 static u32_t m_timeCheck = 0;
 
+//tcp send
+static u8_t tcp_send_counter=0;
+static u8_t tcp_sending=0;
+#define TCP_SNED_COUNTER 2
+
 static ListHandler_t netSendPakege;
 // static int netInTest(Buffer_t *buf, void_fun_bufp output);
 // static s32_t m_simStat = SIM_STAT_UNSPECIFIED;
 static void Net_sendData(void);
+
+static void tcp_send(void);
 
 /*******************************************************************************
   * @brief
@@ -57,6 +64,8 @@ void proc_net_task(s32_t taskId) {
   static int netResetCnt = 0;
   s32_t cereg = 0;
   u32_t uStackSize = 0;
+
+  tcp_send_init();
 
   // variable Initialization
   netResetCnt = 0;
@@ -125,6 +134,7 @@ void proc_net_task(s32_t taskId) {
 //      APP_DEBUG("Net task get APP_USER_TIMER_ID:%ld\r\n", NetOvertime);
         L610Net_manage();
         grid_Net_manage();
+        tcp_send();
         break;
       case NET_CMD_RESTART_ID:
         break;
@@ -182,7 +192,8 @@ void Net_send(u8_t nIndex, u8_t *pData, u16_t len) {
     sendData->buf.payload = (u8_t *)(sendData + 1);
     r_memcpy(sendData->buf.payload, pData, len);
     list_bottomInsert(&netSendPakege, sendData);    
-    Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_SENDDATA_ID, 0, 0);
+  //  Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_SENDDATA_ID, 0, 0);    //Luee 改为统一发送
+    tcp_send_counter_clear();     //立即发送
   } else {
     APP_DEBUG("memory apply full!!!");
   }
@@ -196,8 +207,10 @@ void Net_send(u8_t nIndex, u8_t *pData, u16_t len) {
 *******************************************************************************/
 static void Net_sendData(void) {
   NetSend_t *send = (NetSend_t *)list_nextData(&netSendPakege, null);
+  tcp_sending=1;
   if (send == null) {
     APP_DEBUG("No netSendPakege any more.\r\n");
+    tcp_sending=0;
     return;
   } else if (send->buf.lenght == 0) {
     list_nodeDelete(&netSendPakege, send);
@@ -220,7 +233,32 @@ static void Net_sendData(void) {
 	  APP_DEBUG("Fail to connect to server, cause=%d\r\n", ret);	
 	}	
   }
-  Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_SENDDATA_ID, 2, 0);    // 确保netSendPackage里面没有数据了
+  tcp_sending=0;
+//  Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_SENDDATA_ID, 2, 0);    // 确保netSendPackage里面没有数据了
+}
+
+static void tcp_send(void)
+{
+  if(tcp_send_counter)
+      tcp_send_counter--;
+  //TCP连接成功且tcp 发送空闲
+  if(eybnet_para.inwork_status==1&&tcp_sending==0){
+    if(tcp_send_counter==0){
+      tcp_send_init();
+      Net_sendData();
+    }
+  }
+}
+
+void tcp_send_counter_clear(void)
+{
+  tcp_send_counter=0;
+}
+
+void tcp_send_init(void)
+{
+  tcp_send_counter=TCP_SNED_COUNTER;
+  tcp_sending=0;
 }
 
 /******************************************************************************/

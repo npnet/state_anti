@@ -85,6 +85,7 @@ static void soft_reset_handle(void);
 //ssl 重连
 void ssl_relink(void)
 {
+  statenet_para.inwork_status=0;
   sslsock=-1;
   relinkTime=0;
   overtime = 0;

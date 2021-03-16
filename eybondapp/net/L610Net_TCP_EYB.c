@@ -284,6 +284,7 @@ void L610Net_init2(void) {
   r_memset(netManage, 0, sizeof(netManage));    //Luee
   
   g_netmutex = 0;
+  eybnet_para.inwork_status=0;
 }
 
 
@@ -973,7 +974,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
     //if (m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       if (netManage[nIndex].mode!=2&&m_GprsActState == STATE_DNS_READY && netManage[nIndex].status == L610_SUCCESS) {
       
-      fibo_taskSleep(700);    //Luee
+      fibo_taskSleep(600);    //Luee
 
 	#if 0
       r_memset(strBuf, '\0', sizeof(strBuf));
@@ -1034,7 +1035,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
         
       }
     } else {
-      fibo_taskSleep(700);    //Luee
+      fibo_taskSleep(600);    //Luee
     }
   }
   fibo_thread_delete();

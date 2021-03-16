@@ -60,8 +60,8 @@ static char EybondServer[] = "www.shinemonitor.com:502";
 
 static ListHandler_t rcveList;
 static u8_t sPort;  // index of scocket
-static u16_t overtime_ESP;  // mike 20200918
-static u16_t relinkCnt;
+static u16_t overtime_ESP=0;  // mike 20200918
+static u16_t relinkCnt=0;
 static u32_t m_timeCheck_EYB = 0;
 extern u16_t testPort;
 
@@ -1167,7 +1167,7 @@ static u8_t specialData_receive(ESP_t *esp) {
 void tcp_relink(void)
 {
   L610Net_init2();
-  relinkCnt=0;
+  //relinkCnt=0;
   overtime_ESP = 0;
   Net_close(sPort);
 	sPort = 0xff;
@@ -1178,6 +1178,7 @@ void proc_eybond_task(s32_t taskId) {
   ST_MSG msg;
   u8_t ret = 0;
   relinkCnt = 0;
+  overtime_ESP=0;
   sPort = 0xff;
   m_timeCheck_EYB = 0;
   int timeReport = 60;
@@ -1261,7 +1262,9 @@ static u8_t heartbeat(ESP_t *esp) {
 #pragma pack()
 
   rcve_t *para = (rcve_t *)(esp->PDU);
-  EybondHeader_t *ack;
+  //EybondHeader_t *ack;
+  u8 ack_buf[sizeof(EybondHeader_t) + 18]={0};
+  EybondHeader_t *ack=(EybondHeader_t *)ack_buf;
   Buffer_t buf;
   Clock_t time;
 
@@ -1278,9 +1281,10 @@ static u8_t heartbeat(ESP_t *esp) {
   Clock_Set(&time);
 
   parametr_get(DEVICE_PNID, &buf);
-  ack = memory_apply(sizeof(EybondHeader_t) + 18);
+  //ack = memory_apply(sizeof(EybondHeader_t) + 18);
   r_memset(ack, 0, sizeof(EybondHeader_t) + 18);
-  if (ack != null) {
+  //if (ack != null) {
+  if (1) {
     r_memcpy(ack, &esp->head, sizeof(EybondHeader_t));    //得到回复头
     if (buf.payload == null || (buf.lenght != 14 &&  buf.lenght != 18)) {
       APP_DEBUG("PN ERR: %d, %s\r\n", buf.lenght, buf.payload);
@@ -1296,7 +1300,7 @@ static u8_t heartbeat(ESP_t *esp) {
     buf.payload = (u8_t *)ack;
     esp->ack(&buf);
   }
-  memory_release(buf.payload);
+  //memory_release(buf.payload);
   return 0;
 }
 

@@ -41,7 +41,7 @@ static u32_t m_timeCheck = 0;
 //tcp send
 static u8_t tcp_send_counter=0;
 static u8_t tcp_sending=0;
-#define TCP_SNED_COUNTER 2
+#define TCP_SNED_COUNTER 1
 
 static ListHandler_t netSendPakege;
 // static int netInTest(Buffer_t *buf, void_fun_bufp output);

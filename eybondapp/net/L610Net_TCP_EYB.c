@@ -905,6 +905,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
   if ((nIndex < sizeof(netManage) / sizeof(netManage[0])) && netManage[nIndex].flag == 1 && netManage[nIndex].status == L610_SUCCESS) {
     if (netManage[nIndex].mode == 2) {
 //      ret = SSL_Send(netManage[nIndex].socketID, (u8_t *)data, len);
+        ret=0;
     } else {
     //    while(statenet_para.send_status)    //Luee
     //      fibo_taskSleep(20);   
@@ -1023,7 +1024,7 @@ int L610Net_send(u8_t nIndex, u8_t *data, u16_t len) {
         APP_DEBUG("socket: %ld read failt!\r\n", netManage[nIndex].socketID);
         log_save("TCP rec fail!!!");
         
-        if(relink++>30){
+        if(relink++>1){
             relink=0;
             //L610Net_close(nIndex);
             netManage[nIndex].status = L610_CONNECT_FAIL;

@@ -238,7 +238,7 @@ static void NetMsgAck_Eybond(Buffer_t *buf) { // 网络数据解析返回结果�
       APP_DEBUG("Buffer length is bigger than %d \r\n", MAX_NET_BUFFER_LEN);
       return;
     }
-   output(buf);
+  // output(buf);
 
     Net_send(sPort, buf->payload, buf->lenght);
   }
@@ -315,7 +315,7 @@ void ESP_close(void) {
 u8_t ESP_cmd(Buffer_t *buf, AckCh ch) {
   u8_t e = 0;
 
-  output(buf);
+  //output(buf);
 
 
   if (buf == null || buf->payload == null || ch == null) {

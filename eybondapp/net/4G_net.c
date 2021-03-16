@@ -23,6 +23,7 @@
 
 #include "L610Net_SSL.h"
 #include "CommonServer.h"
+#include "eybpub_run_log.h"
 
 typedef struct {
   u8_t nIndex;
@@ -196,6 +197,7 @@ void Net_send(u8_t nIndex, u8_t *pData, u16_t len) {
     tcp_send_counter_clear();     //立即发送
   } else {
     APP_DEBUG("memory apply full!!!");
+    log_save("Net_send:memory apply full!!!");
   }
 }
 
@@ -227,10 +229,12 @@ static void Net_sendData(void) {
 	} else if (ret == -520) {
       APP_DEBUG("port close state.\r\n");
 	  list_nodeDelete(&netSendPakege, send);
-	  L610Net_close(send->nIndex);      
+    log_save("tcp send fail!!!");
+	//  L610Net_close(send->nIndex);        //Luee 发送失败不关网络
 	} else {
-	  L610Net_close(send->nIndex);
-	  APP_DEBUG("Fail to connect to server, cause=%d\r\n", ret);	
+	//  L610Net_close(send->nIndex);        //Luee 发送失败不关网络
+	  APP_DEBUG("Fail to connect to server, cause=%d\r\n", ret);
+    log_save("tcp send fail!!!");
 	}	
   }
   tcp_sending=0;

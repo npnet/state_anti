@@ -647,7 +647,7 @@ static u8_t deviceDataGet(ESP_t *esp) {
   if (buf.payload == NULL) {
     APP_DEBUG("buf malloc failed!!\r\n");
     log_save("deviceDataGet lenght=0xa00 buf malloc fail!!!");
-    return -1;
+    //return -1;
   }
 
   tail = onlineDeviceList.node;
@@ -781,9 +781,9 @@ static u8_t deviceDataGet(ESP_t *esp) {
     para[1] = 0;
   }
 
-  device_data_geting=0;
-  fibo_taskSleep(200);    //给其它发送留出时间
-  device_data_geting=1;
+  //device_data_geting=0;
+  //fibo_taskSleep(200);    //给其它发送留出时间
+  //device_data_geting=1;
 
   esp->ack(&buf);
   memory_release(buf.payload);

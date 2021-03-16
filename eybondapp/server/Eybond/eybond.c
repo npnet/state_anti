@@ -647,7 +647,7 @@ static u8_t deviceDataGet(ESP_t *esp) {
   if (buf.payload == NULL) {
     APP_DEBUG("buf malloc failed!!\r\n");
     log_save("deviceDataGet lenght=0xa00 buf malloc fail!!!");
-    //return -1;
+    return -1;
   }
 
   tail = onlineDeviceList.node;

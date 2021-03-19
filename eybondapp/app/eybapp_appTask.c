@@ -54,11 +54,7 @@
 #include "eybond.h"
 
 #include "grid_tool.h"
-// #include "x25Qxx.h"  // mike 20200805
-// #include "Eybond.h"  // mike 20200805
-// #include "CommonServer.h"  // mike 20200805
-// #include "antiReflux.h"  // mike 20200805
-// #include "sarnath.h"  // mike 20200805
+#include "anti_reflux.h"
 
 static void_fun_bufp outputFun;
 static DeviceInfo_t cmdHead;
@@ -596,6 +592,7 @@ void proc_app_task(s32_t taskId) {
 *******************************************************************************/
 static void UserTimerAPPscallback(void *param) {
   Eybpub_UT_SendMessage(COMMON_SERVER_TASK, APP_MSG_TIMER_ID, 0, 0);
+  Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_TIMER_ID, 0, 0);
   //if (*((s32_t *)param) == 0) {
   //  if (m_wdgCnt > 3) {
       Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_DEVTIMER_ID, 0, 0);

@@ -64,6 +64,7 @@ void  Uart_write(u8_t *data, u16_t len);
 ST_UARTDCB *DeviceIO_cfgGet(void);
 extern s8_t g_UARTIO_AT_enable;
 
+extern DeviceInfo_t *s_device;
 
 #endif //__DEVICE_IO_
 /******************************************************************************/

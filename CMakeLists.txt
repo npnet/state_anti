@@ -46,6 +46,8 @@ include_directories(eybondapp/server/Eybond)
 include_directories(eybondapp/server/CommonServer)
 include_directories(eybondapp/server/StateGrid)
 include_directories(eybondapp/fota)
+include_directories(eybondapp/anti_reflux)
+include_directories(eybondapp/anti_reflux/Device)
 else()
 include_directories(components/include components/newlib/include app/include)
 endif()
@@ -146,6 +148,8 @@ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
     file(GLOB FOTA_FILES eybondapp/fota/*.c)
     file(GLOB LIB_FILES eybondapp/lib/*.c)
     file(GLOB PUB_FILES eybondapp/public/*.c)
+    file(GLOB REFLUX_FILES eybondapp/anti_reflux/*.c)
+    file(GLOB REFLUX_DEV_FILES eybondapp/anti_reflux/Device/*.c)
     add_appimg(${target} ${flash_ldscript}
     ${MAIN_FILES}
     ${APP_FILES}
@@ -158,6 +162,8 @@ if(CONFIG_APPIMG_LOAD_FLASH_EYBOND)
     ${FOTA_FILES}
     ${LIB_FILES}
     ${PUB_FILES}
+    ${REFLUX_FILES}
+    ${REFLUX_DEV_FILES}
     )
  else()
     set(target 000_4G04_01_BP_V6.0.0.0_${VERSION})

@@ -1,4 +1,4 @@
-/**************Copyright(C)��2015-2026��Shenzhen Eybond Co., Ltd.***************
+/**************Copyright(C)锟斤拷2015-2026锟斤拷Shenzhen Eybond Co., Ltd.***************
   *@brief   : anti-reflux.h
   *@notes   : 2018.11.06 CGQ establish
 *******************************************************************************/

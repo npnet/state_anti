@@ -1,4 +1,4 @@
-/**************Copyright(C)��2015-2026��Shenzhen Eybond Co., Ltd.***************
+/**************Copyright(C)锟斤拷2015-2026锟斤拷Shenzhen Eybond Co., Ltd.***************
   *@brief   : anti-reflux.c 
   *@notes   : 2018.11.06 CGQ 
 *******************************************************************************/
@@ -78,10 +78,10 @@ void proc_antiReflux_task(s32_t taskId)
 *******************************************************************************/
 int float2int(u32_t data)
 {
-#if 0  //方法 1
-    s8_t S;     //符号
-    s8_t  E;    //指数
-    u32_t F;    //小数据位
+#if 0  //鏂规硶 1
+    s8_t S;     //绗﹀彿
+    s8_t  E;    //鎸囨暟
+    u32_t F;    //灏忔暟鎹綅
     u32_t carry;
     int val;
 
@@ -111,7 +111,7 @@ int float2int(u32_t data)
     }
 
     return val*S;
-#elif  1 //方法 二
+#elif  1 //鏂规硶 浜�
 
     int val;
     float f;

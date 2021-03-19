@@ -27,6 +27,7 @@
 #include "http_fota.h"
 #include "CommonServer.h"
 #include "L610Net_SSL.h"
+#include "anti_reflux.h"
 
 UINT32 EYBAPP_TASK = 0;
 UINT32 EYBNET_TASK = 0;
@@ -36,6 +37,7 @@ UINT32 ALIYUN_TASK = 0;
 UINT32 FOTA_TASK = 0;
 UINT32 UPDATE_TASK = 0;
 UINT32 COMMON_SERVER_TASK = 0;
+UINT32 ANTI_REFLUX_TASK=0;
 
 static void prvInvokeGlobalCtors(void) {
   extern void (*__init_array_start[])();
@@ -245,6 +247,7 @@ void * appimg_enter(void *param) {
   UINT32 fota_thread_id = 0;
   UINT32 upd_thread_id = 0;
   UINT32 com_thread_id = 0;
+  UINT32 anti_thread_id=0;
 
   EYBAPP_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   EYBNET_TASK = fibo_queue_create(10, sizeof(ST_MSG));
@@ -254,6 +257,7 @@ void * appimg_enter(void *param) {
   FOTA_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   UPDATE_TASK = fibo_queue_create(10, sizeof(ST_MSG));
   COMMON_SERVER_TASK = fibo_queue_create(10, sizeof(ST_MSG));
+  ANTI_REFLUX_TASK=fibo_queue_create(10,sizeof(ST_MSG));
 
   fibo_thread_create_ex(proc_app_task,          "Eybond APP TASK",     1024*8*2, NULL, OSI_PRIORITY_REALTIME, &app_thread_id);
   fibo_taskSleep(100);
@@ -273,8 +277,10 @@ void * appimg_enter(void *param) {
   //fibo_taskSleep(100);
   fibo_thread_create_ex(proc_commonServer_task, "Common Server TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &com_thread_id);
   fibo_taskSleep(100);
-  APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X UPd %X JLFota %X COM %X\r\n", \
-    net_thread_id, app_thread_id, dev_thread_id, eyb_thread_id, ali_thread_id, upd_thread_id, fota_thread_id, com_thread_id);
+  fibo_thread_create_ex(proc_anti_reflux_task, "ANTI RELFUX TASK",  1024*8*3, NULL, OSI_PRIORITY_LOW,      &anti_thread_id);
+  fibo_taskSleep(100);
+  APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X UPd %X JLFota %X COM %X ANTI %X\r\n", \
+    net_thread_id, app_thread_id, dev_thread_id, eyb_thread_id, ali_thread_id, upd_thread_id, fota_thread_id, com_thread_id,anti_thread_id);
   Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_UART_READY, 0, 0);
 
   return (void *)&user_callback;

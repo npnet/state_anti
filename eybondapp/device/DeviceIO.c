@@ -34,6 +34,7 @@
 #include "DeviceIO.h"
 #include "Device.h"
 #include "Protocol.h"
+#include "anti_reflux.h"
 
 
 s8_t g_UARTIO_AT_enable = 0;
@@ -455,7 +456,7 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
     }
     else{
       APP_DEBUG("\r\n-->UART1 get %d data!!!\r\n", len);
-      //print_buf(data, len);
+      print_buf(data, len);
     }
     if (rcveBuf.payload != null) {
       // 设备串口接收的数据统一在这里释放内存
@@ -473,7 +474,7 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
     rcveBuf.size = SERIAL_RX_BUFFER_LEN;
     rcveBuf.lenght = len;
     r_memset(rcveBuf.payload, '\0', SERIAL_RX_BUFFER_LEN);
-    r_memcpy(rcveBuf.payload, data, len);
+    r_memcpy(rcveBuf.payload, data, len);   //得到uart 数据
     if (r_strncmp(CUSTOMER, "0A5", 3) == 0) {
       if (r_strncmp((char *)rcveBuf.payload, "AT+", 3) == 0 && g_UARTIO_AT_enable == 0) { // 获取到硕日私有AT查询指令
         char strTemp[32] = {0};
@@ -544,6 +545,7 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
         if (is_ali_conn_success) {
           Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
         }
+        Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_DATA_PROCESS, 0, 0);
       }
     } else {  // 生产测试AT指令打开后
       if (r_strncmp((char *)rcveBuf.payload, "SET_TEST=OFF", 12) == 0) {

@@ -49,6 +49,7 @@ static Buffer_t rcveBuf;
 DeviceInfo_t *s_device;
 DeviceInfo_t *s_lockDevice;
 Buffer_t rcveBuf;
+Buffer_t antibuf;
 #endif
 static void wrtie(Buffer_t *buf);
 static void end(DeviceAck_e e);
@@ -475,6 +476,30 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
     rcveBuf.lenght = len;
     r_memset(rcveBuf.payload, '\0', SERIAL_RX_BUFFER_LEN);
     r_memcpy(rcveBuf.payload, data, len);   //得到uart 数据
+
+    if(rcveBuf.payload[0]==METER_ADDR){
+        if (antibuf.payload != null) {
+          memory_release(antibuf.payload);
+          antibuf.lenght = 0;
+          antibuf.size = 0;
+        }
+
+        antibuf.size = len;
+        antibuf.lenght = len;
+        antibuf.payload=memory_apply(len);
+        r_memset(antibuf.payload,'\0',len);
+        r_memcpy(antibuf.payload, data, len);
+        Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_DATA_PROCESS, 0, 0);
+    }
+
+    //Uart_write((u8_t *)rcveBuf.payload, len);
+
+    //fibo_taskSleep(1000);
+    //meter_read();
+    //Uart_write((u8 *)"OK", 2);
+ // }
+//}
+
     if (r_strncmp(CUSTOMER, "0A5", 3) == 0) {
       if (r_strncmp((char *)rcveBuf.payload, "AT+", 3) == 0 && g_UARTIO_AT_enable == 0) { // 获取到硕日私有AT查询指令
         char strTemp[32] = {0};
@@ -530,8 +555,8 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
       if (s_device == null || s_device->buf->payload == null) {
         APP_DEBUG("Cancel MSG %d from UART port:%d!!\r\n", rcveBuf.lenght, uart_port);  // 默认忽略处理没有负载时采集口上报的数据
         if(0 != netInTest(&rcveBuf)) {
-           /*TODO*/
-           /*接收设备口发过来的其它AT命令*/
+           //TODO
+           //接收设备口发过来的其它AT命令
         }
         return;
       } else {  // 有负载时将接收到的数据传递给负载设备处理
@@ -545,7 +570,7 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
         if (is_ali_conn_success) {
           Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
         }
-        Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_DATA_PROCESS, 0, 0);
+        //Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_DATA_PROCESS, 0, 0);
       }
     } else {  // 生产测试AT指令打开后
       if (r_strncmp((char *)rcveBuf.payload, "SET_TEST=OFF", 12) == 0) {
@@ -567,6 +592,7 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
     end(DEVICE_ACK_FINISH);
   }
 }
+
 
 DeviceAck_e DeviceIO_write(DeviceInfo_t *hard, u8_t *pData, mcu_t lenght) {
   DeviceAck_e result = DEVICE_ACK_FINISH;

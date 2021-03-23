@@ -505,6 +505,11 @@ void proc_device_task (s32_t taskId) {
   watiTime = 5;   // wait 5sec start get device date
   m_timeCheck_DEV = 0;
   list_init(&DeviceList);
+
+  //DeviceIO_init(null);
+  //while (1){
+  //  fibo_taskSleep(1000);
+  //}
     
   while (1) {
     fibo_queue_get(EYBDEVICE_TASK, (void *)&msg, 0);  

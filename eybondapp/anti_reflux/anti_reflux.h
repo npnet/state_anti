@@ -17,6 +17,13 @@
 #define ANTI_REFLUX_DATA_PROCESS        MSG_ID_USER_ANTI_REFLUX_START + 0xF60
 #define ANTI_REFLUX_TIMER_ID            MSG_ID_USER_ANTI_REFLUX_START + 0xF61
 
+#define METER_ADDR  0xc8
+#define METER_REG_ADDR 112
+#define ANTI_REFLUX_REG_ADDR 0x17C0
+#define MODBUS_RTU_FUN_RD   0x03
+#define MODBUS_RTU_FUN_WR   0x10
+#define MODBUS_RTU_FUN_ER   0x80
+
 typedef struct
 {
     u8_t state;
@@ -38,6 +45,7 @@ typedef struct
 void proc_antiReflux_task(s32_t taskId);
 u8_t modbusDataCheck(void *load, void *changeData);
 int float2int(u32_t data);
+void meter_read(void);
 
 
 void proc_anti_reflux_task(s32_t taskId);

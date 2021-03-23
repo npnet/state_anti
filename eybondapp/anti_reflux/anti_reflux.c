@@ -25,12 +25,6 @@
 #include "eyblib_CRC.h"
 #include "eybapp_appTask.h"
 
-#define METER_ADDR  0xc8
-#define METER_REG_ADDR 112
-#define ANTI_REFLUX_REG_ADDR 0x17C0
-#define MODBUS_RTU_FUN_RD   0x03
-#define MODBUS_RTU_FUN_WR   0x10
-#define MODBUS_RTU_FUN_ER   0x80
 #define REALTIME_METER_READ_COUNTER 10
 
 
@@ -45,6 +39,7 @@ typedef struct {
   u16_t payload[];
 } modbus_wr2_t;
 
+#pragma pack(1)
 typedef struct {
   u8_t addr;
   u8_t fun;
@@ -61,6 +56,7 @@ typedef struct {
   u16_t totalh;
   u16_t crc16;
 } modbus_wr_t;
+#pragma pack()
 
 typedef struct {
   u8_t addr;
@@ -70,6 +66,7 @@ typedef struct {
   u16_t crc16;
 } modbus_wr_response_t;
 
+#pragma pack(1)
 typedef struct {
   u8_t addr;
   u8_t fun;
@@ -77,6 +74,7 @@ typedef struct {
   u16_t num;
   u16_t crc16;
 } modbus_rd_t;
+#pragma pack()
 
 typedef struct {
   u8_t addr;
@@ -123,7 +121,7 @@ static u8_t invterAdd(void *load, void *val);
 static u8_t invterRemove(void *load, void *val);
 static void deviceDel(Device_t *dev);
 static void anti_relex_data_process(void);
-static void meter_read(void);
+void meter_read(void);
 static void realtime_meter_read(void);
 
 static const AntiReflux_t *deviceTab[] = {
@@ -157,9 +155,8 @@ void proc_anti_reflux_task(s32_t taskId)
         break;
         case ANTI_REFLUX_TIMER_ID:
             APP_DEBUG("anti reflux time running\r\n");
-            checkDeviceOnline();
-            //实时读取电表数据
-            //realtime_meter_read();
+            //checkDeviceOnline();
+            realtime_meter_read();
         break;
         }   
     }
@@ -177,45 +174,134 @@ static void anti_relex_data_process(void)
     static Device_t *currentDevice = NULL;
     static DeviceCmd_t *currentCmd = NULL;
     u16 reg_addr;
-    //s_device->buf->payload        //设备uart接收到的数据
+        
     APP_DEBUG("MODBUS_DATA_GET\r\n");
-    currentDevice = list_nextData(&DeviceList, currentDevice);    // 实时获取列表中需要执行指令的设备节点
-    if(NULL != currentDevice){
-        currentCmd = list_nextData(&currentDevice->cmdList, currentCmd);  // 找到当前执行设备需要执行的指令
-        if(NULL != currentCmd){
-            APP_DEBUG("get device data cmd success\r\n");
-            print_buf(currentCmd->cmd.payload,sizeof(currentCmd->cmd.payload));
-            //将接收到的设备数据映射为modbus rtu协议结构体
-            modbus_wr2_t *modbus_buf=(modbus_wr2_t *)currentCmd->cmd.payload;
-            
+    print_buf(antibuf.payload,antibuf.lenght);         
+    modbus_wr2_t *modbus_buf=(modbus_wr2_t *)antibuf.payload;
+    APP_DEBUG("modbus_buf->fun=%d modbus_buf->addr=%d \r\n",modbus_buf->fun,modbus_buf->addr);
+
+    modbus_rd_response_t *meter_rec_buf=(modbus_rd_response_t *)antibuf.payload;
+    u8 *send_buf=memory_apply(25);
+    r_memset(send_buf,'\0',25);
+    modbus_wr_t *anti_send_buf=(modbus_wr_t *)send_buf;
+    APP_DEBUG("meter_rec_buf->fun=%d meter_rec_buf->addr=%d meter_rec_buf->bytes=%d \r\n",meter_rec_buf->fun,meter_rec_buf->addr,meter_rec_buf->bytes);
+
+    //send_buf =(u8 *)anti_send_buf+7;
+    //antibuf.payload =(u8 *)meter_rec_buf+3;
+    //r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //得到电表数据
+    r_memcpy(&anti_send_buf->bytes+1,&meter_rec_buf->bytes+1,meter_rec_buf->bytes);
+
+    anti_send_buf->addr=device_addr;          
+    anti_send_buf->fun=MODBUS_RTU_FUN_WR;
+    anti_send_buf->st_addr=ENDIAN_BIG_LITTLE_16(ANTI_REFLUX_REG_ADDR);
+    anti_send_buf->num= ENDIAN_BIG_LITTLE_16(8);
+    anti_send_buf->bytes=meter_rec_buf->bytes;
+    anti_send_buf->crc16=crc16_standard(CRC_RTU,(u8_t *)anti_send_buf,sizeof(modbus_wr_t)-sizeof(anti_send_buf->crc16));
+    Uart_write((u8_t *)send_buf, sizeof(modbus_wr_t));
+    
+    APP_DEBUG("send anti reflux data\r\n");
+    print_buf(send_buf,25);
+    memory_release(send_buf);
+
+}
+
+ /*          
             if((modbus_buf->fun & MODBUS_RTU_FUN_ER) == MODBUS_RTU_FUN_ER){
-                //处理异常回复
+                //收到异常指令
             }else{
-                //处理有效数据
+                
                 if(modbus_buf->fun==MODBUS_RTU_FUN_RD){
-                    //将接收到数据映射到电表回复结构体
-                    modbus_rd_response_t *meter_rec_buf=(modbus_rd_response_t *)currentCmd->cmd.payload;
-                    //将电表数据发转发给设备
-                    modbus_wr_t *anti_send_buf=NULL;
+                    modbus_rd_response_t *meter_rec_buf=(modbus_rd_response_t *)antibuf.payload;
+                    APP_DEBUG("meter_rec_buf->fun=%d meter_rec_buf->addr=%d meter_rec_buf->bytes=%d \r\n",meter_rec_buf->fun,meter_rec_buf->addr,meter_rec_buf->bytes);
+                    //u8 send_buf[25]={0};
+                    u8 *send_buf=fibo_malloc(25);
+                    modbus_wr_t *anti_send_buf=(modbus_wr_t *)send_buf;
                     if(modbus_buf->addr==METER_ADDR && meter_rec_buf->bytes>=2 && meter_rec_buf->bytes<=16){
-                        //处理电表数据
-                        anti_send_buf+=7;
-                        meter_rec_buf+=3;
-                        r_memcpy(anti_send_buf,meter_rec_buf,meter_rec_buf->bytes);
-                        anti_send_buf->addr=device_addr;          //后续需根据多设备轮询
+                        
+                        APP_DEBUG("get meter data success\r\n");
+                        //print_buf(antibuf.payload,sizeof(antibuf.payload));
+
+                        send_buf +=7;
+                        //meter_rec_buf+=3;
+                        antibuf.payload +=3;
+                        r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //得到电表数据
+                        anti_send_buf->addr=device_addr;          
                         anti_send_buf->fun=MODBUS_RTU_FUN_WR;
                         anti_send_buf->st_addr=ENDIAN_BIG_LITTLE_16(ANTI_REFLUX_REG_ADDR);
                         anti_send_buf->num= ENDIAN_BIG_LITTLE_16(8);
                         anti_send_buf->bytes=meter_rec_buf->bytes;
                         anti_send_buf->crc16=crc16_standard(CRC_RTU,(u8_t *)anti_send_buf,sizeof(modbus_wr_t)-sizeof(anti_send_buf->crc16));
-                        Uart_write((u8_t *)anti_send_buf, sizeof(modbus_wr_t));
+                        Uart_write((u8_t *)send_buf, sizeof(modbus_wr_t));
+                        
+                        APP_DEBUG("send anti reflux data\r\n");
+                        print_buf(send_buf,sizeof(send_buf));
+                        fibo_free(send_buf);
                     }
                 }
                 if(modbus_buf->fun==MODBUS_RTU_FUN_WR){
-                    //得到寄存器开始地址
+                    
                     reg_addr=ENDIAN_BIG_LITTLE_16(modbus_buf->st_addr);
                     if(reg_addr==ANTI_REFLUX_REG_ADDR){
-                        //处理设备回复给逆变器数据
+                        //处理逆变器接收数据
+                        
+                    }
+                }
+            }   //else
+ //       }   //if(NULL != currentCmd)
+ //   }   //if(NULL != currentDevice)
+}   //static void anti_relex_data_process(void)
+*/
+
+/*
+static void anti_relex_data_process(void)
+{
+    static Device_t *currentDevice = NULL;
+    static DeviceCmd_t *currentCmd = NULL;
+    u16 reg_addr;
+    //s_device->buf->payload        
+    APP_DEBUG("MODBUS_DATA_GET\r\n");
+    currentDevice = list_nextData(&DeviceList, currentDevice);      //得到设备节点
+    if(NULL != currentDevice){
+        currentCmd = list_nextData(&currentDevice->cmdList, currentCmd);    //得到当前设备相应的指令  
+        if(NULL != currentCmd){
+            APP_DEBUG("get device data cmd success\r\n");
+            print_buf(currentCmd->cmd.payload,sizeof(currentCmd->cmd.payload));
+            
+            modbus_wr2_t *modbus_buf=(modbus_wr2_t *)currentCmd->cmd.payload;
+            
+            if((modbus_buf->fun & MODBUS_RTU_FUN_ER) == MODBUS_RTU_FUN_ER){
+                //收到异常指令
+            }else{
+                
+                if(modbus_buf->fun==MODBUS_RTU_FUN_RD){
+                    
+                    modbus_rd_response_t *meter_rec_buf=(modbus_rd_response_t *)currentCmd->cmd.payload;
+                    
+                    //u8 send_buf[25]={0};
+                    u8 *send_buf=fibo_malloc(25);
+                    modbus_wr_t *anti_send_buf=(modbus_wr_t *)send_buf;
+                    if(modbus_buf->addr==METER_ADDR && meter_rec_buf->bytes>=2 && meter_rec_buf->bytes<=16){
+                        
+                        APP_DEBUG("get meter data success\r\n");
+                        send_buf +=7;
+                        //meter_rec_buf+=3;
+                        currentCmd->cmd.payload +=3;
+                        r_memcpy(send_buf,currentCmd->cmd.payload,meter_rec_buf->bytes);    //得到电表数据
+                        anti_send_buf->addr=device_addr;          
+                        anti_send_buf->fun=MODBUS_RTU_FUN_WR;
+                        anti_send_buf->st_addr=ENDIAN_BIG_LITTLE_16(ANTI_REFLUX_REG_ADDR);
+                        anti_send_buf->num= ENDIAN_BIG_LITTLE_16(8);
+                        anti_send_buf->bytes=meter_rec_buf->bytes;
+                        anti_send_buf->crc16=crc16_standard(CRC_RTU,(u8_t *)anti_send_buf,sizeof(modbus_wr_t)-sizeof(anti_send_buf->crc16));
+                        Uart_write((u8_t *)send_buf, sizeof(modbus_wr_t));
+                        fibo_free(send_buf);
+                    }
+                }
+                if(modbus_buf->fun==MODBUS_RTU_FUN_WR){
+                    
+                    reg_addr=ENDIAN_BIG_LITTLE_16(modbus_buf->st_addr);
+                    if(reg_addr==ANTI_REFLUX_REG_ADDR){
+                        //处理逆变器接收数据
                         
                     }
                 }
@@ -223,24 +309,25 @@ static void anti_relex_data_process(void)
         }   //if(NULL != currentCmd)
     }   //if(NULL != currentDevice)
 }   //static void anti_relex_data_process(void)
-
+*/
 /*******************************************************************************            
 * introduce:        
 * parameter:                       
 * return:                 
 * author:           Luee                                                    
 *******************************************************************************/
-static void meter_read(void)
+void meter_read(void)
 {
-  modbus_rd_t *meter_read_t={0};
+    u8 meter_buf[8]={0};
+    modbus_rd_t *meter_read_t=(modbus_rd_t *) meter_buf;
 
-  meter_read_t->addr=METER_ADDR;
-  meter_read_t->fun=0x03;
-  meter_read_t->st_addr=ENDIAN_BIG_LITTLE_16(METER_REG_ADDR);
-  meter_read_t->num=ENDIAN_BIG_LITTLE_16(8);
-  meter_read_t->crc16=crc16_standard(CRC_RTU, (u8_t *)meter_read_t, sizeof(modbus_rd_t) - sizeof(meter_read_t->crc16));
+    meter_read_t->addr=METER_ADDR;
+    meter_read_t->fun=0x03;
+    meter_read_t->st_addr=ENDIAN_BIG_LITTLE_16(METER_REG_ADDR);
+    meter_read_t->num=ENDIAN_BIG_LITTLE_16(8);
+    meter_read_t->crc16=crc16_standard(CRC_RTU, (u8_t *)meter_read_t, sizeof(modbus_rd_t) - sizeof(meter_read_t->crc16));
 
-  Uart_write((u8_t *)meter_read_t, sizeof(modbus_rd_t));
+    Uart_write(meter_buf, sizeof(modbus_rd_t));
 }
 
 /*******************************************************************************            
@@ -270,8 +357,8 @@ static void realtime_meter_read(void)
 static u8_t checkDeviceOnline(void)
 {
     static int onlineDeviceCount = 0;
-    //在线设备不等于0,
-    //有电表
+    //鍦ㄧ嚎璁惧涓嶇瓑浜�0,
+    //鏈夌數琛�
     if (onlineDeviceList.count !=  onlineDeviceCount 
         && (MeterDevice.head != null)){
         onlineDeviceCount = 0;
@@ -294,7 +381,7 @@ static u8_t checkDeviceOnline(void)
                     if (deviceTab[i]->tab.code == online->code)
                     {
                         //if (0x0200 == (online->code & 0x0200))
-                        if (0x0212 == (online->code))           //三相电表
+                        if (0x0212 == (online->code))           //涓夌浉鐢佃〃
                         {
                             InvertList_t *deviceList;
                             Device_t *invsterDev = null;
@@ -497,16 +584,17 @@ u8_t modbusDataCheck(void *load, void *changeData)
 *******************************************************************************/
 static void Anti_reflux_init(void)
 {
+    antibuf.payload=NULL;
     meterPower.state = 0;
     list_init(&invertDevice);
 }
 
 int float2int(u32_t data)
 {
-#if 0  //閺傝纭� 1
-    s8_t S;     //缁楋箑褰�
-    s8_t  E;    //閹稿洦鏆�
-    u32_t F;    //鐏忓繑鏆熼幑顔荤秴
+#if 0  //闁哄倽顫夌涵锟� 1
+    s8_t S;     //缂佹绠戣ぐ锟�
+    s8_t  E;    //闁圭ǹ娲﹂弳锟�
+    u32_t F;    //閻忓繐绻戦弳鐔煎箲椤旇崵绉�
     u32_t carry;
     int val;
 
@@ -536,7 +624,7 @@ int float2int(u32_t data)
     }
 
     return val*S;
-#elif  1 //閺傝纭� 娴滐拷
+#elif  1 //闁哄倽顫夌涵锟� 濞存粣鎷�
 
     int val;
     float f;

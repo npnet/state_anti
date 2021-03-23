@@ -65,6 +65,8 @@ ST_UARTDCB *DeviceIO_cfgGet(void);
 extern s8_t g_UARTIO_AT_enable;
 
 extern DeviceInfo_t *s_device;
+extern Buffer_t antibuf;
+extern Buffer_t rcveBuf;
 
 #endif //__DEVICE_IO_
 /******************************************************************************/

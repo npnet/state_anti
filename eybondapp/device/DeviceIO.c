@@ -477,7 +477,8 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
     r_memset(rcveBuf.payload, '\0', SERIAL_RX_BUFFER_LEN);
     r_memcpy(rcveBuf.payload, data, len);   //得到uart 数据
 
-    if(rcveBuf.payload[0]==METER_ADDR){
+    //if(rcveBuf.payload[0]==METER_ADDR){
+      if(1){
         if (antibuf.payload != null) {
           memory_release(antibuf.payload);
           antibuf.lenght = 0;

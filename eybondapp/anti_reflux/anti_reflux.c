@@ -146,6 +146,11 @@ void proc_anti_reflux_task(s32_t taskId)
 
     APP_DEBUG("anti-reflux task run!!\r\n");
     Anti_reflux_init();
+
+    //while(1){
+    //    fibo_taskSleep(500);
+    //}
+
     while(1){
         //fibo_taskSleep(500);
         fibo_queue_get(ANTI_REFLUX_TASK, (void *)&msg, 0);
@@ -164,7 +169,7 @@ void proc_anti_reflux_task(s32_t taskId)
 }
 
 /*******************************************************************************            
-* introduce:        
+* introduce:   闁棗褰夋潻鏂挎礀閺佺増宓佹径鍕倞     
 * parameter:                       
 * return:                 
 * author:           Luee                                                    
@@ -174,6 +179,17 @@ static void anti_relex_data_process(void)
     static Device_t *currentDevice = NULL;
     static DeviceCmd_t *currentCmd = NULL;
     u16 reg_addr;
+
+    //瀵版鍩岄崷銊у殠鐠佹儳顦崷鏉挎絻
+    if(antibuf.payload[0]!=METER_ADDR){
+        device_addr=antibuf.payload[0];        
+        return;
+    }
+
+    //鐠佹儳顦崷銊у殠閹靛秴褰傞柅浣烘暩鐞涖劍鏆熼幑锟�
+    //if(onlineDeviceList.count==0){
+    //    return;
+    //}
         
     APP_DEBUG("MODBUS_DATA_GET\r\n");
     print_buf(antibuf.payload,antibuf.lenght);         
@@ -188,7 +204,7 @@ static void anti_relex_data_process(void)
 
     //send_buf =(u8 *)anti_send_buf+7;
     //antibuf.payload =(u8 *)meter_rec_buf+3;
-    //r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //得到电表数据
+    //r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //鐎电増顨呴崺宀勬偨娴ｅ啨鈧啴寮悧鍫濈ウ
     r_memcpy(&anti_send_buf->bytes+1,&meter_rec_buf->bytes+1,meter_rec_buf->bytes);
 
     anti_send_buf->addr=device_addr;          
@@ -207,7 +223,7 @@ static void anti_relex_data_process(void)
 
  /*          
             if((modbus_buf->fun & MODBUS_RTU_FUN_ER) == MODBUS_RTU_FUN_ER){
-                //收到异常指令
+                //闁衡偓鐠哄搫鐓傜€殿喖鍊搁悥鍫曞箰閸ワ附濮�
             }else{
                 
                 if(modbus_buf->fun==MODBUS_RTU_FUN_RD){
@@ -224,7 +240,7 @@ static void anti_relex_data_process(void)
                         send_buf +=7;
                         //meter_rec_buf+=3;
                         antibuf.payload +=3;
-                        r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //得到电表数据
+                        r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //鐎电増顨呴崺宀勬偨娴ｅ啨鈧啴寮悧鍫濈ウ
                         anti_send_buf->addr=device_addr;          
                         anti_send_buf->fun=MODBUS_RTU_FUN_WR;
                         anti_send_buf->st_addr=ENDIAN_BIG_LITTLE_16(ANTI_REFLUX_REG_ADDR);
@@ -242,7 +258,7 @@ static void anti_relex_data_process(void)
                     
                     reg_addr=ENDIAN_BIG_LITTLE_16(modbus_buf->st_addr);
                     if(reg_addr==ANTI_REFLUX_REG_ADDR){
-                        //处理逆变器接收数据
+                        //濠㈣泛瀚幃濠囨焻閸℃缍侀柛锝冨妽鐢挳寮ㄩ懜鍨闁圭櫢鎷�
                         
                     }
                 }
@@ -260,9 +276,9 @@ static void anti_relex_data_process(void)
     u16 reg_addr;
     //s_device->buf->payload        
     APP_DEBUG("MODBUS_DATA_GET\r\n");
-    currentDevice = list_nextData(&DeviceList, currentDevice);      //得到设备节点
+    currentDevice = list_nextData(&DeviceList, currentDevice);      //鐎电増顨呴崺宀€鎷嬮幆褜妲甸柤鍝勫€婚崑锟�
     if(NULL != currentDevice){
-        currentCmd = list_nextData(&currentDevice->cmdList, currentCmd);    //得到当前设备相应的指令  
+        currentCmd = list_nextData(&currentDevice->cmdList, currentCmd);    //鐎电増顨呴崺宀冦亹閹惧啿顤呴悹浣瑰劤椤︻剟鎯勭粙璺ㄥ畨闁汇劌瀚€垫碍绂掗敓锟�  
         if(NULL != currentCmd){
             APP_DEBUG("get device data cmd success\r\n");
             print_buf(currentCmd->cmd.payload,sizeof(currentCmd->cmd.payload));
@@ -270,7 +286,7 @@ static void anti_relex_data_process(void)
             modbus_wr2_t *modbus_buf=(modbus_wr2_t *)currentCmd->cmd.payload;
             
             if((modbus_buf->fun & MODBUS_RTU_FUN_ER) == MODBUS_RTU_FUN_ER){
-                //收到异常指令
+                //闁衡偓鐠哄搫鐓傜€殿喖鍊搁悥鍫曞箰閸ワ附濮�
             }else{
                 
                 if(modbus_buf->fun==MODBUS_RTU_FUN_RD){
@@ -286,7 +302,7 @@ static void anti_relex_data_process(void)
                         send_buf +=7;
                         //meter_rec_buf+=3;
                         currentCmd->cmd.payload +=3;
-                        r_memcpy(send_buf,currentCmd->cmd.payload,meter_rec_buf->bytes);    //得到电表数据
+                        r_memcpy(send_buf,currentCmd->cmd.payload,meter_rec_buf->bytes);    //鐎电増顨呴崺宀勬偨娴ｅ啨鈧啴寮悧鍫濈ウ
                         anti_send_buf->addr=device_addr;          
                         anti_send_buf->fun=MODBUS_RTU_FUN_WR;
                         anti_send_buf->st_addr=ENDIAN_BIG_LITTLE_16(ANTI_REFLUX_REG_ADDR);
@@ -301,7 +317,7 @@ static void anti_relex_data_process(void)
                     
                     reg_addr=ENDIAN_BIG_LITTLE_16(modbus_buf->st_addr);
                     if(reg_addr==ANTI_REFLUX_REG_ADDR){
-                        //处理逆变器接收数据
+                        //濠㈣泛瀚幃濠囨焻閸℃缍侀柛锝冨妽鐢挳寮ㄩ懜鍨闁圭櫢鎷�
                         
                     }
                 }
@@ -342,7 +358,7 @@ static void realtime_meter_read(void)
 
     if(counter)
         counter--;
-    if(counter==0){
+    if(counter==0 && onlineDeviceList.count!=0){
         counter=REALTIME_METER_READ_COUNTER;
         meter_read();
     }
@@ -357,8 +373,8 @@ static void realtime_meter_read(void)
 static u8_t checkDeviceOnline(void)
 {
     static int onlineDeviceCount = 0;
-    //鍦ㄧ嚎璁惧涓嶇瓑浜�0,
-    //鏈夌數琛�
+    //闂侀潻璐熼崝搴ㄥ吹鎼达絾濯奸柟顖嗗本校婵炴垶鎸哥粔鍫曟偤閹寸偟顩查柨鐕傛嫹0,
+    //闂佸搫鐗嗛ˇ閬嶅极閸濄儲鍋橀柨鐕傛嫹
     if (onlineDeviceList.count !=  onlineDeviceCount 
         && (MeterDevice.head != null)){
         onlineDeviceCount = 0;
@@ -381,7 +397,7 @@ static u8_t checkDeviceOnline(void)
                     if (deviceTab[i]->tab.code == online->code)
                     {
                         //if (0x0200 == (online->code & 0x0200))
-                        if (0x0212 == (online->code))           //涓夌浉鐢佃〃
+                        if (0x0212 == (online->code))           //婵炴垶鎸搁ˇ鍗灻规径鎰仺濞达絽鍟ㄩ埀顒婃嫹
                         {
                             InvertList_t *deviceList;
                             Device_t *invsterDev = null;
@@ -591,10 +607,10 @@ static void Anti_reflux_init(void)
 
 int float2int(u32_t data)
 {
-#if 0  //闁哄倽顫夌涵锟� 1
-    s8_t S;     //缂佹绠戣ぐ锟�
-    s8_t  E;    //闁圭ǹ娲﹂弳锟�
-    u32_t F;    //閻忓繐绻戦弳鐔煎箲椤旇崵绉�
+#if 0  //闂傚倷绀侀幖顐﹀磹娴犲缍栧璺烘湰閸忔粓鏌ㄩ悤鍌涘 1
+    s8_t S;     //缂傚倸鍊烽悞锕傘€冮幇顔句笉闁硅揪绲绘禍褰掓煥閻曞倹瀚�
+    s8_t  E;    //闂傚倷绀佸﹢杈ㄧ仚濠电偠顕滅粻鎾愁嚕閹惰姤鏅搁柨鐕傛嫹
+    u32_t F;    //闂備浇顕х换鎰崲閹邦喗宕查柟杈剧畱濮规煡鏌ｉ弮鍌氬付缂佺姴寮堕妵鍕籍閸パ冩優缂備礁顧€閹凤拷
     u32_t carry;
     int val;
 
@@ -624,7 +640,7 @@ int float2int(u32_t data)
     }
 
     return val*S;
-#elif  1 //闁哄倽顫夌涵锟� 濞存粣鎷�
+#elif  1 //闂傚倷绀侀幖顐﹀磹娴犲缍栧璺烘湰閸忔粓鏌ㄩ悤鍌涘 婵犵數鍋涢悺銊у垝閿濆绠柨鐕傛嫹
 
     int val;
     float f;

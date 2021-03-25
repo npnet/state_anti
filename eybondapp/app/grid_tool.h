@@ -18,9 +18,7 @@
 #include "eybpub_data_collector_parameter_table.h"
 #include "eybpub_parameter_number_and_value.h"
 
-//set will init para
-//#define PARA_INIT   1
-//#define SSLREC_M26  1
+#define GETANTIBUF_FROMACK 1
 
 typedef signed long long   s64;                            
 typedef signed long  s32;

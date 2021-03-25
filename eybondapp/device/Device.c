@@ -262,7 +262,7 @@ void Device_add(Device_t *device) {
 *******************************************************************************/
 void Device_inset(Device_t *device) {
   APP_DEBUG("Device_inset\r\n");
-  device->lock = DEVICE_UNLOCK;   //Luee
+  //device->lock = DEVICE_UNLOCK;   //Luee
   list_topInsert(&DeviceList, device);
   device->lock = DEVICE_UNLOCK;
   currentStep = 0;
@@ -358,8 +358,8 @@ static void deviceCmdSend(void) {
         if (currentDevice->cfg != null) {
           APP_DEBUG("currentDevice->cfg is %ld!!\r\n", currentDevice->cfg->baudrate);
           DeviceIO_init(currentDevice->cfg);
-          //watiTime = 1;
-          watiTime = 2;   //Luee
+          watiTime = 1;
+          //watiTime = 2;   //Luee
         } else if (DeviceIO_cfgGet() == null) {
           APP_DEBUG("Uart No Init!!\r\n");
           log_save("Uart No Init!!");

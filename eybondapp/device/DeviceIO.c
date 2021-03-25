@@ -449,6 +449,28 @@ void DeviceIO_init(ST_UARTDCB *cfg) {
   * @param  None
   * @retval None
 *******************************************************************************/
+void get_antibuf(u8_t *data,u16_t len)
+{
+  if (antibuf.payload != null) {
+          memory_release(antibuf.payload);
+          antibuf.lenght = 0;
+          antibuf.size = 0;
+        }
+
+        antibuf.size = len;
+        antibuf.lenght = len;
+        antibuf.payload=memory_apply(len);
+        r_memset(antibuf.payload,'\0',len);
+        r_memcpy(antibuf.payload, data, len);
+        Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_DATA_PROCESS, 0, 0);
+}
+
+/*******************************************************************************
+  * @brief
+  * @note   None
+  * @param  None
+  * @retval None
+*******************************************************************************/
 void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *arg) {
   if (uart_port == DEVICE_IO_PORT) {
     if (len > SERIAL_RX_BUFFER_LEN || len == 0) {
@@ -478,29 +500,11 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
     r_memcpy(rcveBuf.payload, data, len);   //得到uart 数据
 
     //if(rcveBuf.payload[0]==METER_ADDR){
-      if(1){
-        if (antibuf.payload != null) {
-          memory_release(antibuf.payload);
-          antibuf.lenght = 0;
-          antibuf.size = 0;
-        }
+#ifndef GETANTIBUF_FROMACK
+      get_antibuf(data,len);
+#endif
 
-        antibuf.size = len;
-        antibuf.lenght = len;
-        antibuf.payload=memory_apply(len);
-        r_memset(antibuf.payload,'\0',len);
-        r_memcpy(antibuf.payload, data, len);
-        Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_DATA_PROCESS, 0, 0);
-    }
-
-    //Uart_write((u8_t *)rcveBuf.payload, len);
-
-    //fibo_taskSleep(1000);
-    //meter_read();
-    //Uart_write((u8 *)"OK", 2);
- // }
-//}
-
+   
     if (r_strncmp(CUSTOMER, "0A5", 3) == 0) {
       if (r_strncmp((char *)rcveBuf.payload, "AT+", 3) == 0 && g_UARTIO_AT_enable == 0) { // 获取到硕日私有AT查询指令
         char strTemp[32] = {0};

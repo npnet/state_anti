@@ -62,6 +62,8 @@ void    DeviceIO_unlock(void);
 DeviceInfo_t *DeviceIO_lockState(void);
 void  Uart_write(u8_t *data, u16_t len);
 ST_UARTDCB *DeviceIO_cfgGet(void);
+void get_antibuf(u8_t *data,u16_t len);
+
 extern s8_t g_UARTIO_AT_enable;
 
 extern DeviceInfo_t *s_device;

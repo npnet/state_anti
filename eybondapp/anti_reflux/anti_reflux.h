@@ -42,7 +42,6 @@ typedef struct
     AntiReflux_t *aux;
 }AntiRefluxDeviceInfo_t;
 
-void proc_antiReflux_task(s32_t taskId);
 u8_t modbusDataCheck(void *load, void *changeData);
 int float2int(u32_t data);
 void meter_read(void);

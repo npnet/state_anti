@@ -557,8 +557,8 @@ static u8_t devtrans(ESP_t *esp) {
   dev = list_nodeApply(sizeof(Device_t));
   cmd = list_nodeApply(sizeof(DeviceCmd_t));
 
-  cmd->waitTime = 1500;     // 1500=1.5 sec
-//  cmd->waitTime = 2000;
+  //cmd->waitTime = 1500;     // 1500=1.5 sec
+  cmd->waitTime = 3000;       //Luee
   cmd->state = 0;
 //  cmd->ack.size = 0;        // mike 20200926
 //  cmd->ack.payload = null;  // 指令返回数据初始化

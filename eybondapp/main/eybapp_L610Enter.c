@@ -277,7 +277,7 @@ void * appimg_enter(void *param) {
   //fibo_taskSleep(100);
   fibo_thread_create_ex(proc_commonServer_task, "Common Server TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &com_thread_id);
   fibo_taskSleep(100);
-  fibo_thread_create_ex(proc_anti_reflux_task, "ANTI RELFUX TASK",  1024*8*3, NULL, OSI_PRIORITY_LOW,      &anti_thread_id);
+  fibo_thread_create_ex(proc_anti_reflux_task, "ANTI RELFUX TASK",  1024*8*4, NULL, OSI_PRIORITY_LOW,      &anti_thread_id);
   fibo_taskSleep(100);
   APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X UPd %X JLFota %X COM %X ANTI %X\r\n", \
     net_thread_id, app_thread_id, dev_thread_id, eyb_thread_id, ali_thread_id, upd_thread_id, fota_thread_id, com_thread_id,anti_thread_id);

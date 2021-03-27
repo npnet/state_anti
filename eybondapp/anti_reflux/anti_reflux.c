@@ -26,6 +26,7 @@
 #include "eybapp_appTask.h"
 
 #define REALTIME_METER_READ_COUNTER 10
+#define METER_OVERTIME  60          //30S
 
 
 static u8 device_addr=1;
@@ -114,6 +115,8 @@ static buf_t anti_ack_buf={0};
 static u8 online_dev_count=0;
 static u8 addr_index=0;
 static u8 online_dev_addr_tab[64];
+static u8 meter_data_sent=0;      //=1 meter data have sent
+static u8 meter_overtime=0;
 
 
 static void Anti_reflux_init(void);
@@ -191,7 +194,7 @@ static u8_t anti_ack(Device_t *dev)
     cmd = (DeviceCmd_t *)dev->cmdList.node->payload;
     APP_DEBUG("anti ack buf:\r\n");
     APP_DEBUG("cmd->ack.payload[0]=%d",cmd->ack.payload[0]);
-    print_buf(cmd->ack.payload, cmd->ack.lenght);
+    //print_buf(cmd->ack.payload, cmd->ack.lenght);
     
     if(cmd->ack.payload[0]==METER_ADDR){
         //收到电表回复
@@ -221,10 +224,10 @@ static u8_t anti_trans(u8 *data_ptr ,u8 data_len)
     dev = list_nodeApply(sizeof(Device_t));
     cmd = list_nodeApply(sizeof(DeviceCmd_t));
 
-    cmd->waitTime = 2000;       //1500;     // 1500=1.5 sec
+    cmd->waitTime = 1500;     // 1500=1.5 sec
     cmd->state = 0;
 
-    cmd->ack.size = DEVICE_ACK_SIZE;
+    cmd->ack.size = 64;     //DEVICE_ACK_SIZE;
     cmd->ack.payload = memory_apply(cmd->ack.size);
     cmd->ack.lenght = 0;
     cmd->cmd.size = data_len;
@@ -233,8 +236,6 @@ static u8_t anti_trans(u8 *data_ptr ,u8 data_len)
     r_memcpy(cmd->cmd.payload, data_ptr, cmd->cmd.size);
 
     APP_PRINT("cmd.payload:");
-    //out_put_buffer((char *)cmd->cmd.payload,cmd->cmd.size);
-    //APP_PRINT("\r\n");
     print_buf(cmd->cmd.payload,cmd->cmd.size);
 
     dev->cfg = null;  // 配置一个执行该指令的设备
@@ -245,6 +246,7 @@ static u8_t anti_trans(u8 *data_ptr ,u8 data_len)
 
     list_init(&dev->cmdList);
     list_bottomInsert(&dev->cmdList, cmd);
+    //list_topInsert(&dev->cmdList, cmd);
    // Device_inset(dev);    // 将需要执行指令的设备放入Devicelist，交由deviceCmdSend处理
     Device_add(dev);
     return 1;
@@ -315,7 +317,7 @@ static void anti_relex_data_process(void)
     }
 	       
     APP_DEBUG("MODBUS_DATA_GET\r\n");
-    print_buf(antibuf.payload,antibuf.lenght);         
+    //print_buf(antibuf.payload,antibuf.lenght);         
     modbus_wr2_t *modbus_buf=(modbus_wr2_t *)antibuf.payload;
     APP_DEBUG("modbus_buf->fun=%d modbus_buf->addr=%d \r\n",modbus_buf->fun,modbus_buf->addr);
 
@@ -338,6 +340,7 @@ static void anti_relex_data_process(void)
     anti_send_buf->crc16=crc16_standard(CRC_RTU,(u8_t *)anti_send_buf,sizeof(modbus_wr_t)-sizeof(anti_send_buf->crc16));
     //Uart_write((u8_t *)send_buf, sizeof(modbus_wr_t));
     anti_trans((u8_t *)send_buf, sizeof(modbus_wr_t));
+    meter_data_sent=0;              //电表数据已获取成功
     
     APP_DEBUG("send anti reflux data\r\n");
     print_buf(send_buf,25);
@@ -483,8 +486,16 @@ static void realtime_meter_read(void)
 
     if(counter)
         counter--;
-    if(counter==0 && online_dev_count!=0){
+    if(meter_overtime)
+        meter_overtime--;
+    //眲=电表获取超时，重发
+    if(meter_overtime==0){
+        meter_data_sent=0;
+    }
+    if(counter==0 && online_dev_count!=0 && meter_data_sent==0){
         counter=REALTIME_METER_READ_COUNTER;
+        meter_data_sent=1;
+        meter_overtime=METER_OVERTIME;
         meter_read();
     }
 }

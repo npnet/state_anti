@@ -87,6 +87,6 @@ s32_t Eybpub_UT_SendMessage(s32_t destTaskId, u32_t msgId, u32_t param1, u32_t p
   msg.param1 = param1;
   msg.param2 = param2;
 //  if (fibo_queue_space_available(destTaskId))
-  return fibo_queue_put(destTaskId, &msg, 500);
+  return fibo_queue_put(destTaskId, &msg, 1000);    //Luee 超时时间500->1000
 }
 #endif

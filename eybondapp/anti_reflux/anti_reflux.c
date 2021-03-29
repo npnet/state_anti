@@ -185,7 +185,7 @@ void proc_anti_reflux_task(s32_t taskId)
 * return:                 
 * author:           Luee                                                    
 *******************************************************************************/
-//鏀跺埌閫嗗彉鍣ㄦ暟鎹簲绛�
+//閺€璺哄煂闁棗褰夐崳銊︽殶閹诡喖绨茬粵锟�
 static u8_t anti_ack(Device_t *dev)
 {
 
@@ -197,7 +197,7 @@ static u8_t anti_ack(Device_t *dev)
     //print_buf(cmd->ack.payload, cmd->ack.lenght);
     
     if(cmd->ack.payload[0]==METER_ADDR){
-        //鏀跺埌鐢佃〃鍥炲
+        //閺€璺哄煂閻絻銆冮崶鐐差槻
         APP_DEBUG("get meter return");
 #ifdef GETANTIBUF_FROMACK
         get_antibuf(cmd->ack.payload,cmd->ack.lenght); 
@@ -245,22 +245,22 @@ static u8_t anti_trans(u8 *data_ptr ,u8 data_len)
     cmd->ack.lenght = 0;
     cmd->cmd.size = data_len;
     cmd->cmd.lenght = cmd->cmd.size;
-    cmd->cmd.payload = memory_apply(cmd->cmd.size);  // 閲嶆柊鐢宠瀛樻斁杈撳叆鎸囦护鐨勫唴瀛�
+    cmd->cmd.payload = memory_apply(cmd->cmd.size);  // 闁插秵鏌婇悽瀹狀嚞鐎涙ɑ鏂佹潏鎾冲弳閹稿洣鎶ら惃鍕敶鐎涳拷
     r_memcpy(cmd->cmd.payload, data_ptr, cmd->cmd.size);
 
     APP_PRINT("cmd.payload:");
     print_buf(cmd->cmd.payload,cmd->cmd.size);
 
-    dev->cfg = null;  // 閰嶇疆涓€涓墽琛岃鎸囦护鐨勮澶�
-    dev->callBack = anti_ack;  // 璁剧疆閫忎紶璁惧闇€瑕佺殑杩斿洖鍑芥暟
-   // dev->callBack = NULL;  // 璁剧疆閫忎紶璁惧闇€瑕佺殑杩斿洖鍑芥暟
-    //dev->explain = esp;   // 璁惧鎼哄甫鎸囦护鑺傜偣
+    dev->cfg = null;  // 闁板秶鐤嗘稉鈧稉顏呭⒔鐞涘矁顕氶幐鍥︽姢閻ㄥ嫯顔曟径锟�
+    dev->callBack = anti_ack;  // 鐠佸墽鐤嗛柅蹇庣炊鐠佹儳顦棁鈧憰浣烘畱鏉╂柨娲栭崙鑺ユ殶
+   // dev->callBack = NULL;  // 鐠佸墽鐤嗛柅蹇庣炊鐠佹儳顦棁鈧憰浣烘畱鏉╂柨娲栭崙鑺ユ殶
+    //dev->explain = esp;   // 鐠佹儳顦幖鍝勭敨閹稿洣鎶ら懞鍌滃仯
     dev->type = DEVICE_TRANS;
 
     list_init(&dev->cmdList);
     list_bottomInsert(&dev->cmdList, cmd);
     //list_topInsert(&dev->cmdList, cmd);
-   // Device_inset(dev);    // 灏嗛渶瑕佹墽琛屾寚浠ょ殑璁惧鏀惧叆Devicelist锛屼氦鐢眃eviceCmdSend澶勭悊
+   // Device_inset(dev);    // 鐏忓棝娓剁憰浣瑰⒔鐞涘本瀵氭禒銈囨畱鐠佹儳顦弨鎯у弳Devicelist閿涘奔姘﹂悽鐪僥viceCmdSend婢跺嫮鎮�
     Device_add(dev);
     return 1;
 
@@ -302,7 +302,7 @@ static u8 get_online_count(void)
 
 
 /*******************************************************************************            
-* introduce:   闂備緡鍋勫Λ妤勩亹婢跺浜ら柡鍌涘缁€鈧梺杞拌兌婢ф鐣垫担鐟扮窞闁告洦鍘介崐锟�     
+* introduce:   闂傚倷绶￠崑鍕涘Δ鍕╀汗濠㈣泛顑嗘禍銈夋煛閸屾稑顕滅紒鈧埀顒勬⒑鏉炴媽鍏屽褎顨呴悾鍨媴閻熸壆绐為梺鍛婃处閸樹粙宕愰敓锟�     
 * parameter:                       
 * return:                 
 * author:           Luee                                                    
@@ -326,7 +326,7 @@ static void anti_relex_data_process(void)
     else{
         if(++addr_index>=online_dev_count)
             addr_index=0;
-        device_addr=online_dev_addr_tab[addr_index];    //寰楀埌瑕佸彂閫佺殑閫嗗彉鍣ㄥ湴鍧€
+        device_addr=online_dev_addr_tab[addr_index];    //瀵版鍩岀憰浣稿絺闁胶娈戦柅鍡楀綁閸ｃ劌婀撮崸鈧�
     }
 	       
     APP_DEBUG("MODBUS_DATA_GET\r\n");
@@ -342,7 +342,7 @@ static void anti_relex_data_process(void)
 
     //send_buf =(u8 *)anti_send_buf+7;
     //antibuf.payload =(u8 *)meter_rec_buf+3;
-    //r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //闁诲海鏁告晶妤呫€冮崨鏉戞槬鐎光偓閸曨剙浠烘繛杈剧到閸熴劑鍩€椤掆偓閸熸潙顕ｉ锔藉亱闁割偅绻勯妶锟�
+    //r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //闂佽娴烽弫鍛婃櫠濡ゅ懌鈧啴宕ㄩ弶鎴炴К閻庡厜鍋撻柛鏇ㄥ墮娴犵儤绻涙潏鍓у埌闁哥喆鍔戦崺鈧い鎺嗗亾闁哥喐娼欓锝夘敃閿旇棄浜遍梺鍓插亝缁诲嫰濡堕敓锟�
     r_memcpy(&anti_send_buf->bytes+1,&meter_rec_buf->bytes+1,meter_rec_buf->bytes);
 
     anti_send_buf->addr=device_addr;          
@@ -353,7 +353,7 @@ static void anti_relex_data_process(void)
     anti_send_buf->crc16=crc16_standard(CRC_RTU,(u8_t *)anti_send_buf,sizeof(modbus_wr_t)-sizeof(anti_send_buf->crc16));
     //Uart_write((u8_t *)send_buf, sizeof(modbus_wr_t));
     anti_trans((u8_t *)send_buf, sizeof(modbus_wr_t));
-    //meter_data_sent=0;              //鐢佃〃鏁版嵁宸茶幏鍙栨垚鍔�
+    //meter_data_sent=0;              //閻絻銆冮弫鐗堝祦瀹歌尪骞忛崣鏍ㄥ灇閸旓拷
     
     APP_DEBUG("send anti reflux data\r\n");
     memory_release(send_buf);
@@ -362,7 +362,7 @@ static void anti_relex_data_process(void)
 
  /*          
             if((modbus_buf->fun & MODBUS_RTU_FUN_ER) == MODBUS_RTU_FUN_ER){
-                //闂備浇銆€閸嬫捇鎮归崫鍕儓闁绘挸鍊婚埀顒侇問閸犳牠宕愰幖浣瑰亯闁割偅娲栫粻浼存煕閵夘垶妾┑顕嗘嫹
+                //闂傚倷娴囬妴鈧柛瀣崌閹綊宕崟顒佸創闂佺粯鎸搁崐濠氬焵椤掍緡鍟忛柛鐘崇墵瀹曟劙骞栨担鐟颁函闂佸壊鍋呭ú鏍不娴煎瓨鐓曢柕澶樺灦濡绢喖鈹戦鍡樺
             }else{
                 
                 if(modbus_buf->fun==MODBUS_RTU_FUN_RD){
@@ -379,7 +379,7 @@ static void anti_relex_data_process(void)
                         send_buf +=7;
                         //meter_rec_buf+=3;
                         antibuf.payload +=3;
-                        r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //闁诲海鏁告晶妤呫€冮崨鏉戞槬鐎光偓閸曨剙浠烘繛杈剧到閸熴劑鍩€椤掆偓閸熸潙顕ｉ锔藉亱闁割偅绻勯妶锟�
+                        r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //闂佽娴烽弫鍛婃櫠濡ゅ懌鈧啴宕ㄩ弶鎴炴К閻庡厜鍋撻柛鏇ㄥ墮娴犵儤绻涙潏鍓у埌闁哥喆鍔戦崺鈧い鎺嗗亾闁哥喐娼欓锝夘敃閿旇棄浜遍梺鍓插亝缁诲嫰濡堕敓锟�
                         anti_send_buf->addr=device_addr;          
                         anti_send_buf->fun=MODBUS_RTU_FUN_WR;
                         anti_send_buf->st_addr=ENDIAN_BIG_LITTLE_16(ANTI_REFLUX_REG_ADDR);
@@ -397,7 +397,7 @@ static void anti_relex_data_process(void)
                     
                     reg_addr=ENDIAN_BIG_LITTLE_16(modbus_buf->st_addr);
                     if(reg_addr==ANTI_REFLUX_REG_ADDR){
-                        //濠电姰鍨煎▔娑氣偓姘煎櫍楠炲啯绻濋崶銊у姷闂佺硶鍓濋〃鍛礊娓氣偓閺屾盯鏁愰崘銊ヮ瀴闁汇埄鍨遍幐鍐差嚕閵娾晜鍤嬮柛顭戝亝椤斿秹姊洪崷顓燁仧闁瑰嚖鎷�
+                        //婵犵數濮伴崹鐓庘枖濞戞埃鍋撳鐓庢珝妤犵偛鍟换婵嬪炊閵娧冨Х闂備胶纭堕崜婵嬨€冮崨顖滅濞撴埃鍋撻柡灞剧洴閺佹劙宕橀妸銉€撮梺姹囧焺閸ㄩ亶骞愰崘宸殨闁靛ň鏅滈崵瀣煕椤垵浜濇い鏂跨Ч濮婃椽宕烽鐕佷户闂佺懓鍤栭幏锟�
                         
                     }
                 }
@@ -415,9 +415,9 @@ static void anti_relex_data_process(void)
     u16 reg_addr;
     //s_device->buf->payload        
     APP_DEBUG("MODBUS_DATA_GET\r\n");
-    currentDevice = list_nextData(&DeviceList, currentDevice);      //闁诲海鏁告晶妤呫€冮崨鏉戞槬鐎光偓閳ь剟骞忕€ｎ喖绠氱憸婊兾ｉ悽鍛婄厾闁告繂瀚埀顒€顭峰畷鎴︽晸閿燂拷
+    currentDevice = list_nextData(&DeviceList, currentDevice);      //闂佽娴烽弫鍛婃櫠濡ゅ懌鈧啴宕ㄩ弶鎴炴К閻庡厜鍋撻柍褜鍓熼獮蹇曗偓锝庡枛缁犳氨鎲稿⿰鍏撅綁鎮介崨濠勫幘闂佸憡绻傜€氼剟鍩€椤掆偓椤嘲鐣烽幋锔芥櫢闁跨噦鎷�
     if(NULL != currentDevice){
-        currentCmd = list_nextData(&currentDevice->cmdList, currentCmd);    //闁诲海鏁告晶妤呫€冮崨鏉戞槬鐎光偓閸愶缚姹楅梺瑙勫劤閸熷潡路閸涘瓨鍋ｅù锝囨嚀閸斻倖銇勯敂璇插⒋闁诡垰瀚划娆戞崉閵娿儳鏆旈梻浣圭湽閸斿瞼鈧凹鍘鹃埀顒€鐏氱喊宥囩矉閹烘鏅搁柨鐕傛嫹  
+        currentCmd = list_nextData(&currentDevice->cmdList, currentCmd);    //闂佽娴烽弫鍛婃櫠濡ゅ懌鈧啴宕ㄩ弶鎴炴К閻庡厜鍋撻柛鎰剁細濮规姊虹憴鍕姢闁哥喎娼¤矾闁告稑鐡ㄩ崑锝吤归敐鍥ㄥ殌闁告柣鍊栭妵鍕晜鐠囨彃鈷嬮梺璇″灠鐎氼喚鍒掑▎鎴炲磯闁靛ǹ鍎抽弳鏃堟⒒娴ｅ湱婀介柛鏂跨灱閳ь剚鍑归崢楣冨焵椤掆偓閻忔氨鍠婂鍥╃焿闁圭儤顨嗛弲鎼佹煥閻曞倹瀚�  
         if(NULL != currentCmd){
             APP_DEBUG("get device data cmd success\r\n");
             print_buf(currentCmd->cmd.payload,sizeof(currentCmd->cmd.payload));
@@ -425,7 +425,7 @@ static void anti_relex_data_process(void)
             modbus_wr2_t *modbus_buf=(modbus_wr2_t *)currentCmd->cmd.payload;
             
             if((modbus_buf->fun & MODBUS_RTU_FUN_ER) == MODBUS_RTU_FUN_ER){
-                //闂備浇銆€閸嬫捇鎮归崫鍕儓闁绘挸鍊婚埀顒侇問閸犳牠宕愰幖浣瑰亯闁割偅娲栫粻浼存煕閵夘垶妾┑顕嗘嫹
+                //闂傚倷娴囬妴鈧柛瀣崌閹綊宕崟顒佸創闂佺粯鎸搁崐濠氬焵椤掍緡鍟忛柛鐘崇墵瀹曟劙骞栨担鐟颁函闂佸壊鍋呭ú鏍不娴煎瓨鐓曢柕澶樺灦濡绢喖鈹戦鍡樺
             }else{
                 
                 if(modbus_buf->fun==MODBUS_RTU_FUN_RD){
@@ -441,7 +441,7 @@ static void anti_relex_data_process(void)
                         send_buf +=7;
                         //meter_rec_buf+=3;
                         currentCmd->cmd.payload +=3;
-                        r_memcpy(send_buf,currentCmd->cmd.payload,meter_rec_buf->bytes);    //闁诲海鏁告晶妤呫€冮崨鏉戞槬鐎光偓閸曨剙浠烘繛杈剧到閸熴劑鍩€椤掆偓閸熸潙顕ｉ锔藉亱闁割偅绻勯妶锟�
+                        r_memcpy(send_buf,currentCmd->cmd.payload,meter_rec_buf->bytes);    //闂佽娴烽弫鍛婃櫠濡ゅ懌鈧啴宕ㄩ弶鎴炴К閻庡厜鍋撻柛鏇ㄥ墮娴犵儤绻涙潏鍓у埌闁哥喆鍔戦崺鈧い鎺嗗亾闁哥喐娼欓锝夘敃閿旇棄浜遍梺鍓插亝缁诲嫰濡堕敓锟�
                         anti_send_buf->addr=device_addr;          
                         anti_send_buf->fun=MODBUS_RTU_FUN_WR;
                         anti_send_buf->st_addr=ENDIAN_BIG_LITTLE_16(ANTI_REFLUX_REG_ADDR);
@@ -456,7 +456,7 @@ static void anti_relex_data_process(void)
                     
                     reg_addr=ENDIAN_BIG_LITTLE_16(modbus_buf->st_addr);
                     if(reg_addr==ANTI_REFLUX_REG_ADDR){
-                        //濠电姰鍨煎▔娑氣偓姘煎櫍楠炲啯绻濋崶銊у姷闂佺硶鍓濋〃鍛礊娓氣偓閺屾盯鏁愰崘銊ヮ瀴闁汇埄鍨遍幐鍐差嚕閵娾晜鍤嬮柛顭戝亝椤斿秹姊洪崷顓燁仧闁瑰嚖鎷�
+                        //婵犵數濮伴崹鐓庘枖濞戞埃鍋撳鐓庢珝妤犵偛鍟换婵嬪炊閵娧冨Х闂備胶纭堕崜婵嬨€冮崨顖滅濞撴埃鍋撻柡灞剧洴閺佹劙宕橀妸銉€撮梺姹囧焺閸ㄩ亶骞愰崘宸殨闁靛ň鏅滈崵瀣煕椤垵浜濇い鏂跨Ч濮婃椽宕烽鐕佷户闂佺懓鍤栭幏锟�
                         
                     }
                 }
@@ -521,8 +521,8 @@ static void realtime_meter_read(void)
 static u8_t checkDeviceOnline(void)
 {
     static int onlineDeviceCount = 0;
-    //闂傚倷绶氬鑽ゆ嫻閻旂厧绀夐幖娣妼閸氬綊骞栨潏鍓хɑ濠殿垰銈搁弻鐔碱敍閸℃婀伴弽鈥斥攽閻愭潙鐏﹂柟绋挎憸缁棃宕奸弴鐔蜂槐闂佺懓顕崑鐔笺€呴弻銉︾叆闁绘洖鍊圭€氾拷0,
-    //闂傚倷绀侀幖顐︽偋閸℃蛋鍥焼瀹ュ懏鐎梺鍛婄缚閸庢煡宕戝鈧弻銊╂偆閸屾稑顏�
+    //闂傚倸鍊风欢姘焽閼姐倖瀚婚柣鏃傚帶缁€澶愬箹濞ｎ剙濡奸柛姘秺楠炴牗娼忛崜褏蓱婵犳鍨伴妶鎼佸蓟閻旂⒈鏁嶉柛鈩冾殕濠€浼村冀閳ユ枼鏀介柣鎰綑閻忥箓鏌熺粙鎸庢喐缂侇喗妫冨畷濂稿即閻旇渹妲愰梻浣烘嚀椤曨參宕戦悢绗衡偓鍛村蓟閵夛妇鍙嗛梺缁樻礀閸婂湱鈧熬鎷�0,
+    //闂傚倸鍊风粈渚€骞栭锔藉亱闁糕剝铔嬮崶顒佺劶鐎广儱鎳忛悗顒勬⒑閸涘﹦缂氶柛搴㈢叀瀹曟垵顫滈埀顒勫蓟閵娾晜鍋嗛柛灞剧☉椤忥拷
     if (onlineDeviceList.count !=  onlineDeviceCount 
         && (MeterDevice.head != null)){
         onlineDeviceCount = 0;
@@ -545,7 +545,7 @@ static u8_t checkDeviceOnline(void)
                     if (deviceTab[i]->tab.code == online->code)
                     {
                         //if (0x0200 == (online->code & 0x0200))
-                        if (0x0212 == (online->code))           //婵犵數鍋為崹鍫曞箰閹间絸鍥础閻忔槒顫夊鍕箛椤撶偘缂撳┑鐐舵彧缁蹭粙宕妸鈺佺劦妞ゆ帒锕ョ€氾拷
+                        if (0x0212 == (online->code))           //濠电姷鏁搁崑鐐哄垂閸洖绠伴柟闂寸蹈閸ヮ剙纭€闁诲繑妲掗～澶婎嚗閸曨垰绠涙い鎾跺仒缂傛挸鈹戦悙鑸靛涧缂佽弓绮欏畷顖炲Ω閳轰胶鍔﹀銈嗗笒閿曘儳鈧熬鎷�
                         {
                             InvertList_t *deviceList;
                             Device_t *invsterDev = null;
@@ -755,10 +755,10 @@ static void Anti_reflux_init(void)
 
 int float2int(u32_t data)
 {
-#if 0  //闂傚倸鍊搁崐椋庣矆娓氣偓楠炴牠顢曢敃鈧壕鐟懊归悩宸劀缂傚秵鐗曢…璺ㄦ崉閻戞ɑ鎷遍梺绋跨箲缁捇寮婚妸鈺傚亞闁稿本绋戦锟� 1
-    s8_t S;     //缂傚倸鍊搁崐鎼佸磹閻戣姤鍊块柨鏇炲€堕埀顒€鍟撮獮鍥敊閸欍儳鐟濋梻浣侯攰閹活亞寰婄紒妯碱洸鐟滅増甯楅悡銉╂煟閺囩偛鈧湱鈧熬鎷�
-    s8_t  E;    //闂傚倸鍊搁崐椋庣矆娴ｉ潻鑰块弶鍫涘妿娴犳碍绻濋悽闈涗哗妞ゆ洘绮庣划濠氬箻閹颁礁娈ㄩ梺瑙勫劶婵倝寮查幖浣圭叆闁绘洖鍊圭€氾拷
-    u32_t F;    //闂傚倸鍊峰ù鍥敋瑜忛幑銏ゅ箛椤旇棄搴婇梺褰掑亰閸犳鐣烽弻銉︾厵閺夊牆澧介悾杈ㄦ叏鐟欏嫮鍙€闁哄矉缍佸顕€宕掑顑跨帛缂傚倷鑳舵慨鏉戭嚕閸洖桅闁告洦鍨扮猾宥夋煕閵夋垵鍟崕顏嗙磽閸屾瑧顦︽い褉鍋撻梺鐟板殩閹凤拷
+#if 0  //闂傚倸鍊搁崐鎼佸磹妞嬪海鐭嗗〒姘ｅ亾妤犵偞鐗犻、鏇㈡晝閳ь剛澹曢悷鎳婂綊鎮╁顔煎妧缂傚倸绉甸悧鏇⑩€︾捄銊﹀磯闁绘垶蓱閹烽亶姊虹粙璺ㄧ缂侇喗鎹囧濠氬Ω閳哄倸浜為梺绋挎湰缁嬫垿顢旈敓锟� 1
+    s8_t S;     //缂傚倸鍊搁崐鎼佸磹閹间礁纾归柣鎴ｅГ閸婂潡鏌ㄩ弴鐐测偓鍫曞焵椤掆偓閸熸挳鐛崶顒夋晩闁告瑣鍎抽悷婵嬫⒒娴ｄ警鏀伴柟娲讳簽瀵板﹦绱掑Ο纰辨锤閻熸粎澧楃敮妤呮偂閵夆晜鐓熼柡鍥╁仜閳ь剙婀遍埀顒佺啲閹凤拷
+    s8_t  E;    //闂傚倸鍊搁崐鎼佸磹妞嬪海鐭嗗ù锝夋交閼板潡寮堕崼娑樺濞寸姵纰嶇换婵嬫偨闂堟稐鍝楀銈嗘礃缁海鍒掓繝姘闁归绀佸▓銊╂⒑鐟欏嫬鍔跺┑顔哄€濆鏌ュ箹娴ｅ湱鍙嗛梺缁樻礀閸婂湱鈧熬鎷�
+    u32_t F;    //闂傚倸鍊搁崐宄懊归崶顒夋晪鐟滃繘骞戦姀銈呯疀妞ゆ棁妫勬惔濠囨⒑瑜版帒浜伴柛鐘愁殔閻ｇ兘寮婚妷锔惧幍闁哄鐗嗘晶浠嬫偩鏉堛劍鍙忛悷娆忓閸欌偓闂佸搫鐭夌紞浣割嚕椤曗偓瀹曟帒顫濋璺ㄥ笡缂傚倸鍊烽懗鑸垫叏閺夋埈鍤曢柛顐ｆ礀妗呴梺鍛婃处閸ㄦ壆鐚惧澶嬬厱闁靛鍨甸崯顖炲磿椤忓棛纾介柛灞剧懅椤︼附銇勮閸嬫捇姊洪悷鏉挎闁瑰嚖鎷�
     u32_t carry;
     int val;
 
@@ -788,7 +788,7 @@ int float2int(u32_t data)
     }
 
     return val*S;
-#elif  1 //闂傚倸鍊搁崐椋庣矆娓氣偓楠炴牠顢曢敃鈧壕鐟懊归悩宸劀缂傚秵鐗曢…璺ㄦ崉閻戞ɑ鎷遍梺绋跨箲缁捇寮婚妸鈺傚亞闁稿本绋戦锟� 婵犵數濮烽弫鎼佸磻濞戙垺鍋ら柕濞у啫鐏婇梺鎸庣箓椤︻垳绮婚鐐寸叆闁绘洖鍊圭€氾拷
+#elif  1 //闂傚倸鍊搁崐鎼佸磹妞嬪海鐭嗗〒姘ｅ亾妤犵偞鐗犻、鏇㈡晝閳ь剛澹曢悷鎳婂綊鎮╁顔煎妧缂傚倸绉甸悧鏇⑩€︾捄銊﹀磯闁绘垶蓱閹烽亶姊虹粙璺ㄧ缂侇喗鎹囧濠氬Ω閳哄倸浜為梺绋挎湰缁嬫垿顢旈敓锟� 濠电姷鏁告慨鐑藉极閹间礁纾绘繛鎴欏灪閸嬨倝鏌曟繛褍鍟悘濠囨⒑閹稿海绠撴い锔诲灣缁顢涢悙瀵稿弳闂佺粯娲栭崐鍦偓姘炬嫹
 
     int val;
     float f;

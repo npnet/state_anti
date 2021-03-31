@@ -92,7 +92,7 @@ void ModbusCmd_0102(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t
   ackBuf = memory_apply(ackSize + 5);
   if (cmd != null && pLoad != null && ackBuf != null) {
     list_bottomInsert(list, cmd);
-    cmd->waitTime = 2000;
+    cmd->waitTime = WAITTIME;   //2000;
     cmd->state = 0;
     cmd->ack.size = ackSize + 5;
     cmd->ack.payload = ackBuf;
@@ -135,7 +135,7 @@ void ModbusCmd_0304(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t
     ackBuf = memory_apply(len + 5);
     if (cmd != null && pLoad != null && ackBuf != null) {
       list_bottomInsert(list, cmd);
-      cmd->waitTime = 2000;
+      cmd->waitTime = WAITTIME;   //2000;
       cmd->state = 0;
       cmd->ack.size = len + 5;
       cmd->ack.payload = ackBuf;
@@ -174,7 +174,7 @@ void Modbus_06SetCmd(ListHandler_t *list, u8_t addr, u16_t reg, u16_t val) {
   ackBuf = memory_apply(sizeof(ModbusFC06_t));
   if (cmd != null && pLoad != null && ackBuf != null) {
     list_bottomInsert(list, cmd);
-    cmd->waitTime = 2000;
+    cmd->waitTime = WAITTIME;   //2000;
     cmd->state = 0;
     cmd->ack.size = 8;
     cmd->ack.payload = ackBuf;
@@ -212,7 +212,7 @@ void Modbus_16SetCmd(ListHandler_t *list, u8_t addr, u16_t start, u16_t end, u8_
   ackBuf = memory_apply(8);
   if (cmd != null && pLoad != null && ackBuf != null) {
     list_bottomInsert(list, cmd);
-    cmd->waitTime = 2000;
+    cmd->waitTime = WAITTIME;   //2000;
     cmd->state = 0;
     cmd->ack.size = 8;
     cmd->ack.payload = ackBuf;

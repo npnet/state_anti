@@ -250,8 +250,12 @@ void DeviceCmd_clear(Device_t *dev) {
 *******************************************************************************/
 void Device_add(Device_t *device) {
   APP_DEBUG("Device_add\r\n");
-  //device->lock = DEVICE_UNLOCK;   //Luee
   list_bottomInsert(&DeviceList, device);
+  device->lock = DEVICE_UNLOCK;
+}
+void Device_add_anti(Device_t *device) {
+  APP_DEBUG("Device_add\r\n");
+  list_topInsert(&DeviceList, device);
   device->lock = DEVICE_UNLOCK;
 }
 

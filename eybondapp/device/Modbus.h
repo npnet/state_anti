@@ -76,6 +76,8 @@ typedef struct
     u16_t *data; 	// set date;
 }ModbusSetCmd_t;
 
+#define WAITTIME	6000
+
 void Modbus_GetCmdAdd(ListHandler_t *list, u8_t addr, void *tab, u16_t tabSize);
 int Modbus_CmdCheck(Buffer_t *send, Buffer_t *ack);
 void ModbusCmd_0102(ListHandler_t *list, u8_t addr, u8_t fun, u16_t start, u16_t end);

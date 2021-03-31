@@ -25,6 +25,7 @@
 #include "eyblib_CRC.h"
 #include "eybapp_appTask.h"
 #include "ieee754_float.h"
+#include "Protocol.h"
 
 #define REALTIME_METER_READ_COUNTER 60
 #define METER_OVERTIME  120          //60S
@@ -134,6 +135,7 @@ void meter_read(void);
 static void realtime_meter_read(void);
 static u8_t anti_ack(Device_t *dev);
 static u8_t anti_trans(u8 *data_ptr ,u8 data_len);
+static u8_t meter_trans(u8 *data_ptr ,u8 data_len);
 static u8 get_online_count(void);
 
 static const AntiReflux_t *deviceTab[] = {
@@ -238,7 +240,7 @@ static u8_t anti_trans(u8 *data_ptr ,u8 data_len)
     dev = list_nodeApply(sizeof(Device_t));
     cmd = list_nodeApply(sizeof(DeviceCmd_t));
 
-    cmd->waitTime = 1500;     // 1500=1.5 sec
+    cmd->waitTime = 6000;     // 1500=1.5 sec
     cmd->state = 0;
 
     cmd->ack.size = 64;     //DEVICE_ACK_SIZE;
@@ -252,21 +254,63 @@ static u8_t anti_trans(u8 *data_ptr ,u8 data_len)
     APP_PRINT("cmd.payload:");
     print_buf(cmd->cmd.payload,cmd->cmd.size);
 
-    dev->cfg = null;  // 闂備焦婢樼粔鍫曟偪閸℃鈻旈柍褜鍓氱粙澶愵敂閸涱厸鎸冮柣鐐寸☉閻線顢氬璺虹闁搞儻闄勬慨銏ゆ煟閵娿儱顏い鏃€娲樺鍕晸閿燂拷
+    //dev->cfg = null;  // 闂備焦婢樼粔鍫曟偪閸℃鈻旈柍褜鍓氱粙澶愵敂閸涱厸鎸冮柣鐐寸☉閻線顢氬璺虹闁搞儻闄勬慨銏ゆ煟閵娿儱顏い鏃€娲樺鍕晸閿燂拷
+    if (ModbusDevice.cfg == null) {
+          dev->cfg = (ST_UARTDCB *)ModbusDevice.head->hardCfg;
+        } else {
+          dev->cfg = ModbusDevice.cfg;
+        }
+    
+    
     dev->callBack = anti_ack;  // 闁荤姳绀佹晶浠嬫偪閸℃稒鐒婚煫鍥ф捣閻愬﹪鎮规担鐟板姢妞わ富鍓熷Λ渚€鍩€椤掑倹鍟哄ù锝囧劋閻ｉ亶寮堕埡鍌涚叆婵炲弶鐗犲畷娆撴嚍閵夛附顔�
-   // dev->callBack = NULL;  // 闁荤姳绀佹晶浠嬫偪閸℃稒鐒婚煫鍥ф捣閻愬﹪鎮规担鐟板姢妞わ富鍓熷Λ渚€鍩€椤掑倹鍟哄ù锝囧劋閻ｉ亶寮堕埡鍌涚叆婵炲弶鐗犲畷娆撴嚍閵夛附顔�
+   // dev->callBack = NULL;  
     //dev->explain = esp;   // 闁荤姳鐒﹂崕鎶剿囬鍕闁告繂瀚弫銊╂煙缁嬫寧鐭楅柟韬插€濋幊鐐哄磼濠婂啩鍖�
-    dev->type = DEVICE_TRANS;
+    dev->type = DEVICE_MOBUS;       //DEVICE_TRANS;
 
     list_init(&dev->cmdList);
     list_bottomInsert(&dev->cmdList, cmd);
-    //list_topInsert(&dev->cmdList, cmd);
-   // Device_inset(dev);    // 闁诲繐绻愬Λ婵嗐€掗崜浣瑰暫濞达絿鎳撻埛鏃堟偠濞戞ɑ婀伴悗鍨缁傛帡濡堕崶銊ф殸闁荤姳鐒﹂崕鎶剿囬鍕哗闁诡垎鍐ㄦ辈Devicelist闂佹寧绋戞總鏂款潩閿曞倹鍋ㄩ柣顏勫劚viceCmdSend婵犮垼娉涚€氼噣骞冮敓锟�
+    //Device_inset(dev);    // 闁诲繐绻愬Λ婵嗐€掗崜浣瑰暫濞达絿鎳撻埛鏃堟偠濞戞ɑ婀伴悗鍨缁傛帡濡堕崶銊ф殸闁荤姳鐒﹂崕鎶剿囬鍕哗闁诡垎鍐ㄦ辈Devicelist闂佹寧绋戞總鏂款潩閿曞倹鍋ㄩ柣顏勫劚viceCmdSend婵犮垼娉涚€氼噣骞冮敓锟�
     Device_add(dev);
     return 1;
-
 }
 
+static u8_t meter_trans(u8 *data_ptr ,u8 data_len)
+{
+    Device_t *dev;
+    DeviceCmd_t *cmd;
+
+    APP_DEBUG("anti reflux trans\r\n");
+
+    dev = list_nodeApply(sizeof(Device_t));
+    cmd = list_nodeApply(sizeof(DeviceCmd_t));
+
+    cmd->waitTime = 6000;     // 1500=1.5 sec
+    cmd->state = 0;
+
+    cmd->ack.size = 64;     //DEVICE_ACK_SIZE;
+    cmd->ack.payload = memory_apply(cmd->ack.size);
+    cmd->ack.lenght = 0;
+    cmd->cmd.size = data_len;
+    cmd->cmd.lenght = cmd->cmd.size;
+    cmd->cmd.payload = memory_apply(cmd->cmd.size);  // 闂備焦褰冪粔鐢稿蓟婵犲洦鍋ㄩ悗鍦閸ょ偤鎮楀☉娅虫垿寮担瑙勭秶闁规儳鍟垮鎶芥煙缁嬫寧鐭楅柟韬插€濋幆鍐礋椤愩垺鏆ラ柣搴㈠喕閹凤拷
+    r_memcpy(cmd->cmd.payload, data_ptr, cmd->cmd.size);
+
+    APP_PRINT("cmd.payload:");
+    print_buf(cmd->cmd.payload,cmd->cmd.size);
+
+    dev->cfg = (ST_UARTDCB *)&UART_9600_N1;  
+       
+    dev->callBack = anti_ack;  // 闁荤姳绀佹晶浠嬫偪閸℃稒鐒婚煫鍥ф捣閻愬﹪鎮规担鐟板姢妞わ富鍓熷Λ渚€鍩€椤掑倹鍟哄ù锝囧劋閻ｉ亶寮堕埡鍌涚叆婵炲弶鐗犲畷娆撴嚍閵夛附顔�
+   // dev->callBack = NULL;  
+    //dev->explain = esp;   // 闁荤姳鐒﹂崕鎶剿囬鍕闁告繂瀚弫銊╂煙缁嬫寧鐭楅柟韬插€濋幊鐐哄磼濠婂啩鍖�
+    dev->type = DEVICE_MOBUS;       //DEVICE_TRANS;
+
+    list_init(&dev->cmdList);
+    list_bottomInsert(&dev->cmdList, cmd);
+    //Device_inset(dev);    // 闁诲繐绻愬Λ婵嗐€掗崜浣瑰暫濞达絿鎳撻埛鏃堟偠濞戞ɑ婀伴悗鍨缁傛帡濡堕崶銊ф殸闁荤姳鐒﹂崕鎶剿囬鍕哗闁诡垎鍐ㄦ辈Devicelist闂佹寧绋戞總鏂款潩閿曞倹鍋ㄩ柣顏勫劚viceCmdSend婵犮垼娉涚€氼噣骞冮敓锟�
+    Device_add(dev);
+    return 1;
+}
 /*******************************************************************************            
 * introduce:        
 * parameter:                       
@@ -346,7 +390,7 @@ static void anti_relex_data_process(void)
     //antibuf.payload =(u8 *)meter_rec_buf+3;
     //r_memcpy(send_buf,antibuf.payload,meter_rec_buf->bytes);    //闂傚倷娴囬褍霉閻戣棄鏋侀柛娑橈攻濞呯姵淇婇妶鍛櫡闁逞屽墮閸熸潙鐣烽妸鈺佺骇闁瑰鍋炶ⅲ闂佽楠搁崢婊堝磻閹剧粯鐓曢柡鍥ュ妼婢ь喖霉閻橀潧鍔嬬紒缁樼⊕濞煎繘宕滆閸╁矂姊洪崫銉ユ瀭闁告梹鍨垮畷娲焵椤掍降浜滈柟鍝勬娴滈箖姊洪崫銉ユ瀾婵炲吋鐟╅、姘舵晲婢舵ɑ鏅濋梺鎸庢濡嫭绂嶉柆宥嗏拺闁告挻褰冩禍婵堢磼鐠囨彃顏┑鈥崇埣閺佹捇鏁撻敓锟�
     r_memcpy(&anti_send_buf->bytes+1,&meter_rec_buf->bytes+1,meter_rec_buf->bytes);
-    r_memset(antibuf.payload,0,sizeof(modbus_rd_response_t));
+    
     float a=IEEE754_to_Float(&anti_send_buf->bytes+1);
     float b=IEEE754_to_Float(&anti_send_buf->bytes+5);
     float c=IEEE754_to_Float(&anti_send_buf->bytes+9);
@@ -364,8 +408,7 @@ static void anti_relex_data_process(void)
     anti_send_buf->crc16=crc16_standard(CRC_RTU,(u8_t *)anti_send_buf,sizeof(modbus_wr_t)-sizeof(anti_send_buf->crc16));
     //Uart_write((u8_t *)send_buf, sizeof(modbus_wr_t));
     anti_trans((u8_t *)send_buf, sizeof(modbus_wr_t));
-    //meter_data_sent=0;              //闂佹椿婢€缁插濡撮崘顔兼瀬闁绘鐗嗙粊锔锯偓瑙勭摃鐏忣亪鐛箛娑樼煑闁哄秲鍔岄悘鍥煕閺冩挻瀚�
-    
+    r_memset(antibuf.payload,0,sizeof(modbus_rd_response_t));
     APP_DEBUG("send anti reflux data\r\n");
     memory_release(send_buf);
     
@@ -495,7 +538,8 @@ void meter_read(void)
     meter_read_t->crc16=crc16_standard(CRC_RTU, (u8_t *)meter_read_t, sizeof(modbus_rd_t) - sizeof(meter_read_t->crc16));
 
     //Uart_write(meter_buf, sizeof(modbus_rd_t));
-    anti_trans(meter_buf, sizeof(modbus_rd_t));
+    //anti_trans(meter_buf, sizeof(modbus_rd_t));
+    meter_trans(meter_buf, sizeof(modbus_rd_t));
 }
 
 /*******************************************************************************            

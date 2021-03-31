@@ -47,6 +47,8 @@
 #include "grid_tool.h"
 #include "ModbusDevice.h"
 
+#include "ieee754_float.h"
+
 
 #ifdef _PLATFORM_BC25_
 #include "NB_net.h"
@@ -556,6 +558,10 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             PDT[j].wFunc(&PDT[j], buf_value, &len);
             break;
           case 11:  // 是否有设备在线
+            //test float
+            get_float();
+            get_ieee754();
+
             //将在线设备数量转为字符并存在buf_value
             Swap_numChar(buf_value,onlineDeviceList.count);
             //r_strcpy(buf_value, "1");

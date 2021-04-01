@@ -755,9 +755,9 @@ static u8_t deviceDataGet(ESP_t *esp) {
         //800容易离线
         if (buf.lenght > 800) {
           //if (buf.lenght > 600) {
-          device_data_geting=0;
-          fibo_taskSleep(200);    //给其它发送留出时间
-          device_data_geting=1;
+          //device_data_geting=0;
+          //fibo_taskSleep(200);    //给其它发送留出时间
+          //device_data_geting=1;
 
           esp->ack(&buf);
           buf.lenght = 0;

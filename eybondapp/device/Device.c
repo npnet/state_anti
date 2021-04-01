@@ -273,6 +273,13 @@ void Device_inset(Device_t *device) {
   currentStep = 0;
 }
 
+void Device_inset_anti(Device_t *device) {
+  APP_DEBUG("Device_inset anti\r\n");
+  list_bottomInsert(&DeviceList, device);
+  device->lock = DEVICE_UNLOCK;
+  currentStep = 6;
+}
+
 /*******************************************************************************
   * @brief
   * @note   None
@@ -341,6 +348,26 @@ static void deviceCmdSend(void) {
       deviceInfo.callback = device_callback;
     case 1:
       currentDevice = list_nextData(&DeviceList, currentDevice);    // 定时获取列表中需要执行指令的设备节点
+      //Luee add anti reflux
+    /*
+      if(currentDevice->type==DEVICE_ARTI){
+        APP_DEBUG("anti uart send,Step from 1 to 3!!\r\n");
+        currentStep = 3;
+        currentCmd = null;
+        if (currentDevice->cfg != null) {
+          APP_DEBUG("currentDevice->cfg is %ld!!\r\n", currentDevice->cfg->baudrate);
+          DeviceIO_init(currentDevice->cfg);
+          watiTime = 1;
+          //watiTime = 2;   //Luee
+        } else if (DeviceIO_cfgGet() == null) {
+          APP_DEBUG("Uart No Init!!\r\n");
+          log_save("Uart No Init!!");
+          currentStep = 1;
+        }
+      }
+    */
+      //Luee end
+     
       if (currentDevice == null || currentDevice->lock == DEVICE_LOCK) {
         if (++DeviceOvertime >= DEVICE_MAX_OVERTIME) {
           APP_DEBUG("Device no command in %d sec(DeviceOvertime), reset!!\r\n", DeviceOvertime);
@@ -442,6 +469,11 @@ static void deviceCmdSend(void) {
 #endif
         }
       }
+      break;
+
+    case 6:
+      currentCmd = null;
+      currentStep=1;
       break;
     default:
       currentStep = 0;

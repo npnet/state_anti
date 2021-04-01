@@ -69,6 +69,7 @@ void DeviceCmd_clear(Device_t *dev);
 void Device_removeType(u16_t type);
 
 void Device_add_anti(Device_t *device);
+void Device_inset_anti(Device_t *device);
 
 #endif  // __DEVICE_H_
 /******************************************************************************/

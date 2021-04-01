@@ -27,8 +27,8 @@
 #include "ieee754_float.h"
 #include "Protocol.h"
 
-#define REALTIME_METER_READ_COUNTER 60
-#define METER_OVERTIME  120          //60S
+#define REALTIME_METER_READ_COUNTER 180     //2m
+#define METER_OVERTIME  360          //3M
 
 
 static u8 device_addr=1;
@@ -118,7 +118,7 @@ static u8 online_dev_count=0;
 static u8 addr_index=0;
 static u8 online_dev_addr_tab[64];
 static u8 meter_data_sent=0;      //=1 meter data have sent
-static u8 meter_overtime=0;
+static u16 meter_overtime=0;
 
 
 static void Anti_reflux_init(void);
@@ -219,8 +219,8 @@ static u8_t anti_ack(Device_t *dev)
         }
         
     }	
-    //Device_remove(dev);
-    list_nodeDelete(&dev->cmdList, cmd);
+    Device_remove(dev);
+    //list_nodeDelete(&dev->cmdList, cmd);
     return 0;
 }
 
@@ -265,12 +265,13 @@ static u8_t anti_trans(u8 *data_ptr ,u8 data_len)
     dev->callBack = anti_ack;  // 闁荤姳绀佹晶浠嬫偪閸℃稒鐒婚煫鍥ф捣閻愬﹪鎮规担鐟板姢妞わ富鍓熷Λ渚€鍩€椤掑倹鍟哄ù锝囧劋閻ｉ亶寮堕埡鍌涚叆婵炲弶鐗犲畷娆撴嚍閵夛附顔�
    // dev->callBack = NULL;  
     //dev->explain = esp;   // 闁荤姳鐒﹂崕鎶剿囬鍕闁告繂瀚弫銊╂煙缁嬫寧鐭楅柟韬插€濋幊鐐哄磼濠婂啩鍖�
-    dev->type = DEVICE_MOBUS;       //DEVICE_TRANS;
+    dev->type = DEVICE_ARTI;       //DEVICE_TRANS;
 
     list_init(&dev->cmdList);
     list_bottomInsert(&dev->cmdList, cmd);
-    //Device_inset(dev);    // 闁诲繐绻愬Λ婵嗐€掗崜浣瑰暫濞达絿鎳撻埛鏃堟偠濞戞ɑ婀伴悗鍨缁傛帡濡堕崶銊ф殸闁荤姳鐒﹂崕鎶剿囬鍕哗闁诡垎鍐ㄦ辈Devicelist闂佹寧绋戞總鏂款潩閿曞倹鍋ㄩ柣顏勫劚viceCmdSend婵犮垼娉涚€氼噣骞冮敓锟�
-    Device_add(dev);
+    Device_inset(dev);    // 闁诲繐绻愬Λ婵嗐€掗崜浣瑰暫濞达絿鎳撻埛鏃堟偠濞戞ɑ婀伴悗鍨缁傛帡濡堕崶銊ф殸闁荤姳鐒﹂崕鎶剿囬鍕哗闁诡垎鍐ㄦ辈Devicelist闂佹寧绋戞總鏂款潩閿曞倹鍋ㄩ柣顏勫劚viceCmdSend婵犮垼娉涚€氼噣骞冮敓锟�
+    //Device_add(dev);
+    
     return 1;
 }
 
@@ -303,12 +304,14 @@ static u8_t meter_trans(u8 *data_ptr ,u8 data_len)
     dev->callBack = anti_ack;  // 闁荤姳绀佹晶浠嬫偪閸℃稒鐒婚煫鍥ф捣閻愬﹪鎮规担鐟板姢妞わ富鍓熷Λ渚€鍩€椤掑倹鍟哄ù锝囧劋閻ｉ亶寮堕埡鍌涚叆婵炲弶鐗犲畷娆撴嚍閵夛附顔�
    // dev->callBack = NULL;  
     //dev->explain = esp;   // 闁荤姳鐒﹂崕鎶剿囬鍕闁告繂瀚弫銊╂煙缁嬫寧鐭楅柟韬插€濋幊鐐哄磼濠婂啩鍖�
-    dev->type = DEVICE_MOBUS;       //DEVICE_TRANS;
+    dev->type = DEVICE_ARTI;       //DEVICE_TRANS;
 
     list_init(&dev->cmdList);
     list_bottomInsert(&dev->cmdList, cmd);
     //Device_inset(dev);    // 闁诲繐绻愬Λ婵嗐€掗崜浣瑰暫濞达絿鎳撻埛鏃堟偠濞戞ɑ婀伴悗鍨缁傛帡濡堕崶銊ф殸闁荤姳鐒﹂崕鎶剿囬鍕哗闁诡垎鍐ㄦ辈Devicelist闂佹寧绋戞總鏂款潩閿曞倹鍋ㄩ柣顏勫劚viceCmdSend婵犮垼娉涚€氼噣骞冮敓锟�
     Device_add(dev);
+    //Device_inset_anti(dev);
+
     return 1;
 }
 /*******************************************************************************            
@@ -407,6 +410,7 @@ static void anti_relex_data_process(void)
     anti_send_buf->bytes=meter_rec_buf->bytes;
     anti_send_buf->crc16=crc16_standard(CRC_RTU,(u8_t *)anti_send_buf,sizeof(modbus_wr_t)-sizeof(anti_send_buf->crc16));
     //Uart_write((u8_t *)send_buf, sizeof(modbus_wr_t));
+    //fibo_taskSleep(500);
     anti_trans((u8_t *)send_buf, sizeof(modbus_wr_t));
     r_memset(antibuf.payload,0,sizeof(modbus_rd_response_t));
     APP_DEBUG("send anti reflux data\r\n");
@@ -573,7 +577,7 @@ static void realtime_meter_read(void)
 
 static void realtime_meter_read(void)
 {
-    static u8 counter=REALTIME_METER_READ_COUNTER;
+    static u16 counter=REALTIME_METER_READ_COUNTER;
 
     if(counter)
         counter--;

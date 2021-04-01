@@ -462,7 +462,7 @@ void get_antibuf(u8_t *data,u16_t len)
         antibuf.payload=memory_apply(len);
         r_memset(antibuf.payload,'\0',len);
         r_memcpy(antibuf.payload, data, len);
-        Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_DATA_PROCESS, 0, 0);
+        Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_DATA_PROCESS, 0, 0,0);
 }
 
 /*******************************************************************************
@@ -573,7 +573,7 @@ void UARTIOCallBack(hal_uart_port_t uart_port, UINT8 *data, UINT16 len, void *ar
         r_memcpy(s_device->buf->payload, rcveBuf.payload, s_device->buf->lenght);
         APP_DEBUG("s_device buf len:%d size:%d!!\r\n", s_device->buf->lenght, s_device->buf->size);
         if (is_ali_conn_success) {
-          Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0);
+          Eybpub_UT_SendMessage(ALIYUN_TASK, MODBUS_DATA_GET, 0, 0,0);
         }
         //Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_DATA_PROCESS, 0, 0);
       }
@@ -710,7 +710,7 @@ static void end(DeviceAck_e e) {
     APP_DEBUG("end call device callback!!\r\n");
     s_device->callback(e);  // 执行设备列表中的callback函数
   } else if (e != DEVICE_ACK_OVERTIME) {
-    Eybpub_UT_SendMessage(EYBAPP_TASK, APP_DEVICE_IO_ID, (u32_t)&rcveBuf, (u32_t)((void *)wrtie));
+    Eybpub_UT_SendMessage(EYBAPP_TASK, APP_DEVICE_IO_ID, (u32_t)&rcveBuf, (u32_t)((void *)wrtie),0);
   }
   s_device = s_lockDevice;
 }

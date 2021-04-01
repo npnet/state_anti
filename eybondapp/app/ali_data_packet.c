@@ -693,7 +693,7 @@ void web_atcmd_parse(char* parm_ptr)
         snprintf((char *)send_packet, STR_RET_SIZE, "%s","+GINFTPC:OK");
 		
 		send_rrpc_response_packet(aliyun_mqtt_thread_handle,rrpc_response_topic);
-        Eybpub_UT_SendMessage(FOTA_TASK, FIRMWARE_UPDATE, 0, 0);
+        Eybpub_UT_SendMessage(FOTA_TASK, FIRMWARE_UPDATE, 0, 0,0);
     }
     else if(memcmp((const char*)parm_ptr,(const char*)RS485_TRANSPARENT,strlen(RS485_TRANSPARENT))==0)/*透传*/
     {

@@ -575,7 +575,7 @@ u8_t Update_exit(ESP_t *esp) {
 *******************************************************************************/
 static void enterUpdate(void) {
   if (updateID != 0) {
-    Eybpub_UT_SendMessage(UPDATE_TASK, updateID, (u32_t)update, (u32_t)deviceType);
+    Eybpub_UT_SendMessage(UPDATE_TASK, updateID, (u32_t)update, (u32_t)deviceType,0);
     update = null;  // 完成指针传递后，指NULL
     deviceType = null;
   }

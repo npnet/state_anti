@@ -30,8 +30,8 @@
 #define EYBOND_CMD_REPORT    MSG_ID_USER_EYB_START+0xFB1
 #endif
 
-//#define ESP_PROCESS_FREP        (1000)       //ms
-#define ESP_PROCESS_FREP        (500)       //ms    //Luee
+#define ESP_PROCESS_FREP        (1000)       //ms
+//#define ESP_PROCESS_FREP        (500)       //ms    //Luee
 #define EPS_ACK_OVERTIME        (15000)
 #define ESP_WAIT_CNT            (EPS_ACK_OVERTIME/ESP_PROCESS_FREP)
 

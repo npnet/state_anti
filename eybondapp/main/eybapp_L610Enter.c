@@ -115,7 +115,7 @@ static void sig_res_callback(GAPP_SIGNAL_ID_T sig, va_list arg) {
       UINT8 cid = (UINT8)va_arg(arg, int);
       APP_DEBUG("GAPP_SIG_PDP_DEACTIVE_ABNORMALLY_IND cid = %d\r\n", cid);
       va_end(arg);
-      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0);   //Luee
+      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0,0);   //Luee
 //    fibo_taskSleep(1000);
 //	  UINT8 ip[50];	
 //	  int ret;
@@ -281,7 +281,7 @@ void * appimg_enter(void *param) {
   fibo_taskSleep(100);
   APP_PRINT("Net %X APP %X Dev %X Eyb %X MQTT %X UPd %X JLFota %X COM %X ANTI %X\r\n", \
     net_thread_id, app_thread_id, dev_thread_id, eyb_thread_id, ali_thread_id, upd_thread_id, fota_thread_id, com_thread_id,anti_thread_id);
-  Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_UART_READY, 0, 0);
+  Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_UART_READY, 0, 0,0);
 
   return (void *)&user_callback;
 }

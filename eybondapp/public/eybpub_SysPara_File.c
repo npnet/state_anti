@@ -734,7 +734,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
             case '2':  // 恢复出厂设置 -- 指示按defult参数表恢复，生产时写的数据如果改了就恢复不了了
               log_save("System Para Reset!");
               parametr_default();
-              Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0);
+              Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0,0);
               break;
             case '3':  // 看门狗停狗重启
               log_save("System Hardware Reset!");
@@ -860,9 +860,9 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
     }
     parameter_init();  // 保持统一
     if (number == DEVICE_MONITOR_NUM || number == DEVICE_PROTOCOL || number == DEVICE_UART_SETTING) {
-      Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0);
+      Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0,0);
     } else if (number == DEVICE_PNID || number == EYBOND_SERVER_ADDR) {
-      Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_RESTART_ID, 0, 0);    // 或者NET_CMD_RESTART_ID
+      Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_RESTART_ID, 0, 0,0);    // 或者NET_CMD_RESTART_ID
     }
   }
   return ret ;

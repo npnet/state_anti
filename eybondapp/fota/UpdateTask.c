@@ -120,7 +120,7 @@ void proc_update_task(s32_t taskId) {
       case DEVICE_UPDATE_READY_ID:
         log_save("Device update ready");
         fibo_taskSleep(2000);
-        Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_UPDATE_READY_ID, 0, 0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_UPDATE_READY_ID, 0, 0,0);
         break;
       case DEVICE_UPDATE_END_ID:
         Update_end();

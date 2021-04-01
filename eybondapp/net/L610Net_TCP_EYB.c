@@ -518,7 +518,7 @@ void L610Net_manage(void) {
         ret = fibo_get_curr_prior_RAT(SINGLE_SIM);
         APP_DEBUG("sim RAT mode after SIM inserted:%ld\r\n", ret);
         log_save("SIM inserted!!!");
-        Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_INSERTED, 0, 0);
+        Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_INSERTED, 0, 0,0);
         m_GprsActState = STATE_SIM_INSERTED;
       } else {
         registe_times++;
@@ -550,7 +550,7 @@ void L610Net_manage(void) {
         ret = fibo_PDPActive(1, (UINT8*)m_GprsConfig.apnName, NULL, NULL, 0, SINGLE_SIM, ip);        
         APP_DEBUG("active APN(%s) ret = %ld,ip=%s\r\n", m_GprsConfig.apnName, ret, ip);
         if (ret == 0) {
-          Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_READY, 0, 0);
+          Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_READY, 0, 0,0);
           m_GprsActState = STATE_SIM_READY;
           registe_times = 0;
           log_save("pdp success & sim ready!!!");
@@ -576,7 +576,7 @@ void L610Net_manage(void) {
       break;
     }
     case STATE_SIM_NOT_INSERTED:
-      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_NOT_INSERTED, 0, 0);
+      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_NOT_INSERTED, 0, 0,0);
       m_GprsActState = STATE_GSM_QUERY_STATE;
       break;
     case STATE_SIM_READY: { // 确认注网后获得IP
@@ -586,7 +586,7 @@ void L610Net_manage(void) {
          ret = fibo_get_curr_prior_RAT(SINGLE_SIM);
          APP_DEBUG("sim RAT mode after PDP active:%ld\r\n", ret);
          if (cid_status == 1 && r_strlen((char *)ip) != 0) {
-           Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_READY, 0, 0);
+           Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_READY, 0, 0,0);
            m_GprsActState = STATE_GSM_READY;
            registe_times = 0;
          } else {           
@@ -610,7 +610,7 @@ void L610Net_manage(void) {
       break;
     }
     case STATE_SIM_NOT_READY:
-      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_FAIL, 0, 0);
+      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_FAIL, 0, 0,0);
       m_GprsActState = STATE_GSM_QUERY_STATE;
       break;
     case STATE_GSM_READY: {
@@ -623,7 +623,7 @@ void L610Net_manage(void) {
         if (ping_ret == 0) {
 //        fibo_mping(0, 0, 0, 0, 0, 0, 0);
           APP_DEBUG("PING %s OK ret = %d\r\n", NET_PING_HOSTNAME, ping_ret);
-          Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_DNS_READY, 0, 0);
+          Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_DNS_READY, 0, 0,0);
           fibo_sem_signal(g_SemFlag);
           registe = 1;
           m_GprsActState = STATE_DNS_READY;
@@ -647,7 +647,7 @@ void L610Net_manage(void) {
       break;
     }
     case STATE_GSM_NOT_READY:
-      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0);
+      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0,0);
       m_GprsActState = STATE_GSM_QUERY_STATE;
       break;
     case STATE_DNS_READY: {
@@ -786,7 +786,7 @@ void L610Net_manage(void) {
       ret = fibo_PDPRelease(0, SINGLE_SIM);
       APP_DEBUG("fibo_PDPRelease ret = %ld\r\n", ret);
       m_GprsActState = STATE_GSM_QUERY_STATE;
-      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_DNS_FAIL, 0, 0);
+      Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_DNS_FAIL, 0, 0,0);
 
       tcp_relink();     //立即重连TCP Luee
       

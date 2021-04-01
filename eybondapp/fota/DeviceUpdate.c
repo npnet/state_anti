@@ -181,7 +181,7 @@ static u8_t readyAck(DeviceAck_e e) {
       Ql_OS_SendMessage(DEVICE_TASK, DEVICE_UPDATE_READY_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-      Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_UPDATE_READY_ID, 0, 0);
+      Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_UPDATE_READY_ID, 0, 0,0);
 #endif
     } else {
       APP_DEBUG("Device Update command send\r\n")

@@ -80,13 +80,17 @@ s32_t ReadSerialPort(hal_uart_port_t port, u8_t* pBuffer, u32_t bufLen) {
   return rdTotalLen;
 }
 
-s32_t Eybpub_UT_SendMessage(s32_t destTaskId, u32_t msgId, u32_t param1, u32_t param2) {
+s32_t Eybpub_UT_SendMessage(s32_t destTaskId, u32_t msgId, u32_t param1, u32_t param2, u32_t param3) {
   ST_MSG msg;
+  u32_t overtime=0;
   r_memset(&msg, 0, sizeof(ST_MSG));
   msg.message = msgId;
   msg.param1 = param1;
   msg.param2 = param2;
-//  if (fibo_queue_space_available(destTaskId))
-  return fibo_queue_put(destTaskId, &msg, 1000);    //Luee 超时时间500->1000
+
+  overtime=param3;
+  if(param3==0)
+    overtime=3000;
+  return fibo_queue_put(destTaskId, &msg, overtime);    //Luee 
 }
 #endif

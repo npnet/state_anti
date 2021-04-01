@@ -324,7 +324,7 @@ static void dataProcess(u8_t port, Buffer_t *buf) {
 	sPort = port;
 	if (server->api->add(buf, CommonServerDataSend) == 0)
     {
-        Eybpub_UT_SendMessage(COMMON_SERVER_TASK, COMMON_SERVER__DATA_PROCESS, 0, 0);
+        Eybpub_UT_SendMessage(COMMON_SERVER_TASK, COMMON_SERVER__DATA_PROCESS, 0, 0,0);
     }
     memory_release(buf);
 

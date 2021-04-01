@@ -376,7 +376,7 @@ static void deviceCmdSend(void) {
           Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-          Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
+          Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0,0);
 #endif
         }
         APP_DEBUG("currentDevice is null,DeviceOvertime:%d!!\r\n", DeviceOvertime);
@@ -465,7 +465,7 @@ static void deviceCmdSend(void) {
           Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-          Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
+          Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0,0);
 #endif
         }
       }
@@ -486,7 +486,7 @@ static void deviceCmdSend(void) {
     Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-    Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
+    Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0,0);
 #endif
   }
 }
@@ -526,7 +526,7 @@ static void device_callback(DeviceAck_e ack) {
   Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-  Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0);
+  Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_CMD_ID, 0, 0,0);
 #endif
 }
 

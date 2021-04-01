@@ -77,7 +77,7 @@ typedef struct {
   u32_t  srcTaskId;
 } ST_MSG;
 
-s32_t Eybpub_UT_SendMessage(s32_t destTaskId, u32_t msgId, u32_t param1, u32_t param2);
+s32_t Eybpub_UT_SendMessage(s32_t destTaskId, u32_t msgId, u32_t param1, u32_t param2, u32_t param3);
 #endif
 
 #endif //__EYBPUB_UTILITY_H_

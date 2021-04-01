@@ -444,9 +444,9 @@ void proc_app_task(s32_t taskId) {
     switch (msg.message) {
       case APP_MSG_UART_READY:
         APP_DEBUG("App task APP_MSG_UART_READY\r\n");
-        Eybpub_UT_SendMessage(EYBNET_TASK, APP_MSG_UART_READY, 0, 0);
-        Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_UART_READY, 0, 0);
-        Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_UART_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBNET_TASK, APP_MSG_UART_READY, 0, 0,0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_UART_READY, 0, 0,0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_UART_READY, 0, 0,0);
         //Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_UART_READY, 0, 0);
         APP_timer = fibo_timer_period_new(APP_time_Interval, UserTimerAPPscallback, &m_timeCnt);    // 注册APPTimer
         if (APP_timer == 0) {
@@ -455,44 +455,44 @@ void proc_app_task(s32_t taskId) {
         break;
       case NET_MSG_SIM_READY:   // SIM卡插入了
         APP_DEBUG("Get NET_MSG_SIM_READY MSG\r\n");
-        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_SIM_READY, 0, 0);
-        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_SIM_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_SIM_READY, 0, 0,0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_SIM_READY, 0, 0,0);
         break;
       case NET_MSG_SIM_FAIL:
         APP_DEBUG("Get NET_MSG_SIM_FAIL MSG\r\n");
-        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_SIM_FAIL, 0, 0);
-        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_SIM_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_SIM_FAIL, 0, 0,0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_SIM_FAIL, 0, 0,0);
         break;
       case NET_MSG_GSM_READY:  // 注网成功消息
         APP_DEBUG("Get NET_MSG_GSM_READY MSG\r\n");
-        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_READY, 0, 0);
-        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_GSM_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_READY, 0, 0,0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_GSM_READY, 0, 0,0);
         break;
       case NET_MSG_GSM_FAIL:
-        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_FAIL, 0, 0);
-        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_GSM_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_GSM_FAIL, 0,0 ,0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_GSM_FAIL, 0, 0,0);
         break;
       case NET_MSG_DNS_READY:
-        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_DNS_READY, 0, 0);
-        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_DNS_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_DNS_READY, 0, 0,0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_DNS_READY, 0, 0,0);
         //Eybpub_UT_SendMessage(ALIYUN_TASK, NET_MSG_DNS_READY, 0, 0);
         APP_DEBUG("Net task NET_MSG_DNS_READY\r\n");
         break;
       case NET_MSG_DNS_FAIL:
-        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_DNS_FAIL, 0, 0);
-        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_DNS_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_DNS_FAIL, 0, 0,0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_DNS_FAIL, 0, 0,0);
         //Eybpub_UT_SendMessage(ALIYUN_TASK, NET_MSG_DNS_FAIL, 0, 0);
         APP_DEBUG("Net task NET_MSG_DNS_FAIL\r\n");
         break;
       case NET_MSG_NET_READY:    // 连接服务器成功消息
         APP_DEBUG("Get NET_MSG_NET_READY MSG\r\n");
-        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_NET_READY, 0, 0);
-        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_NET_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_NET_READY, 0, 0,0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_NET_READY, 0, 0,0);
         break;
       case NET_MSG_NET_FAIL:    // 连接服务器成功消息
         APP_DEBUG("Get NET_MSG_NET_FAIL MSG\r\n");
-        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_NET_FAIL, 0, 0);
-        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_NET_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(EYBDEVICE_TASK, NET_MSG_NET_FAIL, 0, 0,0);
+        Eybpub_UT_SendMessage(EYBOND_TASK, NET_MSG_NET_FAIL, 0, 0,0);
         break;      
       case APP_CMD_BEEP_ID:  // mike 20200817 APP蜂鸣指令
         APP_DEBUG("App task APP_CMD_BEEP_ID\r\n");
@@ -514,7 +514,7 @@ void proc_app_task(s32_t taskId) {
         break;
       case APP_MSG_TIMER_ID: {
 //        APP_DEBUG("App task APP_MSG_TIMER_ID\r\n");
-        Eybpub_UT_SendMessage(EYBNET_TASK, APP_MSG_TIMER_ID, 0, 0);
+        Eybpub_UT_SendMessage(EYBNET_TASK, APP_MSG_TIMER_ID, 0, 0,500);
         Key_scan();
         Clock_Add();
         if ((DeviceIO_lockState() == &cmdHead) && deviceLockTime++ > (60 * 2)) {
@@ -591,22 +591,25 @@ void proc_app_task(s32_t taskId) {
  return   :
 *******************************************************************************/
 static void UserTimerAPPscallback(void *param) {
-  Eybpub_UT_SendMessage(COMMON_SERVER_TASK, APP_MSG_TIMER_ID, 0, 0);
-  Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_TIMER_ID, 0, 0);
+  static u8_t timeCnt = 0;
   //if (*((s32_t *)param) == 0) {
-  //  if (m_wdgCnt > 3) {
-      Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
-      Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_DEVTIMER_ID, 0, 0);
+    if (m_wdgCnt > 3) {
+      if (timeCnt++ > 0){
+      Eybpub_UT_SendMessage(EYBDEVICE_TASK, APP_MSG_DEVTIMER_ID, 0, 0,1000);
+      Eybpub_UT_SendMessage(EYBOND_TASK, APP_MSG_DEVTIMER_ID, 0, 0,1000);
       //Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_TIMER_ID, 0, 0);
       //Eybpub_UT_SendMessage(FOTA_TASK, APP_MSG_TIMER_ID, 0, 0);
-      Eybpub_UT_SendMessage(UPDATE_TASK, APP_MSG_TIMER_ID, 0, 0);
-      //Eybpub_UT_SendMessage(COMMON_SERVER_TASK, APP_MSG_TIMER_ID, 0, 0);
-    //}
+      Eybpub_UT_SendMessage(UPDATE_TASK, APP_MSG_TIMER_ID, 0, 0,1000);
+      Eybpub_UT_SendMessage(COMMON_SERVER_TASK, APP_MSG_TIMER_ID, 0, 0,1000);
+      Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_TIMER_ID, 0, 0,1000);
+      timeCnt = 0;
+      }
+    }
     *((s32_t *)param) += 1;
   //} else {
-    Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_TIMER_ID, 0, 0);
+    Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_TIMER_ID, 0, 0,500);
     *((s32_t *)param) -= 1;;
- // }
+  //}
 }
 /*******************************************************************************
  Brief    : void
@@ -614,7 +617,7 @@ static void UserTimerAPPscallback(void *param) {
  return   :
 *******************************************************************************/
 static void UserTimerWDGcallback(void *param) {
-  Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_WDG_ID, 0, 0);
+  Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_WDG_ID, 0, 0,1000);
 }
 #endif
 

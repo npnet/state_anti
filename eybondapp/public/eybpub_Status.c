@@ -255,7 +255,7 @@ void Beep_Init(void) {
 void Beep_On(char cnt) {
   if (cnt < 10 && cnt > 0) {
     beepCnt = cnt;
-    Eybpub_UT_SendMessage(EYBAPP_TASK, APP_CMD_BEEP_ID, 0, 0);
+    Eybpub_UT_SendMessage(EYBAPP_TASK, APP_CMD_BEEP_ID, 0, 0,0);
   }
 }
 
@@ -271,7 +271,7 @@ void Beep_Run(void) {
   fibo_gpio_set(BEEP_PORT, PINLEVEL_LOW);  
   if (--beepCnt > 0) {
     fibo_taskSleep(500);
-    Eybpub_UT_SendMessage(EYBAPP_TASK, APP_CMD_BEEP_ID, 0, 0);
+    Eybpub_UT_SendMessage(EYBAPP_TASK, APP_CMD_BEEP_ID, 0, 0,0);
   }
 }
 

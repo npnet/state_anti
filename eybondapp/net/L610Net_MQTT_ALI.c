@@ -160,11 +160,11 @@ void L610Net_MQTT_ALI_manage(void) {
       if ((simstatus == 1) && (simret == 0)) {
         // SIM卡已插入
         APP_DEBUG("sim is insert !\r\n");
-        Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_READY, 0, 0);
+        Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_READY, 0, 0,0);
         m_OCActState = STATE_NW_QUERY_STATE;
       } else {
         APP_DEBUG("sim no checked, please insert sim & retry\r\n");
-        Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_FAIL, 0, 0);
+        Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_FAIL, 0, 0,0);
         //Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_FAIL, 0, 0);   //Luee
       }
       break;

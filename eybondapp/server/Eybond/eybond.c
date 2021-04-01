@@ -339,7 +339,7 @@ u8_t ESP_cmd(Buffer_t *buf, AckCh ch) {
       Ql_OS_SendMessage(EYBOND_TASK, EYBOND_DATA_PROCESS, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-      Eybpub_UT_SendMessage(EYBOND_TASK, EYBOND_DATA_PROCESS, 0, 0);
+      Eybpub_UT_SendMessage(EYBOND_TASK, EYBOND_DATA_PROCESS, 0, 0,0);
 #endif
     }
   }
@@ -794,7 +794,7 @@ static u8_t deviceDataGet(ESP_t *esp) {
     Ql_OS_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
 #endif
 #ifdef _PLATFORM_L610_
-    Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0);
+    Eybpub_UT_SendMessage(EYBDEVICE_TASK, DEVICE_RESTART_ID, 0, 0,0);
 #endif
     overTime = 0;
   }

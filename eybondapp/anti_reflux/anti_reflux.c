@@ -26,6 +26,7 @@
 #include "eybapp_appTask.h"
 #include "ieee754_float.h"
 #include "Protocol.h"
+#include "char2negative.h"
 
 #define REALTIME_METER_READ_COUNTER 180     //2m
 #define METER_OVERTIME  360          //3M
@@ -177,7 +178,9 @@ void proc_anti_reflux_task(s32_t taskId)
         case ANTI_REFLUX_TIMER_ID:
             APP_DEBUG("anti reflux time running\r\n");
             get_online_count();
-            realtime_meter_read();          
+            //para 96=1,enable anti reflux
+            if(anti_reflux_en)
+                realtime_meter_read();          
         break;
         }   
     }
@@ -405,6 +408,13 @@ static void anti_relex_data_process(void)
     APP_DEBUG("C POWER=%f KW\r\n",c);
     APP_DEBUG("T POWER=%f KW\r\n",t);
 
+    //any one >=anti_threshold
+    if(a>anti_threshold && b>anti_threshold && c>anti_threshold && t>anti_threshold){
+        meter_data_sent=0;
+        APP_DEBUG("no over anti reflux threshold\r\n")
+        return;
+    }
+
     anti_send_buf->addr=device_addr;          
     anti_send_buf->fun=MODBUS_RTU_FUN_WR;
     anti_send_buf->st_addr=ENDIAN_BIG_LITTLE_16(ANTI_REFLUX_REG_ADDR);
@@ -412,7 +422,7 @@ static void anti_relex_data_process(void)
     anti_send_buf->bytes=meter_rec_buf->bytes;
     anti_send_buf->crc16=crc16_standard(CRC_RTU,(u8_t *)anti_send_buf,sizeof(modbus_wr_t)-sizeof(anti_send_buf->crc16));
     //Uart_write((u8_t *)send_buf, sizeof(modbus_wr_t));
-    //fibo_taskSleep(500);
+    
     anti_trans((u8_t *)send_buf, sizeof(modbus_wr_t));
     r_memset(antibuf.payload,0,sizeof(modbus_rd_response_t));
     APP_DEBUG("send anti reflux data\r\n");
@@ -554,28 +564,7 @@ void meter_read(void)
 * return:                 
 * author:           Luee                                                    
 *******************************************************************************/
-//test
-/*
-static void realtime_meter_read(void)
-{
-    static u8 counter=REALTIME_METER_READ_COUNTER;
 
-    if(counter)
-        counter--;
-    if(meter_overtime)
-        meter_overtime--;
-    
-    if(meter_overtime==0){
-        meter_data_sent=0;
-    }
-    if(counter==0){
-        counter=REALTIME_METER_READ_COUNTER;
-        meter_data_sent=1;
-        meter_overtime=METER_OVERTIME;
-        meter_read();
-    }
-}
-*/
 
 static void realtime_meter_read(void)
 {
@@ -596,6 +585,29 @@ static void realtime_meter_read(void)
         meter_read();
     }
 }
+
+/*
+
+static void realtime_meter_read(void)
+{
+    static u16 counter=REALTIME_METER_READ_COUNTER;
+
+    if(counter)
+        counter--;
+    if(meter_overtime)
+        meter_overtime--;
+    
+    if(meter_overtime==0){
+        meter_data_sent=0;
+    }
+    if(counter==0 && online_dev_count!=0 && meter_data_sent==0){
+        counter=REALTIME_METER_READ_COUNTER;
+        meter_data_sent=1;
+        meter_overtime=METER_OVERTIME;
+        meter_read();
+    }
+}
+*/
 
 
 /*******************************************************************************            
@@ -836,6 +848,7 @@ static void Anti_reflux_init(void)
 {
     Buffer_t buf;
     u32 buf_value;
+    float f;
 
     antibuf.payload=NULL;
     meterPower.state = 0;
@@ -846,7 +859,7 @@ static void Anti_reflux_init(void)
     //Swap_numChar(buf_value,onlineDeviceList.count);     //将16进制数年转为字符串
     //buf_value = Swap_charNum((char *) * (int *)buf.payload);   //将字符串转为16进制
     buf_value = Swap_charNum((char *)buf.payload);   //将字符串转为16进制
-    APP_DEBUG("PARA 120=%ld",buf_value);
+    APP_DEBUG("anti_reflux_en=%ld\r\n",buf_value);
     anti_reflux_en=0;       
     if(buf_value)
         anti_reflux_en=1;   //anti reflux enable
@@ -854,6 +867,9 @@ static void Anti_reflux_init(void)
 
     //get para 97,anti reflux threshlod
     SysPara_Get(97, &buf);
+    f=my_atof((char *)buf.payload);
+    anti_threshold=f/1000;      //kw
+    APP_DEBUG("anti_threshold=%f\r\n",anti_threshold);
     memory_release(buf.payload);
 
 }

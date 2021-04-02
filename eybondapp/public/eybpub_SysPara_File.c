@@ -747,11 +747,11 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
               parametr_default();
               Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0,0);
               break;
-            case '3':  // 看门狗停狗重启
+            case '6':  // 看门狗停狗重启
               log_save("System Hardware Reset!");
               Watchdog_stop();
               break;
-            case '6':  
+            case '8':  
               para_init();    //Luee 参数初始化
               soft_reset_en();
               break;

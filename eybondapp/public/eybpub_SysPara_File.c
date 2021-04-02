@@ -48,6 +48,7 @@
 #include "ModbusDevice.h"
 
 #include "ieee754_float.h"
+#include "char2negative.h"
 
 
 #ifdef _PLATFORM_BC25_
@@ -515,6 +516,11 @@ void main_parametr_update(void) { // 由于APP固件升级会让系统保存的�
 
 #ifdef _PLATFORM_L610_
 void parametr_get(u32_t number, Buffer_t *databuf) {
+  char ch1[]={"-123.543"}; 
+  char ch2[]={"-200"}; 
+  char ch3[]={"123"}; 
+
+
   char *buf_value = NULL;
   u16_t len = 0;
   Buffer_t logbuf;
@@ -559,8 +565,13 @@ void parametr_get(u32_t number, Buffer_t *databuf) {
             break;
           case 11:  // 是否有设备在线
             //test float
-            get_float();
-            get_ieee754();
+            //get_float();
+            //get_ieee754();
+
+                 
+            APP_DEBUG("char2negative:%f\n",my_atof(ch1)); 
+            APP_DEBUG("char2negative:%f\n",my_atof(ch2)); 
+            APP_DEBUG("char2negative:%f\n",my_atof(ch3)); 
 
             //将在线设备数量转为字符并存在buf_value
             Swap_numChar(buf_value,onlineDeviceList.count);

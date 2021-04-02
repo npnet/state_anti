@@ -784,10 +784,12 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
   {93,  ""                        },         /*device_name*/
   {94,  ""                        },         /*device_secret*/
   {95,  ""                        },         /*pub_topic*/
-  {96,  ""                        },         /*sub_topic*/
-  {97,  "0"                       },         /*total_working_time 累计工作时间*/
- // {98,  JIN_LANG_COLL_VER         },         /*锦浪采集器版本*/
+  {96,  "1"                        },         /*sub_topic*/
+  {97,  "-200"                       },         /*total_working_time 累计工作时间*/
+ // {98,  JIN_LANG_COLL_VER       },         /*锦浪采集器版本*/
  {98,  "0"         },         /*锦浪采集器版本*/
+ //防逆流
+ {120, "0"                        }         /*！=0,防逆流使能*/
 };
 
 /* 数采器参数读写接口 */

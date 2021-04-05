@@ -738,9 +738,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
           switch (*(data->payload)) {
             case '1':  // 采集器重启
               soft_reset_en();
-              //log_save("System Software Reset!");
-              //APP_DEBUG("\r\n-->System Software Reset!\r\n");
-              //fibo_softReset();
+              
               break;
             case '2':  // 恢复出厂设置 -- 指示按defult参数表恢复，生产时写的数据如果改了就恢复不了了
               log_save("System Para Reset!");

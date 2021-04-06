@@ -600,7 +600,6 @@ static void UserTimerAPPscallback(void *param) {
       //Eybpub_UT_SendMessage(ALIYUN_TASK, APP_MSG_TIMER_ID, 0, 0);
       //Eybpub_UT_SendMessage(FOTA_TASK, APP_MSG_TIMER_ID, 0, 0);
       Eybpub_UT_SendMessage(UPDATE_TASK, APP_MSG_TIMER_ID, 0, 0,1000);
-      Eybpub_UT_SendMessage(COMMON_SERVER_TASK, APP_MSG_TIMER_ID, 0, 0,1000);
       Eybpub_UT_SendMessage(ANTI_REFLUX_TASK, ANTI_REFLUX_TIMER_ID, 0, 0,1000);
       timeCnt = 0;
       }
@@ -608,6 +607,7 @@ static void UserTimerAPPscallback(void *param) {
     *((s32_t *)param) += 1;
   //} else {
     Eybpub_UT_SendMessage(EYBAPP_TASK, APP_MSG_TIMER_ID, 0, 0,500);
+    Eybpub_UT_SendMessage(COMMON_SERVER_TASK, APP_MSG_TIMER_ID, 0, 0,500);
     *((s32_t *)param) -= 1;;
   //}
 }

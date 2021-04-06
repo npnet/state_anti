@@ -35,6 +35,7 @@
 #include "L610Net_SSL.h"
 #include "L610Net_TCP_EYB.h"
 #include "eybpub_Status.h"
+#include "eybpub_watchdog.h"
 
 net_para_t eybnet_para;
 net_para_t statenet_para;

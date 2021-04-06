@@ -45,6 +45,8 @@ u16_t testPort = 0;
 static char produc_flag = 0;
 extern char produc_save_flag;
 
+static void realtime_chk_pdp(void);
+
 
 int ip4addr_aton(const char *cp, ip4_addr_t *addr)
 {
@@ -511,6 +513,7 @@ void L610Net_manage(void) {
       if ((simstatus == 1) && (simret == 0)) {
         // SIM卡已插入
         registe_times = 0;
+        //LTE优先，单卡
         ret = fibo_set_prior_RAT(0, SINGLE_SIM);
         if (ret < 0) {
           APP_DEBUG("set sim RAT to LTE mode fail:%ld\r\n", ret);
@@ -536,7 +539,9 @@ void L610Net_manage(void) {
       r_memset(&sim_reg_info,0,sizeof(sim_reg_info));
       ret = fibo_getRegInfo(&sim_reg_info, SINGLE_SIM);  // 注册频段
 //      APP_DEBUG("sim getRegInfo ret:%d, reg_state = %d, curr_rat=%d\r\n", ret, sim_reg_info.nStatus ,sim_reg_info.curr_rat);
-	  if(1 == sim_reg_info.nStatus || 5 == sim_reg_info.nStatus) { // SIM卡已注册
+	  //if(1 == sim_reg_info.nStatus || 5 == sim_reg_info.nStatus) { // SIM卡已注册
+    if(1 == sim_reg_info.nStatus) { // SIM卡已注册
+      //注册成功
         APP_DEBUG("sim regitster success\r\n");
         log_save("sim register success!!!");
         if(sim_reg_info.curr_rat == 4 || sim_reg_info.curr_rat ==7) {
@@ -550,11 +555,13 @@ void L610Net_manage(void) {
         ret = fibo_PDPActive(1, (UINT8*)m_GprsConfig.apnName, NULL, NULL, 0, SINGLE_SIM, ip);        
         APP_DEBUG("active APN(%s) ret = %ld,ip=%s\r\n", m_GprsConfig.apnName, ret, ip);
         if (ret == 0) {
+          //激活PDP
           Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_SIM_READY, 0, 0,0);
           m_GprsActState = STATE_SIM_READY;
           registe_times = 0;
           log_save("pdp success & sim ready!!!");
         } else {
+          //激活pdp失败
           APP_DEBUG("sim PDPActive APN %s fail\r\n", m_GprsConfig.apnName);
           log_save("sim PDPActive APN %s fail", m_GprsConfig.apnName);
           registe_times++;
@@ -565,6 +572,7 @@ void L610Net_manage(void) {
           }
         }
       } else {
+        //注册失败
         APP_DEBUG("sim register processing %d\r\n", registe_times);
         registe_times++;
         if (registe_times >= SIM_REGISTER_TIMES) { // 确认sim注册失败
@@ -616,12 +624,13 @@ void L610Net_manage(void) {
     case STATE_GSM_READY: {
       ret = fibo_getHostByName(EYBOND_DEFAULT_SERVER, &addr_para, 1, SINGLE_SIM);  // 0成功 小于0失败
       if (ret == 0) {
+        //得到正式服DNS IP
         registe_times = 0;
         APP_DEBUG("%s DNS IP is:%ld:%ld:%ld:%ld\r\n", EYBOND_DEFAULT_SERVER, (addr_para.u_addr.ip4.addr >> 0) & 0x000000FF, (addr_para.u_addr.ip4.addr >> 8) & 0x000000FF, (addr_para.u_addr.ip4.addr >> 16) & 0x000000FF, (addr_para.u_addr.ip4.addr >> 24) & 0x000000FF);
         APP_DEBUG("Try PING %s last ret = %d\r\n", NET_PING_HOSTNAME, ping_ret);
         ping_ret = fibo_mping(1, NET_PING_HOSTNAME, 4, 32, 64, 0, 4000);
         if (ping_ret == 0) {
-//        fibo_mping(0, 0, 0, 0, 0, 0, 0);
+          //ping百度成功
           APP_DEBUG("PING %s OK ret = %d\r\n", NET_PING_HOSTNAME, ping_ret);
           Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_DNS_READY, 0, 0,0);
           fibo_sem_signal(g_SemFlag);
@@ -759,6 +768,10 @@ void L610Net_manage(void) {
           }
         }
       }       //if (registe == 1) end
+
+
+
+      /*
       //实时每30秒检测PDP
       if (registe_times == 0) {
         r_memset(&ip, 0, sizeof(ip));
@@ -779,6 +792,9 @@ void L610Net_manage(void) {
           registe_times++;
         }
       }
+      */
+
+      realtime_chk_pdp();
       break;
     }
     case STATE_DNS_NOT_READY: {
@@ -801,23 +817,50 @@ void L610Net_manage(void) {
   }
   g_netmutex = 0;
 }
-/*      if (registe_times == 1) { // ping
-        APP_DEBUG("Try PING %s last ret = %d\r\n", PING_HOSTNAME, ping_ret);
-        ping_ret = fibo_mping(1, PING_HOSTNAME, 4, 32, 64, 0, 4000);
-        if (ping_ret == 0) {
-          registe = 1;
-        } else {
-          APP_DEBUG("PING %s Fail ret = %d\r\n", PING_HOSTNAME, ping_ret);
-          registe = 0;
-          m_GprsActState = STATE_DNS_NOT_READY; 
-        }
-      } else {
-        registe_times++;
-        if (registe_times > SIM_REGISTER_TIMES * 5) { // 每5分钟ping一次
-          registe_times = 1;
-        }
-      } */
 
+
+/******************************************************************************                    
+ * introduce:            
+ * parameter:        none                 
+ * return:                 
+ * author:           Luee                                              
+ *****************************************************************************/
+static void realtime_chk_pdp(void)
+{
+  s32_t ret = 0;
+  //ip_addr_t  addr_para;
+  //GAPP_TCPIP_ADDR_T addr;
+  u8_t ip[50];
+  u8_t cid_status = 0;
+
+  r_memset(&ip, 0, sizeof(ip));
+  if (0 == fibo_PDPStatus(1, ip, &cid_status, SINGLE_SIM)) {
+     APP_DEBUG("sim ip = %s,cid_status=%d\r\n", ip, cid_status);
+     ret = fibo_get_curr_prior_RAT(SINGLE_SIM);
+     APP_DEBUG("sim RAT mode after PDP active:%ld\r\n", ret);
+     if (cid_status == 1 && r_strlen((char *)ip) != 0) {
+       //Eybpub_UT_SendMessage(EYBNET_TASK, NET_MSG_GSM_READY, 0, 0,0);
+       //m_GprsActState = STATE_GSM_READY;
+       registe_times = 0;
+     } else {           
+       registe_times++;
+       if (registe_times >= SIM_REGISTER_TIMES) {
+         APP_DEBUG("sim try %d times to get IP fail\r\n", registe_times);
+         registe_times = 0;             
+         m_GprsActState = STATE_DNS_NOT_READY;    //STATE_GSM_NOT_READY;
+         log_save("realtime check sim no ready!!!");
+       }
+     }
+  } else {
+    registe_times++;
+    if (registe_times >= SIM_REGISTER_TIMES) {
+      APP_DEBUG("can't get sim PDP status and try fibo_PDPStatus %d times\r\n", registe_times);
+      registe_times = 0;
+      m_GprsActState = STATE_DNS_NOT_READY;   //STATE_GSM_NOT_READY;
+      log_save("realtime check sim no ready!!!");
+    }
+  }
+}
 
 /*******************************************************************************
  Brief    :

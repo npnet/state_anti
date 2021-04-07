@@ -117,8 +117,8 @@ typedef struct
 static MeterValue_t meterPower;
 static ListHandler_t invertDevice;
 static buf_t anti_ack_buf={0};
-static u8 online_dev_count=0xff;
-static u8 addr_index=0;
+static u8 online_dev_count=0;
+static u8 addr_index=0xff;
 static u8 online_dev_addr_tab[64];
 static u8 meter_data_sent=0;      //=1 meter data have sent
 static u16 meter_overtime=0;

@@ -746,7 +746,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
               Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0,0);
               break;
             case '3':   //软重启
-              soft_reset_en();
+              fibo_softReset();
               break;
             case '6':  // 看门狗停狗重启
               log_save("System Hardware Reset!");
@@ -759,7 +759,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
               para_init();    //Luee 参数初始化
               soft_reset_en();
               break;
-              
+
             #if 0
             case '4':  // 删除a文件测试
               log_save("delete a file success!");

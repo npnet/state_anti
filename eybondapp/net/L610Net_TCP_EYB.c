@@ -369,8 +369,8 @@ u8_t state_status(u8_t nIndex) {
     if (netManage[nIndex].flag == 1) {
       ret = netManage[nIndex].status;
       if (ret == L610_SUCCESS) {
-        NetLED_On();      //网络有数据，服务器连接成功
-        GSMLED_On();      //硬件网络连接成功
+        //NetLED_On();      //网络有数据，服务器连接成功
+        //GSMLED_On();      //硬件网络连接成功
         statenet_para.inwork_status = 1; //全局变量，TCP连接成功
       } else {
         //NetLED_Off();

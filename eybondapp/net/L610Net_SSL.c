@@ -379,9 +379,9 @@ s32 ssl_rec(void)
     //连接失败重连
     if(rec_len<=0){
       APP_DEBUG("\r\n-->state grid ssl recieve fail times:%d\r\n",ssl_relink_times);
-      if(ssl_relink_times++>30){
+      if(ssl_relink_times++>150){
         ssl_relink_times=0;
-        ssl_relink();
+        //ssl_relink();
         log_save("-->state grid ssl recieve fail\r\n");
       }
     }

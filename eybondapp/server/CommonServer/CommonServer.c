@@ -200,12 +200,12 @@ void sslrec_task(void *param)
 void proc_commonServer_task(s32_t taskId) {
   u8_t ret;
   ST_MSG msg;
-  //u16_t relinkTime = 0;
   u8_t eybnet_index=0xff;
   s32 rets32;
 
   APP_PRINT("Common server task run!!\r\n");
   r_memset(&msg, 0, sizeof(ST_MSG));
+  ssl_relink();
   server = null;
   sPort = 0xFF;
   while (1) {
@@ -232,6 +232,7 @@ void proc_commonServer_task(s32_t taskId) {
         //APP_DEBUG("\r\n-->server=%ld\r\n",server);
         //50
         if (m_GprsActState == STATE_DNS_READY&&ret == 0xFF && relinkTime++ > 50) {
+          relinkTime=200;
         //if (ret == 0xFF && relinkTime++ > 50) {   
           //if ((m_GprsActState == STATE_DNS_READY)&&(ret == 0xFF)) {   
           if (server == null) {
@@ -274,7 +275,7 @@ void proc_commonServer_task(s32_t taskId) {
         }
         else{
             //if (overtime++ > server->api->waitTime){
-            if (overtime++ > 720){
+            if (overtime++ > 900){
                 overtime = 20;
 						    //Net_close(sPort);
                 ssl_relink();

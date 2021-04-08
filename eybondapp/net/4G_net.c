@@ -116,7 +116,7 @@ void proc_net_task(s32_t taskId) {
         Eybpub_UT_SendMessage(EYBAPP_TASK, NET_MSG_GSM_READY, 0,0 ,0);
 
         //SSL_init();  
-        ssl_relink(); 
+        //ssl_relink(); 
         break;
       case NET_MSG_GSM_FAIL:
         APP_DEBUG("Net task NET_MSG_GSM_FAIL\r\n");

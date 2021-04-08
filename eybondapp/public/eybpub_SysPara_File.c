@@ -736,7 +736,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
         case 29:
           APP_DEBUG("\r\n-->number is %ld str %s\r\n",number, data->payload);
           switch (*(data->payload)) {
-            case '1':  // 采集器重启
+            case '1':  // 采集器硬重启代替软重启
               soft_reset_en();
               
               break;
@@ -745,17 +745,21 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
               parametr_default();
               Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0,0);
               break;
+            case '3':   //软重启
+              soft_reset_en();
+              break;
             case '6':  // 看门狗停狗重启
               log_save("System Hardware Reset!");
               Watchdog_stop();
+              break;
+            case '7':  
+              log_clean();    //Luee 日志清除
               break;
             case '8':  
               para_init();    //Luee 参数初始化
               soft_reset_en();
               break;
-            case '7':  
-              log_clean();    //Luee 日志清除
-              break;
+              
             #if 0
             case '4':  // 删除a文件测试
               log_save("delete a file success!");

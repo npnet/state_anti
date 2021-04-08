@@ -373,7 +373,7 @@ u8_t state_status(u8_t nIndex) {
         GSMLED_On();      //硬件网络连接成功
         statenet_para.inwork_status = 1; //全局变量，TCP连接成功
       } else {
-        NetLED_Off();
+        //NetLED_Off();
         statenet_para.inwork_status = 0; //全局变量，TCP连接失败
 
       }

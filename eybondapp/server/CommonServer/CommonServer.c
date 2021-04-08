@@ -274,7 +274,7 @@ void proc_commonServer_task(s32_t taskId) {
         }
         else{
             //if (overtime++ > server->api->waitTime){
-            if (overtime++ > 660){
+            if (overtime++ > 720){
                 overtime = 20;
 						    //Net_close(sPort);
                 ssl_relink();

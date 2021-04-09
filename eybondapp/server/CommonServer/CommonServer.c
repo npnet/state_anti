@@ -61,7 +61,8 @@ static const CommonServerTab_t server_con={
 };
 
 static u8_t sPort;
-static int overtime;
+static int overtime=0;
+static int state_overtime=0;
 //static CommonServerTab_t  const *server;
 static CommonServerTab_t *server;
 
@@ -205,6 +206,7 @@ void proc_commonServer_task(s32_t taskId) {
 
   APP_PRINT("Common server task run!!\r\n");
   r_memset(&msg, 0, sizeof(ST_MSG));
+  state_overtime=0;
   ssl_relink();
   server = null;
   sPort = 0xFF;
@@ -277,10 +279,16 @@ void proc_commonServer_task(s32_t taskId) {
             //if (overtime++ > server->api->waitTime){
             if (overtime++ > 900){
                 overtime = 20;
+                state_overtime++;
 						    //Net_close(sPort);
                 ssl_relink();
                 log_save("state grid relink over and relink\r\n");
 					  }
+            if(state_overtime>2){
+              state_overtime=0;
+              log_save("state  over time and hard reboot!\r\n");
+              Watchdog_stop();
+            }
         }
         if (server != null && server->api != null){
               server->api->run(ret);
@@ -324,6 +332,7 @@ void CommonServerDataSend(Buffer_t *buf) {
 static void dataProcess(u8_t port, Buffer_t *buf) {
   output(buf);
 	overtime = 0;
+  state_overtime=0;
 	sPort = port;
 	if (server->api->add(buf, CommonServerDataSend) == 0)
     {

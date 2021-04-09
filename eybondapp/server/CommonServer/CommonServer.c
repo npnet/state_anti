@@ -276,15 +276,14 @@ void proc_commonServer_task(s32_t taskId) {
 
         }
         else{
-            //if (overtime++ > server->api->waitTime){
-            if (overtime++ > 900){
+            if (overtime++ > 780){
                 overtime = 20;
                 state_overtime++;
 						    //Net_close(sPort);
                 ssl_relink();
                 log_save("state grid relink over and relink\r\n");
 					  }
-            if(state_overtime>2){
+            if(state_overtime>=2){
               state_overtime=0;
               log_save("state  over time and hard reboot!\r\n");
               Watchdog_stop();

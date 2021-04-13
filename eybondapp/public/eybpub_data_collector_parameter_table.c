@@ -784,8 +784,9 @@ const DefaultPara_List_t defaultPara[] = {  // ""选项恢复默认值时会忽�
   {93,  ""                        },         /*device_name*/
   {94,  ""                        },         /*device_secret*/
   {95,  ""                        },         /*pub_topic*/
-  {96,  "1"                        },         /*sub_topic*/
-  {97,  "-200"                       },         /*total_working_time 累计工作时间*/
+  //anti reflux
+  {96,  "0"                        },         /*=0 disable, =1 enable*/
+  {97,  "-200"                       },       /*threshold value*/
  // {98,  JIN_LANG_COLL_VER       },         /*锦浪采集器版本*/
  {98,  "0"         },         /*锦浪采集器版本*/
 };

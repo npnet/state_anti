@@ -283,11 +283,15 @@ void proc_commonServer_task(s32_t taskId) {
                 ssl_relink();
                 log_save("state grid relink over and relink\r\n");
 					  }
+            
             if(state_overtime>=2){
               state_overtime=0;
-              log_save("state  over time and hard reboot!\r\n");
-              Watchdog_stop();
+              if (server != null && server->api != null){
+                log_save("state  over time and hard reboot!\r\n");
+                Watchdog_stop();
+              }
             }
+            
         }
         if (server != null && server->api != null){
               server->api->run(ret);

@@ -246,7 +246,7 @@ void proc_commonServer_task(s32_t taskId) {
                 APP_DEBUG("\r\n-->state grid is exist\r\n");
                 server = &serverTab[ret];
                 //server = &server_con;
-                break;
+                //break;
               }
             //}
           }
@@ -279,7 +279,6 @@ void proc_commonServer_task(s32_t taskId) {
             if (overtime++ > 780){
                 overtime = 20;
                 state_overtime++;
-						    //Net_close(sPort);
                 ssl_relink();
                 log_save("state grid relink over and relink\r\n");
 					  }

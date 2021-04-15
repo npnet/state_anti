@@ -737,13 +737,12 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
           APP_DEBUG("\r\n-->number is %ld str %s\r\n",number, data->payload);
           switch (*(data->payload)) {
             case '1':  // 采集器硬重启代替软重启
-              soft_reset_en();
-              
+              soft_reset_en();              
               break;
-            case '2':  // 恢复出厂设置 -- 指示按defult参数表恢复，生产时写的数据如果改了就恢复不了了
-              log_save("System Para Reset!");
-              parametr_default();
-              Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0,0);
+            case '2':  // 恢复出厂设置 -- 实测若加入恢复参数为出厂设置，则生产时14号参数不能被写入
+              //log_save("System Para Reset!");
+              //parametr_default();
+              //Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0,0);
               break;
             case '3':   //软重启
               fibo_softReset();
@@ -757,7 +756,7 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
               break;
             case '8':  
               para_init();    //Luee 参数初始化
-              soft_reset_en();
+              Watchdog_stop();
               break;
 
             #if 0

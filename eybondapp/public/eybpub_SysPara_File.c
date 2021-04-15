@@ -742,7 +742,8 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
             case '2':  // 恢复出厂设置 -- 实测若加入恢复参数为出厂设置，则生产时14号参数不能被写入
               //log_save("System Para Reset!");
               //parametr_default();
-              //Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0,0);
+              //设备重置
+              Eybpub_UT_SendMessage(EYBDEVICE_TASK, SYS_PARA_CHANGE, number, 0,0);
               break;
             case '3':   //软重启
               fibo_softReset();
@@ -773,6 +774,9 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
           return ret;
           break;
         case 34: {
+          //生产时不修改14号参数
+          if(produc_save_flag)
+          break;
           ListHandler_t uartCfgStr;
           r_strsplit(&uartCfgStr, str, '-');
           int tab[4] = {0};

@@ -48,5 +48,6 @@ void meter_read(void);
 
 
 void proc_anti_reflux_task(s32_t taskId);
+void updata_anti_reflux_para(void);
 
 #endif /* _ANTI_REFLUX_H_ */

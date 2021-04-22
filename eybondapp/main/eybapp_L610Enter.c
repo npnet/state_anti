@@ -205,7 +205,8 @@ void * appimg_enter(void *param) {
   software_version   = fibo_get_sw_verno();  // 获取当前的软件版本(客户定制)
   APP_PRINT("hardware_version %s\r\n",hardware_version);
   APP_PRINT("SDK version %s\r\n",software_version);
-  INT32 enret = fibo_watchdog_enable(60);  // 60秒=1分钟 无任何语句执行则重启      
+  //INT32 enret = fibo_watchdog_enable(60);  // 60秒=1分钟 无任何语句执行则重启   
+  INT32 enret = fibo_watchdog_enable(120);  // 120秒=2分钟 无任何语句执行则重启    
   if(0 == enret) {
     APP_DEBUG("ninside watchdog enable success\r\n"); 
   }

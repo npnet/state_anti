@@ -90,7 +90,7 @@ s32_t Eybpub_UT_SendMessage(s32_t destTaskId, u32_t msgId, u32_t param1, u32_t p
 
   overtime=param3;
   if(param3==0)
-    overtime=3000;
+    overtime=2000;
   return fibo_queue_put(destTaskId, &msg, overtime);    //Luee 
 }
 #endif

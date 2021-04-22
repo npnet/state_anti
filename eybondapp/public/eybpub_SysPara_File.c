@@ -49,6 +49,7 @@
 
 #include "ieee754_float.h"
 #include "char2negative.h"
+#include "anti_reflux.h"
 
 
 #ifdef _PLATFORM_BC25_
@@ -881,6 +882,12 @@ u8_t parametr_set(u32_t number, Buffer_t *data) {
       Eybpub_UT_SendMessage(EYBNET_TASK, NET_CMD_RESTART_ID, 0, 0,0);    // 或者NET_CMD_RESTART_ID
     }
   }
+
+  //updata anti reflux para
+  if (number == 96 || number==97){
+    updata_anti_reflux_para();
+  } 
+
   return ret ;
 }
 

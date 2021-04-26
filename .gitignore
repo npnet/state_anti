@@ -33,5 +33,8 @@ doxygen-warning-log.txt
 # vs code file
 *.code-workspace
 
+# tar.gz
+*.tar.gz
+
 # to include anyway
 !.gitignore
